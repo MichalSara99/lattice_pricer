@@ -47,5 +47,14 @@
     <ClInclude Include="lattice_utility_t.h">
       <Filter>Header Files\unit_tests</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_miscellaneous.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_model_t.h">
+      <Filter>Header Files\unit_tests</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

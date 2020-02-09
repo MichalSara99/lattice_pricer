@@ -15,7 +15,11 @@ using namespace boost::gregorian;
 
 void indexedLatticeBinomialForwardInduction() {
 
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(3);
+	const int N = 3;
+	const double maturity{ 1.0 };
+	double dt = maturity / ((double)N);
+
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double>::TreeType).name() << "\n";
 
 	for (auto const &v : il.tree()) {
@@ -26,14 +30,14 @@ void indexedLatticeBinomialForwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value)->std::tuple<double,double> {
+	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value, double dt)->std::tuple<double,double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
 		return std::make_tuple(u*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0);
+	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0, dt);
 	std::cout << "After forward induction step:\n";
 	for (auto const &v : il.tree()) {
 		std::cout << "[";
@@ -47,8 +51,11 @@ void indexedLatticeBinomialForwardInduction() {
 }
 
 void indexedLatticeTrinomialForwardInduction() {
+	const int N = 3;
+	const double maturity{ 1.0 };
+	double dt = maturity / ((double)N);
 
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(3);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double>::TreeType).name() << "\n";
 
 	for (auto const &v : il.tree()) {
@@ -59,7 +66,7 @@ void indexedLatticeTrinomialForwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafForwardGenerator<double, double,double, double> fwdgen = [](double value)->std::tuple<double,double, double> {
+	lattice_types::LeafForwardGenerator<double, double,double, double> fwdgen = [](double value,double dt)->std::tuple<double,double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
@@ -67,7 +74,7 @@ void indexedLatticeTrinomialForwardInduction() {
 		return std::make_tuple(u*value, m*value,d*value);
 	};
 
-	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0);
+	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0, dt);
 	std::cout << "After forward induction step:\n";
 	for (auto const &v : il.tree()) {
 		std::cout << "[";
@@ -88,6 +95,14 @@ void latticeBinomialForwardInduction() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date>
 		la = { today,today + date_duration(2),today,today + date_duration(1) };
 
+	// get fixing dates and compute deltas:
+	auto fixingDates = la.fixingDates();
+	double const daysInYear{ 365.0 };
+	std::vector<double> deltas(fixingDates.size() - 1);
+	for (std::size_t t = 0; t < fixingDates.size()-1; ++t) {
+		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
+	}
+
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
 		for (auto const &e : l.second) {
@@ -97,14 +112,14 @@ void latticeBinomialForwardInduction() {
 	}
 	std::cout << "\n";
 
-	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value)->std::tuple<double, double> {
+	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value,double dt)->std::tuple<double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
 		return std::make_tuple(u*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction(la, fwdgen, 1.0);
+	lattice_algorithms::forward_induction(la, fwdgen, 1.0, deltas);
 	std::cout << "After forward induction step:\n";
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -123,6 +138,14 @@ void latticeTrinomialForwardInduction() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date>
 		la = { today,today + date_duration(2),today,today + date_duration(1) };
 
+	// get fixing dates and compute deltas:
+	auto fixingDates = la.fixingDates();
+	double const daysInYear{ 365.0 };
+	std::vector<double> deltas(fixingDates.size() - 1);
+	for (std::size_t t = 0; t < fixingDates.size() - 1; ++t) {
+		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
+	}
+
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
 		for (auto const &e : l.second) {
@@ -132,7 +155,7 @@ void latticeTrinomialForwardInduction() {
 	}
 	std::cout << "\n";
 
-	lattice_types::LeafForwardGenerator<double, double,double, double> fwdgen = [](double value)->std::tuple<double,double, double> {
+	lattice_types::LeafForwardGenerator<double, double,double, double> fwdgen = [](double value,double dt)->std::tuple<double,double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
@@ -140,7 +163,7 @@ void latticeTrinomialForwardInduction() {
 		return std::make_tuple(u*value, m*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction(la, fwdgen, 1.0);
+	lattice_algorithms::forward_induction(la, fwdgen, 1.0, deltas);
 	std::cout << "After forward induction step:\n";
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -153,11 +176,17 @@ void latticeTrinomialForwardInduction() {
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
 
-// ============================= Testing backward-induction algos =======================
+//
+//// ============================= Testing backward-induction algos =======================
+//
 
 void indexedLatticeBinomialBackwardInduction() {
 
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(3);
+	const int N = 3;
+	const double maturity{ 1.0 };
+	double dt = maturity / ((double)N);
+
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double>::TreeType).name() << "\n";
 
 	for (auto const &v : il.tree()) {
@@ -168,14 +197,14 @@ void indexedLatticeBinomialBackwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value)->std::tuple<double, double> {
+	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value,double dt)->std::tuple<double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
 		return std::make_tuple(u*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0);
+	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0,dt);
 	std::cout << "After forward induction step:\n";
 	for (auto const &v : il.tree()) {
 		std::cout << "[";
@@ -185,7 +214,7 @@ void indexedLatticeBinomialBackwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafBackwardGenerator<double, double, double> backgen = [](double upValue,double downValue) {
+	lattice_types::LeafBackwardGenerator<double, double, double,double> backgen = [](double upValue,double downValue,double dt) {
 		double p = 0.5;
 		return (p*upValue + (1.0 - p)*downValue);
 	};
@@ -194,7 +223,7 @@ void indexedLatticeBinomialBackwardInduction() {
 		return S;
 	};
 
-	lattice_algorithms::backward_induction<>(il, backgen, payoff);
+	lattice_algorithms::backward_induction<>(il, backgen, payoff,dt);
 	std::cout << "After backward induction step:\n";
 	for (auto const &v : il.tree()) {
 		std::cout << "[";
@@ -207,9 +236,14 @@ void indexedLatticeBinomialBackwardInduction() {
 	std::cout << "Price: " << il.apex() << "\n\n";
 }
 
+
 void indexedLatticeTrinomialBackwardInduction() {
 
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(3);
+	const int N = 3;
+	const double maturity{ 1.0 };
+	double dt = maturity / ((double)N);
+
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double>::TreeType).name() << "\n";
 
 	for (auto const &v : il.tree()) {
@@ -220,7 +254,7 @@ void indexedLatticeTrinomialBackwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafForwardGenerator<double, double, double, double> fwdgen = [](double value)->std::tuple<double, double, double> {
+	lattice_types::LeafForwardGenerator<double, double, double, double> fwdgen = [](double value,double dt)->std::tuple<double, double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
@@ -228,7 +262,7 @@ void indexedLatticeTrinomialBackwardInduction() {
 		return std::make_tuple(u*value, m*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0);
+	lattice_algorithms::forward_induction<>(il, fwdgen, 1.0, dt);
 	std::cout << "After forward induction step:\n";
 	for (auto const &v : il.tree()) {
 		std::cout << "[";
@@ -238,7 +272,7 @@ void indexedLatticeTrinomialBackwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafBackwardGenerator<double, double,double, double> backgen = [](double upValue, double midValue,double downValue) {
+	lattice_types::LeafBackwardGenerator<double, double,double, double,double> backgen = [](double upValue, double midValue,double downValue,double dt) {
 		double p = (1.0 / 3.0);
 		return (p*upValue + p*midValue + p*downValue);
 	};
@@ -247,7 +281,7 @@ void indexedLatticeTrinomialBackwardInduction() {
 		return S;
 	};
 
-	lattice_algorithms::backward_induction<>(il, backgen, payoff);
+	lattice_algorithms::backward_induction<>(il, backgen, payoff,dt);
 	std::cout << "After backward induction step:\n";
 	for (auto const &v : il.tree()) {
 		std::cout << "[";
@@ -261,13 +295,20 @@ void indexedLatticeTrinomialBackwardInduction() {
 
 }
 
-
-
 void latticeBinomialBackwardInduction() {
+
 
 	auto today = date(day_clock::local_day());
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date>
 		la = { today,today + date_duration(2),today,today + date_duration(1) };
+
+	// get fixing dates and compute deltas:
+	auto fixingDates = la.fixingDates();
+	double const daysInYear{ 365.0 };
+	std::vector<double> deltas(fixingDates.size() - 1);
+	for (std::size_t t = 0; t < fixingDates.size() - 1; ++t) {
+		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
+	}
 
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -278,14 +319,14 @@ void latticeBinomialBackwardInduction() {
 	}
 	std::cout << "\n";
 
-	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value)->std::tuple<double, double> {
+	lattice_types::LeafForwardGenerator<double, double, double> fwdgen = [](double value,double dt)->std::tuple<double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
 		return std::make_tuple(u*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction(la, fwdgen, 1.0);
+	lattice_algorithms::forward_induction(la, fwdgen, 1.0, deltas);
 	std::cout << "After forward induction step:\n";
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -296,7 +337,7 @@ void latticeBinomialBackwardInduction() {
 	}
 
 
-	lattice_types::LeafBackwardGenerator<double, double, double> backgen = [](double upValue, double downValue) {
+	lattice_types::LeafBackwardGenerator<double, double, double,double> backgen = [](double upValue, double downValue,double dt) {
 		double p = 0.5;
 		return (p*upValue + (1.0 - p)*downValue);
 	};
@@ -305,7 +346,7 @@ void latticeBinomialBackwardInduction() {
 		return S;
 	};
 
-	lattice_algorithms::backward_induction<>(la, backgen, payoff);
+	lattice_algorithms::backward_induction<>(la, backgen, payoff, deltas);
 	std::cout << "After backward induction step:\n";
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -325,6 +366,14 @@ void latticeTrinomialBackwardInduction() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date>
 		la = { today,today + date_duration(2),today,today + date_duration(1) };
 
+	// get fixing dates and compute deltas:
+	auto fixingDates = la.fixingDates();
+	double const daysInYear{ 365.0 };
+	std::vector<double> deltas(fixingDates.size() - 1);
+	for (std::size_t t = 0; t < fixingDates.size() - 1; ++t) {
+		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
+	}
+
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
 		for (auto const &e : l.second) {
@@ -334,7 +383,7 @@ void latticeTrinomialBackwardInduction() {
 	}
 	std::cout << "\n";
 
-	lattice_types::LeafForwardGenerator<double, double, double, double> fwdgen = [](double value)->std::tuple<double, double, double> {
+	lattice_types::LeafForwardGenerator<double, double, double, double> fwdgen = [](double value,double dt)->std::tuple<double, double, double> {
 		// Parameters to ensure recombining lattice (test purposes)
 		double u = 2.0;
 		double d = 1.0 / u;
@@ -342,7 +391,7 @@ void latticeTrinomialBackwardInduction() {
 		return std::make_tuple(u*value, m*value, d*value);
 	};
 
-	lattice_algorithms::forward_induction(la, fwdgen, 1.0);
+	lattice_algorithms::forward_induction(la, fwdgen, 1.0, deltas);
 	std::cout << "After forward induction step:\n";
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -352,7 +401,7 @@ void latticeTrinomialBackwardInduction() {
 		std::cout << "]\n";
 	}
 
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backgen = [](double upValue, double midValue, double downValue) {
+	lattice_types::LeafBackwardGenerator<double, double, double, double,double> backgen = [](double upValue, double midValue, double downValue,double dt) {
 		double p = (1.0 / 3.0);
 		return (p*upValue + p * midValue + p * downValue);
 	};
@@ -361,7 +410,7 @@ void latticeTrinomialBackwardInduction() {
 		return S;
 	};
 
-	lattice_algorithms::backward_induction<>(la, backgen, payoff);
+	lattice_algorithms::backward_induction<>(la, backgen, payoff, deltas);
 	std::cout << "After backward induction step:\n";
 	for (auto const &l : la.tree()) {
 		std::cout << "(" << l.first << "): [";
@@ -373,10 +422,6 @@ void latticeTrinomialBackwardInduction() {
 
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
-
-
-
-
 
 
 

@@ -11,7 +11,7 @@ namespace lattice_types {
 	enum class LatticeType { Binomial, Trinomial };
 
 	template<typename Node,typename ...Nodes>
-	using LeafForwardGenerator = std::function<std::tuple<Nodes...>(Node)>;
+	using LeafForwardGenerator = std::function<std::tuple<Nodes...>(Node,Node)>;
 
 	template<typename Node,typename ...Nodes>
 	using LeafBackwardGenerator = std::function<Node(Nodes...)>;
