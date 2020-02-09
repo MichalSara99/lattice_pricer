@@ -18,6 +18,9 @@ namespace lattice_types {
 
 	template<typename ReturnType,typename ...Args>
 	using Payoff = std::function<ReturnType(Args...)>;
+
+	template<typename ...Args>
+	using PayoffAdjuster = std::function<void(Args...)>;
 }
 
 

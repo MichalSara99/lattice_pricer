@@ -28,7 +28,9 @@ int main(int argc, char const *argv[]) {
 	std::cout << "===============================================\n";
 
 	crrIndexedLattice();
+	crrIndexedLatticeAmerican();
 	crrLattice();
+	crrLatticeAmerican();
 	
 	std::cout << "\n";
 	std::cin.get();

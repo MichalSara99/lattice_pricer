@@ -12,6 +12,7 @@ namespace lattice_algorithms {
 	using lattice_types::LeafForwardGenerator;
 	using lattice_types::LeafBackwardGenerator;
 	using lattice_types::Payoff;
+	using lattice_types::PayoffAdjuster;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
 
@@ -216,6 +217,52 @@ namespace lattice_algorithms {
 			lattice(0, 0) = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime);
 		}
 
+		template<typename Node, typename DeltaTime>
+		void _backward_induction_indexed_binomial_adj_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
+			LeafBackwardGenerator<Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&, Node>const &payoffAdjuster,DeltaTime deltaTime, std::true_type) {
+
+			assert(deltaTime.size() == lattice.maxIndex());
+			std::size_t lastIdx = lattice.maxIndex();
+			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
+				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+			}
+			Node value{};
+			for (auto n = lastIdx - 1; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
+					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
+					payoffAdjuster(value, lattice(n, i));
+					lattice(n, i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime[0]);
+			payoffAdjuster(value, lattice(0, 0));
+			lattice(0, 0) = value;
+		}
+
+		template<typename Node, typename DeltaTime>
+		void _backward_induction_indexed_binomial_adj_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime, std::false_type) {
+
+			std::size_t lastIdx = lattice.maxIndex();
+			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
+				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+			}
+			Node value{};
+			for (auto n = lastIdx - 1; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
+					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
+					payoffAdjuster(value, lattice(n, i));
+					lattice(n, i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime);
+			payoffAdjuster(value, lattice(0, 0));
+			lattice(0, 0) = value;
+		}
+
+
 		template<typename Node, typename TimeAxis,typename DeltaTime>
 		void _backward_induction_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
 			LeafBackwardGenerator<Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
@@ -259,6 +306,58 @@ namespace lattice_algorithms {
 			lattice(fixingDates[0], 0) = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime);
 		}
 
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _backward_induction_lattice_binomial_adj_impl(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime, std::true_type) {
+
+			auto fixingDates = lattice.fixingDates();
+			assert(deltaTime.size() == (fixingDates.size() - 1));
+			TimeAxis lastDate = fixingDates.back();
+			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
+				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+			}
+			Node value{};
+			for (auto n = fixingDates.size() - 2; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
+					value = backwardGenerator(lattice(fixingDates[n + 1], i),
+											lattice(fixingDates[n + 1], i + 1),
+											deltaTime[n]);
+					payoffAdjuster(value, lattice(fixingDates[n], i));
+					lattice(fixingDates[n], i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime[0]);
+			payoffAdjuster(value, lattice(fixingDates[0], 0));
+			lattice(fixingDates[0], 0) = value;
+		}
+
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _backward_induction_lattice_binomial_adj_impl(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&, Node> const &payoffAdjuster,DeltaTime deltaTime, std::false_type) {
+
+			auto fixingDates = lattice.fixingDates();
+			TimeAxis lastDate = fixingDates.back();
+			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
+				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+			}
+			Node value{};
+			for (auto n = fixingDates.size() - 2; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
+					value = backwardGenerator(lattice(fixingDates[n + 1], i),
+											lattice(fixingDates[n + 1], i + 1),
+											deltaTime);
+					payoffAdjuster(value,lattice(fixingDates[n], i));
+					lattice(fixingDates[n], i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime);
+			payoffAdjuster(value, lattice(fixingDates[0], 0));
+			lattice(fixingDates[0], 0) = value;
+		}
+
+
 		template<typename Node,typename DeltaTime>
 		void _backward_induction_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
 			LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
@@ -294,6 +393,51 @@ namespace lattice_algorithms {
 				}
 			}
 			lattice(0, 0) = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
+		}
+
+		template<typename Node, typename DeltaTime>
+		void _backward_induction_indexed_trinomial_adj_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&,Node> const &payoffAdjuster, DeltaTime deltaTime, std::true_type) {
+
+			assert(deltaTime.size() == lattice.maxIndex());
+			std::size_t lastIdx = lattice.maxIndex();
+			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
+				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+			}
+			Node value{};
+			for (auto n = lastIdx - 1; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
+					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
+					payoffAdjuster(value, lattice(n, i));
+					lattice(n, i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
+			payoffAdjuster(value, lattice(0, 0));
+			lattice(0, 0) = value;
+		}
+
+		template<typename Node, typename DeltaTime>
+		void _backward_induction_indexed_trinomial_adj_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime, std::false_type) {
+
+			std::size_t lastIdx = lattice.maxIndex();
+			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
+				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+			}
+			Node value{};
+			for (auto n = lastIdx - 1; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
+					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
+					payoffAdjuster(value, lattice(n, i));
+					lattice(n, i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
+			payoffAdjuster(value, lattice(0, 0));
+			lattice(0, 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -347,6 +491,65 @@ namespace lattice_algorithms {
 				deltaTime);
 		}
 
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _backward_induction_lattice_trinomial_adj_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime, std::true_type) {
+
+			auto fixingDates = lattice.fixingDates();
+			assert(deltaTime.size() == (fixingDates.size() - 1));
+			TimeAxis lastDate = fixingDates.back();
+			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
+				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+			}
+			Node value{};
+			for (auto n = fixingDates.size() - 2; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
+					value = backwardGenerator(lattice(fixingDates[n + 1], i),
+						lattice(fixingDates[n + 1], i + 1),
+						lattice(fixingDates[n + 1], i + 2),
+						deltaTime[n]);
+					payoffAdjuster(value, lattice(fixingDates[n], i));
+					lattice(fixingDates[n], i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(fixingDates[1], 0),
+				lattice(fixingDates[1], 1),
+				lattice(fixingDates[1], 2),
+				deltaTime[0]);
+			payoffAdjuster(value, lattice(fixingDates[0], 0));
+			lattice(fixingDates[0], 0) = value;
+		}
+
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _backward_induction_lattice_trinomial_adj_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
+			LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+			PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime, std::false_type) {
+
+			auto fixingDates = lattice.fixingDates();
+			TimeAxis lastDate = fixingDates.back();
+			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
+				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+			}
+			Node value{};
+			for (auto n = fixingDates.size() - 2; n > 0; --n) {
+				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
+					value = backwardGenerator(lattice(fixingDates[n + 1], i),
+						lattice(fixingDates[n + 1], i + 1),
+						lattice(fixingDates[n + 1], i + 2),
+						deltaTime);
+					payoffAdjuster(value, lattice(fixingDates[n], i));
+					lattice(fixingDates[n], i) = value;
+				}
+			}
+			value = backwardGenerator(lattice(fixingDates[1], 0),
+				lattice(fixingDates[1], 1),
+				lattice(fixingDates[1], 2),
+				deltaTime);
+			payoffAdjuster(value, lattice(fixingDates[0], 0));
+			lattice(fixingDates[0], 0) = value;
+		}
+
 	}
 	
 	template<typename Node,typename DeltaTime>
@@ -355,10 +558,24 @@ namespace lattice_algorithms {
 		_backward_induction_indexed_binomial_impl(lattice, backwardGenerator, payoff, deltaTime, std::is_compound<DeltaTime>());
 	}
 
+	template<typename Node, typename DeltaTime>
+	void backward_induction(IndexedLattice<LatticeType::Binomial, Node>& lattice,
+		LeafBackwardGenerator<Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff, 
+		PayoffAdjuster<Node&,Node> const &payoffAdjuster, DeltaTime deltaTime) {
+		_backward_induction_indexed_binomial_adj_impl(lattice, backwardGenerator, payoff, payoffAdjuster, deltaTime, std::is_compound<DeltaTime>());
+	}
+
 	template<typename Node, typename TimeAxis,typename DeltaTime>
 	void backward_induction(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
 		LeafBackwardGenerator<Node, Node, Node,Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,DeltaTime deltaTime) {
 		_backward_induction_lattice_binomial_impl(lattice, backwardGenerator, payoff, deltaTime, std::is_compound<DeltaTime>());
+	}
+
+	template<typename Node, typename TimeAxis, typename DeltaTime>
+	void backward_induction(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
+		LeafBackwardGenerator<Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+		PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime) {
+		_backward_induction_lattice_binomial_adj_impl(lattice, backwardGenerator, payoff, payoffAdjuster, deltaTime, std::is_compound<DeltaTime>());
 	}
 
 	template<typename Node,typename DeltaTime>
@@ -367,10 +584,24 @@ namespace lattice_algorithms {
 		_backward_induction_indexed_trinomial_impl(lattice, backwardGenerator, payoff, deltaTime, std::is_compound<DeltaTime>());
 	}
 
+	template<typename Node, typename DeltaTime>
+	void backward_induction(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
+		LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+		PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime) {
+		_backward_induction_indexed_trinomial_adj_impl(lattice, backwardGenerator, payoff, payoffAdjuster, deltaTime, std::is_compound<DeltaTime>());
+	}
+
 	template<typename Node, typename TimeAxis,typename DeltaTime>
 	void backward_induction(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
 		LeafBackwardGenerator<Node, Node,Node, Node,Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,DeltaTime deltaTime) {
 		_backward_induction_lattice_trinomial_impl(lattice, backwardGenerator, payoff, deltaTime, std::is_compound<DeltaTime>());
+	}
+
+	template<typename Node, typename TimeAxis, typename DeltaTime>
+	void backward_induction(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
+		LeafBackwardGenerator<Node, Node, Node, Node, Node>const &backwardGenerator, Payoff<Node, Node> const &payoff,
+		PayoffAdjuster<Node&,Node> const &payoffAdjuster,DeltaTime deltaTime) {
+		_backward_induction_lattice_trinomial_adj_impl(lattice, backwardGenerator, payoff, payoffAdjuster, deltaTime, std::is_compound<DeltaTime>());
 	}
 
 
