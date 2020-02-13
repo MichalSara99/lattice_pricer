@@ -9,10 +9,12 @@
 #include<string>
 #include<initializer_list>
 #include"lattice_types.h"
+#include"lattice_miscellaneous.h"
 
 namespace lattice_structure {
 
 	using lattice_types::LatticeType;
+	using lattice_miscellaneous::is_map;
 
 	template<LatticeType Type,
 			typename Node,
@@ -29,6 +31,10 @@ namespace lattice_structure {
 		Node apex_impl(std::true_type)const;
 
 		Node apex_impl(std::false_type)const;
+
+		Node const &operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const;
+
+		Node const &operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const;
 
 	public:
 		typedef typename std::conditional<std::is_integral<TimeAxis>::value,
@@ -47,11 +53,11 @@ namespace lattice_structure {
 		TreeType const &tree()const { return this->tree_; }
 
 		Node const &operator()(TimeAxis timeIdx, std::size_t leafIdx)const {
-			return this->tree_[timeIdx][leafIdx];
+			return operator_impl(timeIdx, leafIdx, is_map<TreeType>());
 		}
 
 		Node &operator()(TimeAxis timeIdx, std::size_t leafIdx) {
-			return this->tree_[timeIdx][leafIdx];
+			return (this->tree_[timeIdx][leafIdx]);
 		}
 			
 		NodeContainerType const &nodesAt(TimeAxis timeIdx)const {
@@ -72,6 +78,24 @@ namespace lattice_structure {
 			return this->tree_.end();
 		}
 	};
+
+
+	template<LatticeType Type,
+			typename Node,
+			typename TimeAxis,
+			typename NodeContainerType>
+	Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const {
+		typename TreeType::const_iterator citer(this->tree_.find(timeIdx));
+		return ((citer != this->tree_.end()) ? (citer->second[leafIdx]) : std::numeric_limits<Node>::max());
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+	Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const {
+		return (this->tree_[timeIdx][leafIdx]);
+	}
 
 
 	template<LatticeType Type,

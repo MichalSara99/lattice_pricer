@@ -21,6 +21,7 @@ namespace lattice_types {
 
 	template<typename ...Args>
 	using PayoffAdjuster = std::function<void(Args...)>;
+
 }
 
 

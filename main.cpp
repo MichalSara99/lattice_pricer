@@ -9,6 +9,7 @@
 #include"lattice_algorithms_t.h"
 #include"lattice_utility_t.h"
 #include"lattice_model_t.h"
+#include"lattice_examples.h"
 
 using namespace boost::gregorian;
 
@@ -27,10 +28,8 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
-	crrIndexedLattice();
-	crrIndexedLatticeAmerican();
-	crrLattice();
-	crrLatticeAmerican();
+	binomialLatticeParallelPricing();
+	binomialLatticeParallelPricingScoped();
 	
 	std::cout << "\n";
 	std::cin.get();
