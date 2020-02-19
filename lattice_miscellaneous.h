@@ -8,6 +8,7 @@
 
 namespace lattice_miscellaneous {
 
+
 	template<typename T = std::enable_if<std::is_arithmetic<T>::value>::type>
 	struct OptionData {
 		T Underlying;

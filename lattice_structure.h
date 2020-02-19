@@ -36,12 +36,17 @@ namespace lattice_structure {
 
 		Node const &operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const;
 
+		NodeContainerType nodesAt_impl(TimeAxis timeIdx, std::true_type)const;
+
+		NodeContainerType nodesAt_impl(TimeAxis timeIdx, std::false_type)const;
+
 	public:
 		typedef typename std::conditional<std::is_integral<TimeAxis>::value,
 								std::vector<NodeContainerType>,
 								std::map<TimeAxis,NodeContainerType>>::type TreeType;
 
 		typedef typename TreeType::iterator Iterator_type;
+		typedef typename TreeType::const_iterator Const_iterator_type;
 
 	protected:
 		TreeType tree_;
@@ -52,6 +57,10 @@ namespace lattice_structure {
 	public:
 		TreeType const &tree()const { return this->tree_; }
 
+		LatticeType type()const { return Type; }
+
+		constexpr std::size_t timeDimension()const { return std::distance(tree_.begin(), tree_.end()); }
+		
 		Node const &operator()(TimeAxis timeIdx, std::size_t leafIdx)const {
 			return operator_impl(timeIdx, leafIdx, is_map<TreeType>());
 		}
@@ -60,8 +69,8 @@ namespace lattice_structure {
 			return (this->tree_[timeIdx][leafIdx]);
 		}
 			
-		NodeContainerType const &nodesAt(TimeAxis timeIdx)const {
-			return this->tree_[timeIdx];
+		NodeContainerType nodesAt(TimeAxis timeIdx)const {
+			return nodesAt_impl(timeIdx, is_map<TreeType>());
 		}
 
 		NodeContainerType &nodesAt(TimeAxis timeIdx) {
@@ -69,6 +78,14 @@ namespace lattice_structure {
 		}
 
 		Node apex()const;
+
+		Const_iterator_type cbegin()const noexcept{
+			return this->tree_.cbegin();
+		}
+
+		Const_iterator_type cend() const noexcept{
+			return this->tree_.cend();
+		}
 
 		Iterator_type begin(){
 			return this->tree_.begin();
@@ -86,7 +103,7 @@ namespace lattice_structure {
 			typename NodeContainerType>
 	Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const {
 		typename TreeType::const_iterator citer(this->tree_.find(timeIdx));
-		return ((citer != this->tree_.end()) ? (citer->second[leafIdx]) : std::numeric_limits<Node>::max());
+		return ((citer != this->tree_.end()) ? (citer->second[leafIdx]) : throw std::out_of_range("Error: timeIdx out of range.\n"));
 	}
 
 	template<LatticeType Type,
@@ -95,6 +112,23 @@ namespace lattice_structure {
 		typename NodeContainerType>
 	Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const {
 		return (this->tree_[timeIdx][leafIdx]);
+	}
+
+	template<LatticeType Type,
+		typename Node,
+	typename TimeAxis,
+	typename NodeContainerType>
+	NodeContainerType GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::nodesAt_impl(TimeAxis timeIdx, std::true_type)const {
+		typename TreeType::const_iterator citer(this->tree_.find(timeIdx));
+		return ((citer != this->tree_.end()) ? (citer->second) : throw std::out_of_range("Error: timeIdx out of range.\n"));
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+	NodeContainerType GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::nodesAt_impl(TimeAxis timeIdx, std::false_type)const {
+		return (this->tree_[timeIdx]);
 	}
 
 
@@ -241,6 +275,7 @@ namespace lattice_structure {
 			this->buildTree(fixingDates_);
 		}
 
+
 		virtual ~Lattice() {}
 
 		Lattice(Lattice<Type, Node, TimeAxis> const &other)
@@ -250,7 +285,7 @@ namespace lattice_structure {
 
 		Lattice(Lattice<Type, Node, TimeAxis> &&other)noexcept 
 			:fixingDates_{std::move(other.fixingDates_)} {
-			this->tree_ = std::move(this->tree_);
+			this->tree_ = std::move(other.tree_);
 		}
 
 		Lattice &operator=(Lattice<Type, Node, TimeAxis> const &other) {

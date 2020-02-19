@@ -320,8 +320,10 @@ void binomialLatticeParallelPricingScoped() {
 	std::cout << "European put price: " << euroPutLattice.apex() << "\n";
 	std::cout << "American call price: " << americanCallLattice.apex() << "\n";
 	std::cout << "American put price: " << americanPutLattice.apex() << "\n";
-
+	std::cout << "time dimension: " << biLattice.timeDimension() << "\n";
 }
+
+
 
 
 

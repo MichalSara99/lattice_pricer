@@ -8,6 +8,8 @@
 namespace lattice_types {
 
 
+	enum class Launch { Sequential, Parallel };
+
 	enum class LatticeType { Binomial, Trinomial };
 
 	template<typename Node,typename ...Nodes>
