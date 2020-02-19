@@ -30,9 +30,14 @@ int main(int argc, char const *argv[]) {
 
 	//binomialLatticeParallelPricing();
 	//binomialLatticeParallelPricingScoped();
-	mergeIndexedBinomial();
-	mergeBinomial();
+	//mergeIndexedBinomial();
+	//mergeBinomial();
 
+	crrLattice();
+	mcrrLattice();
+	jrLattice();
+	trimLattice();
+	tmLattice();
 	
 	std::cout << "\n";
 	std::cin.get();
