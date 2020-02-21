@@ -888,8 +888,7 @@ namespace lattice_algorithms {
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
 				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
 			}
-
-			for (auto n = fixingDates.size() - 2; n > 0; --n) {
+			for (auto n = sFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
 					modifiedLattice(mFixingDates[n], i) = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
 																			modifiedLattice(mFixingDates[n + 1], i + 1),
@@ -918,7 +917,7 @@ namespace lattice_algorithms {
 				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
 			}
 
-			for (auto n = fixingDates.size() - 2; n > 0; --n) {
+			for (auto n = sFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
 					modifiedLattice(mFixingDates[n], i) = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
 																			modifiedLattice(mFixingDates[n + 1], i + 1),
