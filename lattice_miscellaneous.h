@@ -8,8 +8,18 @@
 
 namespace lattice_miscellaneous {
 
+	template<typename T>
+	T sign(T x) {
+		if (x < 0)
+			return -1;
+		else if (x > 0)
+			return 1;
+		return 0;
+	}
 
-	template<typename T = std::enable_if<std::is_arithmetic<T>::value>::type>
+
+	template<typename T,
+			typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
 	struct OptionData {
 		T Underlying;
 		T Strike;

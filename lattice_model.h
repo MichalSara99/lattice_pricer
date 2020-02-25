@@ -18,9 +18,6 @@ namespace lattice_model {
 		// Backward generator:
 		virtual T operator()(T upValue, T downValue, T dt) = 0;
 
-		// Method Name:
-		virtual std::string name()const = 0;
-
 	};
 
 	// ===================== Cox-Rubinstein-Ross model (binomial lattice) ==========================
@@ -53,7 +50,7 @@ namespace lattice_model {
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
-		std::string name()const override{
+		static std::string const name() {
 			return std::string{ "Cox-Rubinstein-Ross model" };
 		}
 	};
@@ -98,7 +95,7 @@ namespace lattice_model {
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
 
-		std::string name()const override {
+		static std::string const name() {
 			return std::string{ "Modified Cox-Rubinstein-Ross model" };
 		}
 	};
@@ -134,7 +131,7 @@ namespace lattice_model {
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
-		std::string name()const override {
+		static std::string const name(){
 			return std::string{ "Jarrow-Rudd model" };
 		}
 	};
@@ -171,7 +168,7 @@ namespace lattice_model {
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
 
-		std::string name()const override {
+		static std::string const name()  {
 			return std::string{ "Trigeorgis model" };
 		}
 	};
@@ -211,12 +208,68 @@ namespace lattice_model {
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
 
-		std::string name()const override {
+		static std::string const name(){
 			return std::string{ "Tian model" };
 		}
 	};
 
+	// ===================== Leisen-Reimer model (binomial lattice) ===========================
+	template<typename T =double>
+	class LeisenReimerModel :public BinomialModel<T> {
+	private:
+		OptionData<T> option_;
+		std::size_t numberPeriods_;
+		std::function<T(T)> inversion_;
 
+	public:
+		LeisenReimerModel(OptionData<T> const& optionData,
+			std::size_t numberPeriods,
+			std::function<T(T)> const &inversionFormula)
+			:option_{ optionData }, 
+			numberPeriods_{numberPeriods},
+			inversion_{ inversionFormula }{
+		}
+
+		// Forward generator:
+		std::tuple<T, T> operator()(T value, T dt) override {
+			T sig = option_.Volatility;
+			T r = option_.RiskFreeRate;
+			T q = option_.DividentRate;
+			T s = option_.Underlying;
+			T k = option_.Strike;
+			T d1 = ((std::log(s / k) + (r - q + 0.5 * sig * sig)) * (numberPeriods_ * dt)) /
+				(sig * std::sqrt(numberPeriods_ * dt));
+			T d2 = d1 - sig * std::sqrt(numberPeriods_ * dt);
+			T e = std::exp((r - q) * dt);
+			T h1 = inversion_(d1);
+			T h2 = inversion_(d2);
+			T p = h2;
+			T up = e * (h1 / h2);
+			T down = (e - p * up) / (1.0 - p);
+			return std::make_tuple(up * value, down * value);
+		}
+
+		// Backward generator:
+		T operator()(T upValue, T downValue, T dt)override {
+			T sig = option_.Volatility;
+			T r = option_.RiskFreeRate;
+			T q = option_.DividentRate;
+			T s = option_.Underlying;
+			T k = option_.Strike;
+			T d1 = ((std::log(s / k) + (r - q + 0.5 * sig * sig)) * (numberPeriods_ * dt)) /
+				(sig * std::sqrt(numberPeriods_ * dt));
+			T d2 = d1 - sig * std::sqrt(numberPeriods_ * dt);
+			T h2 = inversion_(d2);
+			T prob = h2;
+			T disc = std::exp(-1.0 * r * dt);
+			return (disc * (prob * upValue + (1.0 - prob) * downValue));
+		}
+
+		static std::string const name() {
+			return std::string{ "Leisen-Reimer model" };
+		}
+
+	};
 
 
 

@@ -59,5 +59,8 @@
     <ClInclude Include="lattice_examples.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_model_components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

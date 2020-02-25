@@ -28,8 +28,13 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
-	binomialLatticeParallelPricing();
-	binomialLatticeParallelPricingScoped();
+	crrBinomialLatticeParallelPricing();
+	mcrrBinomialLatticeParallelPricingScoped();
+	jrBinomialLatticeParallelPricingScoped();
+	trimBinomialLatticeParallelPricingScoped();
+	tmBinomialLatticeParallelPricingScoped();
+	lrBinomialLatticeParallelPricingScoped();
+
 
 	//mergeIndexedBinomial();
 	//mergeBinomial();
@@ -39,6 +44,7 @@ int main(int argc, char const *argv[]) {
 	//jrLattice();
 	//trimLattice();
 	//tmLattice();
+	//lrLattice();
 	
 	std::cout << "\n";
 	std::cin.get();
