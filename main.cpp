@@ -28,13 +28,14 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
-	crrBinomialLatticeParallelPricing();
-	mcrrBinomialLatticeParallelPricingScoped();
-	jrBinomialLatticeParallelPricingScoped();
-	trimBinomialLatticeParallelPricingScoped();
-	tmBinomialLatticeParallelPricingScoped();
-	lrBinomialLatticeParallelPricingScoped();
-
+	//crrBinomialLatticeParallelPricing();
+	//mcrrBinomialLatticeParallelPricingScoped();
+	//jrBinomialLatticeParallelPricingScoped();
+	//trimBinomialLatticeParallelPricingScoped();
+	//tmBinomialLatticeParallelPricingScoped();
+	//lrBinomialLatticeParallelPricingScoped();
+	pascalTriangleIndexedTest();
+	pascalTriangleTest();
 
 	//mergeIndexedBinomial();
 	//mergeBinomial();

@@ -8,6 +8,7 @@
 #include<iostream>
 #include<boost/date_time/gregorian/gregorian.hpp>
 #include<boost/date_time/gregorian/gregorian_types.hpp>
+#include<boost/math/special_functions/binomial.hpp>
 
 
 using namespace boost::gregorian;
@@ -644,6 +645,101 @@ void mergeTrinomial() {
 		std::cout << "]\n";
 	}
 
+}
+
+
+
+void pascalTriangleIndexedTest() {
+
+	using lattice_structure::IndexedLattice;
+	using lattice_types::LatticeType;
+
+	const int periods = 10;
+
+	IndexedLattice<LatticeType::Binomial, long> pascalLattice{ periods };
+
+	pascalLattice(0, 0) = 1;
+	for (auto t = pascalLattice.minIndex() + 1; t <= pascalLattice.maxIndex();++t) {
+
+		// Edges:
+		pascalLattice(t, 0) = pascalLattice(t - 1, 0);
+		pascalLattice(t, pascalLattice.nodesAt(t).size() - 1) = pascalLattice(t - 1, pascalLattice.nodesAt(t - 1).size() - 1);
+
+		// Inner nodes:
+		for (auto i = 1; i < pascalLattice.nodesAt(t).size() - 1; ++i) {
+			pascalLattice(t, i) = pascalLattice(t - 1, i - 1) + pascalLattice(t - 1, i);
+		}
+	}
+
+	// test against binomial coefficients in boost:
+	std::size_t counter{ 0 };
+	long latticeValue{ 0 };
+	double boostValue{};
+	for (auto t = pascalLattice.minIndex(); t <= pascalLattice.maxIndex(); ++t) {
+		for (auto k = 0; k < pascalLattice.nodesAt(t).size(); ++k) {
+			latticeValue = pascalLattice(t, k);
+			boostValue = boost::math::binomial_coefficient<double>(t, k);
+			if (static_cast<double>(latticeValue) != boostValue) {
+				counter++;
+			}
+		}
+	}
+	std::cout << "Number of differences: " << counter << "\n";
+
+}
+
+void pascalTriangleTest() {
+	using lattice_structure::Lattice;
+	using lattice_types::LatticeType;
+
+	const int periods = 10;
+
+	auto today = date(day_clock::local_day());
+	std::set<date> fDates;
+	fDates.emplace(today);
+
+	for (std::size_t p = 1; p <= periods; ++p) {
+		fDates.emplace(today + date_duration(p));
+	}
+
+	Lattice<LatticeType::Binomial, long, date> pascalLattice{ fDates };
+
+	pascalLattice(today, 0) = 1;
+
+	auto itr = pascalLattice.cbegin();
+	auto begin = std::next(pascalLattice.cbegin(),1);
+	auto end = pascalLattice.cend();
+
+	for (; begin != end; ++begin, ++itr) {
+
+		// Edges:
+		pascalLattice(begin->first, 0) = pascalLattice(itr->first, 0);
+		pascalLattice(begin->first, pascalLattice.nodesAt(begin->first).size() - 1) =
+			pascalLattice(itr->first, pascalLattice.nodesAt(itr->first).size() - 1);
+
+		// Inner nodes:
+		for (auto i = 1; i < pascalLattice.nodesAt(begin->first).size() - 1; ++i) {
+			pascalLattice(begin->first, i) = pascalLattice(itr->first, i - 1) + pascalLattice(itr->first, i);
+		}
+	}
+
+	// test against binomial coefficients in boost:
+	std::size_t counter{ 0 };
+	long latticeValue{ 0 };
+	double boostValue{};
+	std::size_t t{ 0 };
+	begin = pascalLattice.cbegin();
+	end = pascalLattice.cend();
+	for (; begin!= end; ++begin,++t) {
+		for (auto k = 0; k < pascalLattice.nodesAt(begin->first).size(); ++k) {
+			latticeValue = pascalLattice(begin->first, k);
+			boostValue = boost::math::binomial_coefficient<double>(t, k);
+			if (static_cast<double>(latticeValue) != boostValue) {
+				counter++;
+			}
+		}
+	}
+	std::cout << "Number of differences: " << counter << "\n";
 }
 
 
