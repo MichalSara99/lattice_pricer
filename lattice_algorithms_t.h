@@ -654,7 +654,7 @@ void pascalTriangleIndexedTest() {
 	using lattice_structure::IndexedLattice;
 	using lattice_types::LatticeType;
 
-	const int periods = 10;
+	std::size_t periods = 10;
 
 	IndexedLattice<LatticeType::Binomial, long> pascalLattice{ periods };
 

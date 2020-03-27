@@ -1004,7 +1004,7 @@ void crrLattice() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 
@@ -1062,7 +1062,7 @@ void mcrrLattice() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 
@@ -1121,7 +1121,7 @@ void jrLattice() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 
@@ -1179,7 +1179,7 @@ void trimLattice() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 
@@ -1238,7 +1238,7 @@ void tmLattice() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 
@@ -1298,7 +1298,7 @@ void lrLattice() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 
@@ -1361,7 +1361,7 @@ void crrLatticeMod() {
 
 	option.Strike = 65.0;
 	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
+	option.DividentRate = 0.05;
 	option.Volatility = 0.3;
 	option.Underlying = 60.0;
 

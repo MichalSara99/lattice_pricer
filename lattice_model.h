@@ -34,10 +34,11 @@ namespace lattice_model {
 
 		// Forward generator
 		std::tuple<T, T> operator()(T value, T dt) override {
-			T s = option_.Volatility;
+			T q = option_.DividentRate;
+			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
-			T r1 = (r - 0.5*s*s)*dt;
-			T r2 = s * std::sqrt(dt);
+			T r1 = (r - q - 0.5*sig*sig)*dt;
+			T r2 = sig * std::sqrt(dt);
 			T up = std::exp(r1 + r2);
 			T down = std::exp(r1 - r2);
 			return std::make_tuple(up*value, down*value);
@@ -45,8 +46,9 @@ namespace lattice_model {
 
 		// Backward generator
 		T operator()(T upValue, T downValue, T dt) override {
+			T q = option_.DividentRate;
 			T r = option_.RiskFreeRate;
-			T disc = std::exp(-1.0*r*dt);
+			T disc = std::exp(-1.0*(r - q)*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -82,6 +84,7 @@ namespace lattice_model {
 
 		// Backward generator:
 		T operator()(T upValue, T downValue, T dt) override {
+			T q = option_.DividentRate;
 			T s = option_.Underlying;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
@@ -90,8 +93,8 @@ namespace lattice_model {
 			T V_n = sig * std::sqrt(dt);
 			T up = std::exp(K_n + V_n);
 			T down = std::exp(K_n - V_n);
-			T disc = std::exp(-1.0*r*dt);
-			T prob = (std::exp(r*dt) - down) / (up - down);
+			T disc = std::exp(-1.0*(r - q)*dt);
+			T prob = (std::exp((r-q)*dt) - down) / (up - down);
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
 
@@ -114,9 +117,10 @@ namespace lattice_model {
 
 		// Forward generator
 		std::tuple<T, T> operator()(T value, T dt)override {
+			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
-			T d = (r - 0.5*sig*sig)*dt;
+			T d = (r - q - 0.5*sig*sig)*dt;
 			T x1 = d + sig * std::sqrt(dt);
 			T x2 = d - sig * std::sqrt(dt);
 			T up = std::exp(x1);
@@ -126,8 +130,9 @@ namespace lattice_model {
 
 		// Backward generator
 		T operator()(T upValue, T downValue, T dt) override {
+			T q = option_.DividentRate;
 			T r = option_.RiskFreeRate;
-			T disc = std::exp(-1.0*r*dt);
+			T disc = std::exp(-1.0*(r - q)*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -146,7 +151,7 @@ namespace lattice_model {
 	public:
 		TrigeorgisModel(OptionData<T> const &optionData)
 			:option_{ optionData },
-			gamma_{ optionData.RiskFreeRate - 0.5*optionData.Volatility*optionData.Volatility } {
+			gamma_{ optionData.RiskFreeRate - optionData.DividentRate - 0.5*optionData.Volatility*optionData.Volatility } {
 		}
 
 		// Forward generator:
@@ -160,10 +165,11 @@ namespace lattice_model {
 
 		// Backward generator:
 		T operator()(T upValue, T downValue, T dt)override {
+			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
-			T disc = std::exp(-1.0*r*dt);
+			T disc = std::exp(-1.0*(r - q)*dt);
 			T prob = 0.5*(1.0 + (gamma_*(dt / x)));
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
@@ -186,25 +192,27 @@ namespace lattice_model {
 
 		// Forward generator:
 		std::tuple<T, T> operator()(T value, T dt) override {
+			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T v = std::exp(sig*sig*dt);
 			T x = std::sqrt(v *v + 2.0*v - 3.0);
-			T up = (0.5*std::exp(r*dt)*v*(v + 1.0 + x));
-			T down = (0.5*std::exp(r*dt)*v*(v + 1.0 - x));
+			T up = (0.5*std::exp((r- q)*dt)*v*(v + 1.0 + x));
+			T down = (0.5*std::exp((r-q)*dt)*v*(v + 1.0 - x));
 			return std::make_tuple(up*value, down*value);
 		}
 
 		// Backward generator:
 		T operator()(T upValue, T downValue, T dt)override {
+			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T v = std::exp(sig*sig*dt);
 			T x = std::sqrt(v *v + 2.0*v - 3.0);
-			T up = (0.5*std::exp(r*dt)*v*(v + 1.0 + x));
-			T down = (0.5*std::exp(r*dt)*v*(v + 1.0 - x));
-			T disc = std::exp(-1.0*r*dt);
-			T prob = ((std::exp(r*dt) - down) / (up - down));
+			T up = (0.5*std::exp((r - q)*dt)*v*(v + 1.0 + x));
+			T down = (0.5*std::exp((r - q)*dt)*v*(v + 1.0 - x));
+			T disc = std::exp(-1.0*(r - q)*dt);
+			T prob = ((std::exp((r - q)*dt) - down) / (up - down));
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
 
@@ -261,7 +269,7 @@ namespace lattice_model {
 			T d2 = d1 - sig * std::sqrt(numberPeriods_ * dt);
 			T h2 = inversion_(d2);
 			T prob = h2;
-			T disc = std::exp(-1.0 * r * dt);
+			T disc = std::exp(-1.0 * (r - q) * dt);
 			return (disc * (prob * upValue + (1.0 - prob) * downValue));
 		}
 

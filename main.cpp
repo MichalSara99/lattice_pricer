@@ -34,8 +34,8 @@ int main(int argc, char const *argv[]) {
 	//trimBinomialLatticeParallelPricingScoped();
 	//tmBinomialLatticeParallelPricingScoped();
 	//lrBinomialLatticeParallelPricingScoped();
-	pascalTriangleIndexedTest();
-	pascalTriangleTest();
+	//pascalTriangleIndexedTest();
+	//pascalTriangleTest();
 
 	//mergeIndexedBinomial();
 	//mergeBinomial();
