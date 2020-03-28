@@ -131,6 +131,8 @@
     <ClInclude Include="lattice_algorithms.h" />
     <ClInclude Include="lattice_algorithms_t.h" />
     <ClInclude Include="lattice_examples.h" />
+    <ClInclude Include="lattice_greeks.h" />
+    <ClInclude Include="lattice_greeks_t.h" />
     <ClInclude Include="lattice_miscellaneous.h" />
     <ClInclude Include="lattice_model.h" />
     <ClInclude Include="lattice_model_components.h" />

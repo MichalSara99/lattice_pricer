@@ -62,5 +62,11 @@
     <ClInclude Include="lattice_model_components.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_greeks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_greeks_t.h">
+      <Filter>Header Files\unit_tests</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

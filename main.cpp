@@ -10,6 +10,7 @@
 #include"lattice_utility_t.h"
 #include"lattice_model_t.h"
 #include"lattice_examples.h"
+#include"lattice_greeks_t.h"
 
 using namespace boost::gregorian;
 
@@ -46,6 +47,8 @@ int main(int argc, char const *argv[]) {
 	//trimLattice();
 	//tmLattice();
 	//lrLattice();
+
+	indexedLatticeBinomialDelta();
 	
 	std::cout << "\n";
 	std::cin.get();

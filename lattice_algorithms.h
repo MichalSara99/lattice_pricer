@@ -17,7 +17,9 @@ namespace lattice_algorithms {
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
 
-	//==================== Forward Induction ============================
+	// ==============================================================================
+	// ==================== Forward Induction Algorithms ============================
+	// ==============================================================================
 
 	namespace {
 
@@ -147,7 +149,314 @@ namespace lattice_algorithms {
 			}
 		}
 
+		// =============================================
+		// ===== overloads for discrete dividends ======
+		// =============================================
 
+		template<typename Node, typename DeltaTime>
+		void _forward_induction_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
+			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<std::size_t, Node> const &dividendData, std::true_type) {
+			assert(deltaTime.size() == lattice.maxIndex());
+			lattice(0, 0) = apex;
+			std::tuple<Node, Node> tuple;
+			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+					lattice(t, l) = std::get<0>(tuple);
+					lattice(t, l + 1) = std::get<1>(tuple);
+				}
+			}
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			std::size_t firstExIdx = first->first;
+			if (firstExIdx > lattice.maxIndex())return;
+
+			Node factor{ 1.0 };
+			for (std::size_t t = firstExIdx; t <= lattice.maxIndex(); ++t) {
+				auto nextExItr = dividendData.find(t);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+					lattice(t, l) = factor * std::get<0>(tuple);
+					lattice(t, l + 1) = factor * std::get<1>(tuple);
+				}
+			}
+		}
+
+		template<typename Node, typename DeltaTime>
+		void _forward_induction_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
+			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<std::size_t, Node> const &dividendData, std::false_type) {
+			lattice(0, 0) = apex;
+			std::tuple<Node, Node> tuple;
+			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime);
+					lattice(t, l) = std::get<0>(tuple);
+					lattice(t, l + 1) = std::get<1>(tuple);
+				}
+			}
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			std::size_t firstExIdx = first->first;
+			if (firstExIdx > lattice.maxIndex())return;
+
+			Node factor{ 1.0 };
+			for (std::size_t t = firstExIdx; t <= lattice.maxIndex(); ++t) {
+				auto nextExItr = dividendData.find(t);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime);
+					lattice(t, l) = factor * std::get<0>(tuple);
+					lattice(t, l + 1) = factor * std::get<1>(tuple);
+				}
+			}
+		}
+
+		template<typename Node, typename DeltaTime>
+		void _forward_induction_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
+			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<std::size_t, Node> const &dividendData,std::true_type) {
+			assert(deltaTime.size() == lattice.maxIndex());
+			lattice(0, 0) = apex;
+			std::tuple<Node, Node, Node> tuple;
+			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+					lattice(t, l) = std::get<0>(tuple);
+					lattice(t, l + 1) = std::get<1>(tuple);
+					lattice(t, l + 2) = std::get<2>(tuple);
+				}
+			}
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			std::size_t firstExIdx = first->first;
+			if (firstExIdx > lattice.maxIndex())return;
+
+			Node factor{ 1.0 };
+			for (std::size_t t = firstExIdx; t <= lattice.maxIndex(); ++t) {
+				auto nextExItr = dividendData.find(t);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+					lattice(t, l) = factor * std::get<0>(tuple);
+					lattice(t, l + 1) = factor * std::get<1>(tuple);
+					lattice(t, l + 2) = factor * std::get<2>(tuple);
+				}
+			}
+		}
+
+
+		template<typename Node, typename DeltaTime>
+		void _forward_induction_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
+			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<std::size_t, Node> const &dividendData,std::false_type) {
+			lattice(0, 0) = apex;
+			std::tuple<Node, Node, Node> tuple;
+			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime);
+					lattice(t, l) = std::get<0>(tuple);
+					lattice(t, l + 1) = std::get<1>(tuple);
+					lattice(t, l + 2) = std::get<2>(tuple);
+				}
+			}
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			std::size_t firstExIdx = first->first;
+			if (firstExIdx > lattice.maxIndex())return;
+
+			Node factor{ 1.0 };
+			for (std::size_t t = firstExIdx; t <= lattice.maxIndex(); ++t) {
+				auto nextExItr = dividendData.find(t);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
+					tuple = generator(lattice(t - 1, l), deltaTime);
+					lattice(t, l) = factor * std::get<0>(tuple);
+					lattice(t, l + 1) = factor * std::get<1>(tuple);
+					lattice(t, l + 2) = factor * std::get<2>(tuple);
+				}
+			}
+		}
+
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _forward_induction_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
+			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<TimeAxis,Node> const &dividendData,std::true_type) {
+			auto fixingDates = lattice.fixingDates();
+			assert(deltaTime.size() == (fixingDates.size() - 1));
+			lattice(fixingDates[0], 0) = apex;
+			std::tuple<Node, Node> tuple;
+			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice(fixingDates[t], l) = std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+				}
+			}
+
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			auto fd_itr = std::find(fixingDates.cbegin(), fixingDates.cend(), first->first);
+			if (fd_itr == fixingDates.cend())return;
+
+			Node factor{ 1.0 };
+			std::size_t firstExIdx = std::distance(fixingDates.cbegin(), fd_itr);
+			for (std::size_t t = firstExIdx; t < fixingDates.size(); ++t) {
+				auto nextExItr = dividendData.find(fixingDates[t]);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+				}
+			}
+		}
+		
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _forward_induction_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
+			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<TimeAxis, Node> const &dividendData,std::false_type) {
+			auto fixingDates = lattice.fixingDates();
+			lattice(fixingDates[0], 0) = apex;
+			std::tuple<Node, Node> tuple;
+			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
+					lattice(fixingDates[t], l) = std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+				}
+			}
+
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			auto fd_itr = std::find(fixingDates.cbegin(), fixingDates.cend(), first->first);
+			if (fd_itr == fixingDates.cend())return;
+
+			Node factor{ 1.0 };
+			std::size_t firstExIdx = std::distance(fixingDates.cbegin(), fd_itr);
+			for (std::size_t t = firstExIdx; t < fixingDates.size(); ++t) {
+				auto nextExItr = dividendData.find(fixingDates[t]);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
+					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+				}
+			}
+		}
+
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _forward_induction_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
+			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<TimeAxis,Node> const &dividendData,std::true_type) {
+			auto fixingDates = lattice.fixingDates();
+			assert(deltaTime.size() == (fixingDates.size() - 1));
+			lattice(fixingDates[0], 0) = apex;
+			std::tuple<Node, Node, Node> tuple;
+			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice(fixingDates[t], l) = std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+					lattice(fixingDates[t], l + 2) = std::get<2>(tuple);
+				}
+			}
+
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			auto fd_itr = std::find(fixingDates.cbegin(), fixingDates.cend(), first->first);
+			if (fd_itr == fixingDates.cend())return;
+
+			Node factor{ 1.0 };
+			std::size_t firstExIdx = std::distance(fixingDates.cbegin(), fd_itr);
+			for (std::size_t t = firstExIdx; t < fixingDates.size(); ++t) {
+				auto nextExItr = dividendData.find(fixingDates[t]);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+					lattice(fixingDates[t], l + 2) = factor * std::get<2>(tuple);
+				}
+			}
+		}
+
+		template<typename Node, typename TimeAxis, typename DeltaTime>
+		void _forward_induction_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
+			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+			std::map<TimeAxis,Node> const &dividendData,std::false_type) {
+			auto fixingDates = lattice.fixingDates();
+			lattice(fixingDates[0], 0) = apex;
+			std::tuple<Node, Node, Node> tuple;
+			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
+					lattice(fixingDates[t], l) = std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+					lattice(fixingDates[t], l + 2) = std::get<2>(tuple);
+				}
+			}
+
+			// Adjust the tree for discretely paying divdiends: 
+			auto first = dividendData.begin();
+			auto last = dividendData.end();
+			if (first == last)return;
+			auto fd_itr = std::find(fixingDates.cbegin(), fixingDates.cend(), first->first);
+			if (fd_itr == fixingDates.cend())return;
+
+			Node factor{ 1.0 };
+			std::size_t firstExIdx = std::distance(fixingDates.cbegin(), fd_itr);
+			for (std::size_t t = firstExIdx; t < fixingDates.size(); ++t) {
+				auto nextExItr = dividendData.find(fixingDates[t]);
+				factor = 1.0;
+				if (nextExItr != last) {
+					factor *= (factor - nextExItr->second);
+				}
+				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
+					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
+					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+					lattice(fixingDates[t], l + 2) = factor * std::get<2>(tuple);
+				}
+			}
+		}
 	}
 
 
@@ -177,8 +486,44 @@ namespace lattice_algorithms {
 			_forward_induction_lattice_trinomial_impl(lattice, generator, apex, deltaTime, std::is_compound<DeltaTime>());
 	}
 
-	//==================== Backward Induction ============================
 
+	// =============================================
+	// ===== overloads for discrete dividends ======
+	// =============================================
+
+	template<typename Node,typename DeltaTime>
+	void forward_induction(IndexedLattice<LatticeType::Binomial, Node>& lattice,
+		LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime, 
+		std::map<std::size_t, Node> const &dividendData) {
+		_forward_induction_indexed_binomial_impl(lattice, generator, apex, deltaTime,dividendData,std::is_compound<DeltaTime>());
+	}
+
+	template<typename Node, typename DeltaTime>
+	void forward_induction(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
+		LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+		std::map<std::size_t, Node> const &dividendData) {
+		_forward_induction_indexed_trinomial_impl(lattice, generator, apex, deltaTime, dividendData, std::is_compound<DeltaTime>());
+	}
+
+	template<typename Node, typename TimeAxis, typename DeltaTime>
+	void forward_induction(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
+		LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+		std::map<TimeAxis,Node> const &dividendData) {
+		_forward_induction_lattice_binomial_impl(lattice, generator, apex, deltaTime,dividendData,std::is_compound<DeltaTime>());
+	}
+
+	template<typename Node, typename TimeAxis, typename DeltaTime>
+	void forward_induction(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
+		LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
+		std::map<TimeAxis,Node> const &dividendData) {
+		_forward_induction_lattice_trinomial_impl(lattice, generator, apex, deltaTime, dividendData, std::is_compound<DeltaTime>());
+	}
+
+
+
+	// ==============================================================================
+	// =================== Backward Induction Algorithms ============================
+	// ==============================================================================
 	namespace {
 
 		//==== Backward Induction with rewritable source lattice impls ==== 
