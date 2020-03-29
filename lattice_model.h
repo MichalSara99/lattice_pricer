@@ -20,7 +20,20 @@ namespace lattice_model {
 
 	};
 
+	template<typename T = double>
+	class TrinomialModel {
+	public:
+		// Forward generator:
+		virtual std::tuple<T, T, T> operator()(T value, T dt) = 0;
+
+		// Backward generator:
+		virtual T operator()(T upValue,T midValue, T downValue, T dt) = 0;
+
+	};
+
+	// =============================================================================================
 	// ===================== Cox-Rubinstein-Ross model (binomial lattice) ==========================
+	// =============================================================================================
 	template<typename T=double>
 	class CoxRubinsteinRossModel:public BinomialModel<T> {
 	private:
@@ -57,8 +70,9 @@ namespace lattice_model {
 		}
 	};
 
-
+	// =======================================================================================================
 	// ===================== Modified Cox-Rubinstein-Ross model (binomial lattice) ===========================
+	// =======================================================================================================
 	template<typename T=double>
 	class ModifiedCoxRubinsteinRossModel:public BinomialModel<T> {
 	private:
@@ -103,7 +117,9 @@ namespace lattice_model {
 		}
 	};
 
+	// =====================================================================================
 	// ===================== Jarrow-Rudd model (binomial lattice) ==========================
+	// =====================================================================================
 	template<typename T = double>
 	class JarrowRuddModel:public BinomialModel<T> {
 	private:
@@ -141,7 +157,9 @@ namespace lattice_model {
 		}
 	};
 
+	// =====================================================================================
 	// ===================== Trigeorgis model (binomial lattice) ===========================
+	// =====================================================================================
 	template<typename T=double>
 	class TrigeorgisModel:public BinomialModel<T> {
 	private:
@@ -179,7 +197,9 @@ namespace lattice_model {
 		}
 	};
 
+	// ===============================================================================
 	// ===================== Tian model (binomial lattice) ===========================
+	// ===============================================================================
 	template<typename T = double>
 	class TianModel:public BinomialModel<T> {
 	private:
@@ -221,7 +241,9 @@ namespace lattice_model {
 		}
 	};
 
+	// ========================================================================================
 	// ===================== Leisen-Reimer model (binomial lattice) ===========================
+	// ========================================================================================
 	template<typename T =double>
 	class LeisenReimerModel :public BinomialModel<T> {
 	private:
@@ -280,7 +302,48 @@ namespace lattice_model {
 	};
 
 
+	// ================================================================================
+	// ===================== Boyle model (trinomial lattice) ==========================
+	// ================================================================================
+	template<typename T = double>
+	class BoyleModel :public TrinomialModel<T> {
+	private:
+		OptionData<T> option_;
 
+	public:
+		BoyleModel(OptionData<T>const &optionData)
+			:option_{ optionData } {
+		}
+
+		// Forward generator
+		std::tuple<T, T, T> operator()(T value, T dt) override {
+			T sig = option_.Volatility;
+			T expon = sig * std::sqrt(2.0*dt);
+			T up = std::exp(expon);
+			T mid = 1.0;
+			T down = 1.0 / up;
+			return std::make_tuple(up*value, mid*value, down*value);
+		}
+
+		// Backward generator
+		T operator()(T upValue,T midValue,T downValue, T dt) override {
+			T q = option_.DividentRate;
+			T r = option_.RiskFreeRate;
+			T sig = option_.Volatility;
+			T mu = r - q;
+			T e_sig = std::exp(sig * std::sqrt(0.5*dt));
+			T e_mu = std::exp(mu * 0.5*dt);
+			T p_u = std::pow(((e_mu - (1.0/e_sig))/(e_sig - (1.0/e_sig))), 2.0);
+			T p_d = std::pow(((e_sig - e_mu) / (e_sig - (1.0 / e_sig))), 2.0);
+			T p_m = 1.0 - (p_u + p_d);
+			T disc = std::exp(-1.0*mu*dt);
+			return (disc * (p_u * upValue + p_m * midValue + p_d * downValue));
+		}
+
+		static std::string const name() {
+			return std::string{ "Boyle model" };
+		}
+	};
 
 
 

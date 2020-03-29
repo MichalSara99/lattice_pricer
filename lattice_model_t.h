@@ -295,6 +295,51 @@ void lrIndexedLattice() {
 	std::cout << "Price of call: " << il.apex() << "\n\n";
 }
 
+void bmIndexedLattice() {
+
+	lattice_miscellaneous::OptionData<double> option;
+
+	option.Strike = 65.0;
+	option.RiskFreeRate = 0.25;
+	option.DividentRate = 0.0;
+	option.Volatility = 0.3;
+	option.Underlying = 60.0;
+
+	std::size_t periods{ 100 };
+	double maturity = 0.29;
+	double dt = (maturity / double(periods));
+
+
+	// Creating indexed lattice:
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(periods);
+
+	// Create CRR model:
+	lattice_model::BoyleModel<> bm{ option };
+
+	// Print the model name:
+	std::cout << decltype(bm)::name() << "\n";
+
+	// Forward induction:
+	lattice_types::LeafForwardGenerator<double,double, double, double> fwdGen = bm;
+	lattice_algorithms::forward_induction(il, fwdGen, option.Underlying, dt);
+
+	// Print the part of generated lattice:
+	auto first = il.begin();
+	auto last = std::next(first, 5);
+	lattice_utility::print(il, first, last);
+
+	// Backward induction:
+	lattice_types::LeafBackwardGenerator<double, double,double, double, double> backGen = bm;
+	// Prepare payoff:
+	double K = option.Strike;
+	lattice_types::Payoff<double, double> call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
+	lattice_algorithms::backward_induction(il, backGen, call_payoff, dt);
+
+	// Print the part of generated lattice:
+	lattice_utility::print(il, first, last);
+	// Print apex: value of option:
+	std::cout << "Price of call: " << il.apex() << "\n\n";
+}
 
 void crrIndexedLatticeMod() {
 
@@ -1343,6 +1388,65 @@ void lrLattice() {
 
 	// Backward induction:
 	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = lr;
+	// Prepare payoff:
+	double K = option.Strike;
+	lattice_types::Payoff<double, double> call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
+	lattice_algorithms::backward_induction(la, backGen, call_payoff, timeDeltas);
+
+	// Print the part of generated lattice:
+	lattice_utility::print(la, first, last);
+	// Print apex: value of option:
+	std::cout << "Price of call: " << la.apex() << "\n\n";
+
+}
+
+
+void bmLattice() {
+
+	lattice_miscellaneous::OptionData<double> option;
+
+	option.Strike = 65.0;
+	option.RiskFreeRate = 0.25;
+	option.DividentRate = 0.05;
+	option.Volatility = 0.3;
+	option.Underlying = 60.0;
+
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDates;
+	fixingDates.emplace(today);
+	std::size_t periods{ 100 };
+
+	for (std::size_t t = 1; t <= periods; ++t) {
+		fixingDates.emplace(today + date_duration(t));
+	}
+
+	// Creating lattice:
+	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date> la = { fixingDates };
+
+	// Create CRR model:
+	double daysInYear{ 365.0 };
+	auto fd = la.fixingDates();
+	std::vector<double> timeDeltas(fd.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
+	}
+
+	lattice_model::BoyleModel<> bm{ option };
+
+	// Name of the model:
+	std::cout << decltype(bm)::name() << "\n";
+
+	// Forward induction:
+	lattice_types::LeafForwardGenerator<double, double, double, double> fwdGen = bm;
+	lattice_algorithms::forward_induction(la, fwdGen, option.Underlying, timeDeltas);
+
+	// Print the part of generated lattice:
+	auto first = la.begin();
+	auto last = std::next(first, 5);
+	lattice_utility::print(la, first, last);
+
+	// Backward induction:
+	lattice_types::LeafBackwardGenerator<double, double, double, double, double> backGen = bm;
 	// Prepare payoff:
 	double K = option.Strike;
 	lattice_types::Payoff<double, double> call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };

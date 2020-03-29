@@ -41,14 +41,33 @@ int main(int argc, char const *argv[]) {
 	//mergeIndexedBinomial();
 	//mergeBinomial();
 
+
+	//crrIndexedLattice();
+	//mcrrIndexedLattice();
+	//jrIndexedLattice();
+	//trimIndexedLattice();
+	//tmIndexedLattice();
+	//lrIndexedLattice();
+	//bmIndexedLattice();
+
 	//crrLattice();
 	//mcrrLattice();
 	//jrLattice();
 	//trimLattice();
 	//tmLattice();
 	//lrLattice();
+	//bmLattice();
 
-	indexedLatticeBinomialDelta();
+	//indexedLatticeBinomialDelta();
+	crrIndexedLatticeGreeks();
+	mcrrIndexedLatticeGreeks();
+	jrIndexedLatticeGreeks();
+	trimIndexedLatticeGreeks();
+	tmIndexedLatticeGreeks();
+	lrIndexedLatticeGreeks();
+	bmIndexedLatticeGreeks();
+
+
 	
 	std::cout << "\n";
 	std::cin.get();
