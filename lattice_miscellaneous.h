@@ -26,7 +26,10 @@ namespace lattice_miscellaneous {
 		T Volatility;
 		T RiskFreeRate;
 		T DividentRate;
+		T Correlation;
 	};
+
+
 
 
 	class scoped_thread {

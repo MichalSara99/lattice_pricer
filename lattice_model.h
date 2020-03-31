@@ -2,15 +2,24 @@
 #if !defined(_LATTICE_MODEL)
 #define _LATTICE_MODEL
 
+#include"lattice_types.h"
 #include"lattice_miscellaneous.h"
 
 namespace lattice_model {
 
 	using lattice_miscellaneous::OptionData;
+	using lattice_types::LeafForwardGenerator;
+	using lattice_types::LeafBackwardGenerator;
 
 
-	template<typename T=double>
-	class BinomialModel {
+	template<std::size_t FactorCount,typename T>
+	class BinomialModel{};
+
+	template<std::size_t FactorCount,typename T>
+	class TrinomialModel{};
+
+	template<typename T>
+	class BinomialModel<1,T> {
 	public:
 		// Forward generator:
 		virtual std::tuple<T, T> operator()(T value, T dt) = 0;
@@ -18,10 +27,28 @@ namespace lattice_model {
 		// Backward generator:
 		virtual T operator()(T upValue, T downValue, T dt) = 0;
 
+		// Factor count:
+		enum { FactorCount = 1 };
+
 	};
 
-	template<typename T = double>
-	class TrinomialModel {
+	template<typename T>
+	class BinomialModel<2, T> {
+	public:
+		// Forward generators:
+		virtual std::pair<LeafForwardGenerator<T, T, T>,
+							LeafForwardGenerator<T, T, T>> forwardGenerator()const = 0;
+
+		// Forward generator 2:
+		virtual std::pair<LeafBackwardGenerator<T, T, T, T>,
+							LeafBackwardGenerator<T, T, T, T>> backwardGenerator()const = 0;
+		// Factor count:
+		enum { FactorCount = 2 };
+
+	};
+
+	template<typename T>
+	class TrinomialModel<1,T> {
 	public:
 		// Forward generator:
 		virtual std::tuple<T, T, T> operator()(T value, T dt) = 0;
@@ -29,13 +56,34 @@ namespace lattice_model {
 		// Backward generator:
 		virtual T operator()(T upValue,T midValue, T downValue, T dt) = 0;
 
+		// Factor count:
+		enum { FactorCount = 1 };
+
+	};
+
+	template<typename T>
+	class TrinomialModel<2, T> {
+	public:
+
+		// Forward generators:
+		virtual std::pair<LeafForwardGenerator<T, T, T, T>,
+			LeafForwardGenerator<T, T, T,T>> forwardGenerator()const = 0;
+
+		// Forward generator 2:
+		virtual std::pair<LeafBackwardGenerator<T, T, T, T>,
+			LeafBackwardGenerator<T, T, T, T>> backwardGenerator()const = 0;
+
+		// Factor count:
+		enum { FactorCount = 2 };
 	};
 
 	// =============================================================================================
 	// ===================== Cox-Rubinstein-Ross model (binomial lattice) ==========================
 	// =============================================================================================
-	template<typename T=double>
-	class CoxRubinsteinRossModel:public BinomialModel<T> {
+
+
+	template<typename T = double>
+	class CoxRubinsteinRossModel:public BinomialModel<1,T> {
 	private:
 		T prob_;
 		OptionData<T> option_;
@@ -61,7 +109,7 @@ namespace lattice_model {
 		T operator()(T upValue, T downValue, T dt) override {
 			T q = option_.DividentRate;
 			T r = option_.RiskFreeRate;
-			T disc = std::exp(-1.0*(r - q)*dt);
+			T disc = std::exp(-1.0*r*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -70,11 +118,12 @@ namespace lattice_model {
 		}
 	};
 
+
 	// =======================================================================================================
 	// ===================== Modified Cox-Rubinstein-Ross model (binomial lattice) ===========================
 	// =======================================================================================================
 	template<typename T=double>
-	class ModifiedCoxRubinsteinRossModel:public BinomialModel<T> {
+	class ModifiedCoxRubinsteinRossModel:public BinomialModel<1,T> {
 	private:
 		OptionData<T> option_;
 		std::size_t n_;
@@ -107,7 +156,7 @@ namespace lattice_model {
 			T V_n = sig * std::sqrt(dt);
 			T up = std::exp(K_n + V_n);
 			T down = std::exp(K_n - V_n);
-			T disc = std::exp(-1.0*(r - q)*dt);
+			T disc = std::exp(-1.0*r *dt);
 			T prob = (std::exp((r-q)*dt) - down) / (up - down);
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
@@ -121,7 +170,7 @@ namespace lattice_model {
 	// ===================== Jarrow-Rudd model (binomial lattice) ==========================
 	// =====================================================================================
 	template<typename T = double>
-	class JarrowRuddModel:public BinomialModel<T> {
+	class JarrowRuddModel:public BinomialModel<1,T> {
 	private:
 		T prob_;
 		OptionData<T> option_;
@@ -148,7 +197,7 @@ namespace lattice_model {
 		T operator()(T upValue, T downValue, T dt) override {
 			T q = option_.DividentRate;
 			T r = option_.RiskFreeRate;
-			T disc = std::exp(-1.0*(r - q)*dt);
+			T disc = std::exp(-1.0*r *dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -161,7 +210,7 @@ namespace lattice_model {
 	// ===================== Trigeorgis model (binomial lattice) ===========================
 	// =====================================================================================
 	template<typename T=double>
-	class TrigeorgisModel:public BinomialModel<T> {
+	class TrigeorgisModel:public BinomialModel<1, T> {
 	private:
 		T gamma_;
 		OptionData<T> option_;
@@ -187,7 +236,7 @@ namespace lattice_model {
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
-			T disc = std::exp(-1.0*(r - q)*dt);
+			T disc = std::exp(-1.0*r *dt);
 			T prob = 0.5*(1.0 + (gamma_*(dt / x)));
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
@@ -201,7 +250,7 @@ namespace lattice_model {
 	// ===================== Tian model (binomial lattice) ===========================
 	// ===============================================================================
 	template<typename T = double>
-	class TianModel:public BinomialModel<T> {
+	class TianModel:public BinomialModel<1, T> {
 	private:
 		OptionData<T> option_;
 
@@ -231,7 +280,7 @@ namespace lattice_model {
 			T x = std::sqrt(v *v + 2.0*v - 3.0);
 			T up = (0.5*std::exp((r - q)*dt)*v*(v + 1.0 + x));
 			T down = (0.5*std::exp((r - q)*dt)*v*(v + 1.0 - x));
-			T disc = std::exp(-1.0*(r - q)*dt);
+			T disc = std::exp(-1.0*r*dt);
 			T prob = ((std::exp((r - q)*dt) - down) / (up - down));
 			return (disc * (prob*upValue + (1.0 - prob)*downValue));
 		}
@@ -245,7 +294,7 @@ namespace lattice_model {
 	// ===================== Leisen-Reimer model (binomial lattice) ===========================
 	// ========================================================================================
 	template<typename T =double>
-	class LeisenReimerModel :public BinomialModel<T> {
+	class LeisenReimerModel :public BinomialModel<1, T> {
 	private:
 		OptionData<T> option_;
 		std::size_t numberPeriods_;
@@ -291,7 +340,7 @@ namespace lattice_model {
 			T d2 = d1 - sig * std::sqrt(numberPeriods_ * dt);
 			T h2 = inversion_(d2);
 			T prob = h2;
-			T disc = std::exp(-1.0 * (r - q) * dt);
+			T disc = std::exp(-1.0 * r * dt);
 			return (disc * (prob * upValue + (1.0 - prob) * downValue));
 		}
 
@@ -306,7 +355,7 @@ namespace lattice_model {
 	// ===================== Boyle model (trinomial lattice) ==========================
 	// ================================================================================
 	template<typename T = double>
-	class BoyleModel :public TrinomialModel<T> {
+	class BoyleModel :public TrinomialModel<1, T> {
 	private:
 		OptionData<T> option_;
 
@@ -336,7 +385,7 @@ namespace lattice_model {
 			T p_u = std::pow(((e_mu - (1.0/e_sig))/(e_sig - (1.0/e_sig))), 2.0);
 			T p_d = std::pow(((e_sig - e_mu) / (e_sig - (1.0 / e_sig))), 2.0);
 			T p_m = 1.0 - (p_u + p_d);
-			T disc = std::exp(-1.0*mu*dt);
+			T disc = std::exp(-1.0*r*dt);
 			return (disc * (p_u * upValue + p_m * midValue + p_d * downValue));
 		}
 
@@ -344,11 +393,6 @@ namespace lattice_model {
 			return std::string{ "Boyle model" };
 		}
 	};
-
-
-
-
-
 
 }
 
