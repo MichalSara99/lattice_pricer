@@ -5,6 +5,9 @@
 #include<cassert>
 #include<ppl.h>
 #include"lattice_structure.h"
+#include"lattice_forward_traversals.h"
+#include"lattice_backward_traversals.h"
+#include"lattice_macros.h"
 
 
 namespace lattice_algorithms {
@@ -16,6 +19,9 @@ namespace lattice_algorithms {
 	using lattice_types::PayoffAdjuster;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
+	using lattice_forward_traversals::ForwardTraversal;
+	using lattice_backward_traversals::BackwardTraversal;
+	
 
 	// ==============================================================================
 	// ==================== Forward Induction Algorithms ============================
@@ -27,13 +33,13 @@ namespace lattice_algorithms {
 		void _forward_induction_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,std::true_type) {
 			assert(deltaTime.size() == lattice.maxIndex());
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime[t-1]);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime[t-1]);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
 				}
 			}
 		}
@@ -41,13 +47,13 @@ namespace lattice_algorithms {
 		template<typename Node, typename DeltaTime>
 		void _forward_induction_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime, std::false_type) {
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
 				}
 			}
 		}
@@ -57,14 +63,14 @@ namespace lattice_algorithms {
 		void _forward_induction_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,std::true_type) {
 			assert(deltaTime.size() == lattice.maxIndex());
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l),deltaTime[t-1]);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
-					lattice(t, l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(t - 1, l),deltaTime[t-1]);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
+					lattice.at(t, l + 2) = std::get<2>(tuple);
 				}
 			}
 		}
@@ -72,14 +78,14 @@ namespace lattice_algorithms {
 		template<typename Node, typename DeltaTime>
 		void _forward_induction_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex,DeltaTime deltaTime,std::false_type) {
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
-					lattice(t, l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
+					lattice.at(t, l + 2) = std::get<2>(tuple);
 				}
 			}
 		}
@@ -90,13 +96,13 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex,DeltaTime deltaTime,std::true_type) {
 			auto fixingDates = lattice.fixingDates();
 			assert(deltaTime.size() == (fixingDates.size() - 1));
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
 				}
 			}
 		}
@@ -105,13 +111,13 @@ namespace lattice_algorithms {
 		void _forward_induction_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis>& lattice,
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime, std::false_type) {
 			auto fixingDates = lattice.fixingDates();
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
 				}
 			}
 		}
@@ -121,14 +127,14 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex,DeltaTime deltaTime,std::true_type) {
 			auto fixingDates = lattice.fixingDates();
 			assert(deltaTime.size() == (fixingDates.size() - 1));
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
-					lattice(fixingDates[t], l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
+					lattice.at(fixingDates[t], l + 2) = std::get<2>(tuple);
 				}
 			}
 		}
@@ -137,14 +143,14 @@ namespace lattice_algorithms {
 		void _forward_induction_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>& lattice,
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime, std::false_type) {
 			auto fixingDates = lattice.fixingDates();
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
-					lattice(fixingDates[t], l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
+					lattice.at(fixingDates[t], l + 2) = std::get<2>(tuple);
 				}
 			}
 		}
@@ -158,13 +164,13 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
 			std::map<std::size_t, Node> const &dividendData, std::true_type) {
 			assert(deltaTime.size() == lattice.maxIndex());
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime[t - 1]);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
 				}
 			}
 			// Adjust the tree for discretely paying divdiends: 
@@ -182,9 +188,9 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
-					lattice(t, l) = factor * std::get<0>(tuple);
-					lattice(t, l + 1) = factor * std::get<1>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime[t - 1]);
+					lattice.at(t, l) = factor * std::get<0>(tuple);
+					lattice.at(t, l + 1) = factor * std::get<1>(tuple);
 				}
 			}
 		}
@@ -193,13 +199,13 @@ namespace lattice_algorithms {
 		void _forward_induction_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node>& lattice,
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
 			std::map<std::size_t, Node> const &dividendData, std::false_type) {
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
 				}
 			}
 			// Adjust the tree for discretely paying divdiends: 
@@ -217,9 +223,9 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime);
-					lattice(t, l) = factor * std::get<0>(tuple);
-					lattice(t, l + 1) = factor * std::get<1>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime);
+					lattice.at(t, l) = factor * std::get<0>(tuple);
+					lattice.at(t, l + 1) = factor * std::get<1>(tuple);
 				}
 			}
 		}
@@ -229,14 +235,14 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
 			std::map<std::size_t, Node> const &dividendData,std::true_type) {
 			assert(deltaTime.size() == lattice.maxIndex());
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
-					lattice(t, l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime[t - 1]);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
+					lattice.at(t, l + 2) = std::get<2>(tuple);
 				}
 			}
 			// Adjust the tree for discretely paying divdiends: 
@@ -254,10 +260,10 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
-					lattice(t, l) = factor * std::get<0>(tuple);
-					lattice(t, l + 1) = factor * std::get<1>(tuple);
-					lattice(t, l + 2) = factor * std::get<2>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime[t - 1]);
+					lattice.at(t, l) = factor * std::get<0>(tuple);
+					lattice.at(t, l + 1) = factor * std::get<1>(tuple);
+					lattice.at(t, l + 2) = factor * std::get<2>(tuple);
 				}
 			}
 		}
@@ -267,14 +273,14 @@ namespace lattice_algorithms {
 		void _forward_induction_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node>& lattice,
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
 			std::map<std::size_t, Node> const &dividendData,std::false_type) {
-			lattice(0, 0) = apex;
+			lattice.at(0, 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = lattice.minIndex() + 1; t <= lattice.maxIndex(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime);
-					lattice(t, l) = std::get<0>(tuple);
-					lattice(t, l + 1) = std::get<1>(tuple);
-					lattice(t, l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime);
+					lattice.at(t, l) = std::get<0>(tuple);
+					lattice.at(t, l + 1) = std::get<1>(tuple);
+					lattice.at(t, l + 2) = std::get<2>(tuple);
 				}
 			}
 			// Adjust the tree for discretely paying divdiends: 
@@ -292,10 +298,10 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(t - 1).size(); ++l) {
-					tuple = generator(lattice(t - 1, l), deltaTime);
-					lattice(t, l) = factor * std::get<0>(tuple);
-					lattice(t, l + 1) = factor * std::get<1>(tuple);
-					lattice(t, l + 2) = factor * std::get<2>(tuple);
+					tuple = generator(lattice.at(t - 1, l), deltaTime);
+					lattice.at(t, l) = factor * std::get<0>(tuple);
+					lattice.at(t, l + 1) = factor * std::get<1>(tuple);
+					lattice.at(t, l + 2) = factor * std::get<2>(tuple);
 				}
 			}
 		}
@@ -306,13 +312,13 @@ namespace lattice_algorithms {
 			std::map<TimeAxis,Node> const &dividendData,std::true_type) {
 			auto fixingDates = lattice.fixingDates();
 			assert(deltaTime.size() == (fixingDates.size() - 1));
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
 				}
 			}
 
@@ -332,9 +338,9 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
-					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice.at(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
 				}
 			}
 		}
@@ -344,13 +350,13 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
 			std::map<TimeAxis, Node> const &dividendData,std::false_type) {
 			auto fixingDates = lattice.fixingDates();
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
 				}
 			}
 
@@ -370,9 +376,9 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
-					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime);
+					lattice.at(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
 				}
 			}
 		}
@@ -383,14 +389,14 @@ namespace lattice_algorithms {
 			std::map<TimeAxis,Node> const &dividendData,std::true_type) {
 			auto fixingDates = lattice.fixingDates();
 			assert(deltaTime.size() == (fixingDates.size() - 1));
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
-					lattice(fixingDates[t], l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
+					lattice.at(fixingDates[t], l + 2) = std::get<2>(tuple);
 				}
 			}
 
@@ -410,10 +416,10 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime[t - 1]);
-					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
-					lattice(fixingDates[t], l + 2) = factor * std::get<2>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime[t - 1]);
+					lattice.at(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+					lattice.at(fixingDates[t], l + 2) = factor * std::get<2>(tuple);
 				}
 			}
 		}
@@ -423,14 +429,14 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node, Node, Node> const &generator, Node apex, DeltaTime deltaTime,
 			std::map<TimeAxis,Node> const &dividendData,std::false_type) {
 			auto fixingDates = lattice.fixingDates();
-			lattice(fixingDates[0], 0) = apex;
+			lattice.at(fixingDates[0], 0) = apex;
 			std::tuple<Node, Node, Node> tuple;
 			for (std::size_t t = 1; t < fixingDates.size(); ++t) {
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
-					lattice(fixingDates[t], l) = std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = std::get<1>(tuple);
-					lattice(fixingDates[t], l + 2) = std::get<2>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime);
+					lattice.at(fixingDates[t], l) = std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = std::get<1>(tuple);
+					lattice.at(fixingDates[t], l + 2) = std::get<2>(tuple);
 				}
 			}
 
@@ -450,10 +456,10 @@ namespace lattice_algorithms {
 					factor *= (factor - nextExItr->second);
 				}
 				for (std::size_t l = 0; l < lattice.nodesAt(fixingDates[t - 1]).size(); ++l) {
-					tuple = generator(lattice(fixingDates[t - 1], l), deltaTime);
-					lattice(fixingDates[t], l) = factor * std::get<0>(tuple);
-					lattice(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
-					lattice(fixingDates[t], l + 2) = factor * std::get<2>(tuple);
+					tuple = generator(lattice.at(fixingDates[t - 1], l), deltaTime);
+					lattice.at(fixingDates[t], l) = factor * std::get<0>(tuple);
+					lattice.at(fixingDates[t], l + 1) = factor * std::get<1>(tuple);
+					lattice.at(fixingDates[t], l + 2) = factor * std::get<2>(tuple);
 				}
 			}
 		}
@@ -485,6 +491,68 @@ namespace lattice_algorithms {
 			LeafForwardGenerator<Node, Node,Node,Node> const &generator, Node apex, DeltaTime deltaTime) {
 			_forward_induction_lattice_trinomial_impl(lattice, generator, apex, deltaTime, std::is_compound<DeltaTime>());
 	}
+
+
+
+
+	
+
+	// ==============================================================================
+	// ==================== Forward Induction Algorithms ============================
+	// ==============================================================================
+
+	template<LatticeType Type,
+			typename TimeAxis,
+			typename DeltaTime,
+			typename Node>
+			class ForwardInduction{};
+
+
+	template<typename TimeAxis,
+			typename DeltaTime,
+			typename Node>
+	class ForwardInduction<LatticeType::Binomial,TimeAxis,DeltaTime,Node> {
+	public:
+		template<typename LatticeObject,typename Generator>
+		void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,Node apex) {
+			//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+			ForwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime, Node>::
+				traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
+		}
+
+		template<typename LatticeObject, typename Generator>
+		void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
+			std::map<TimeAxis,Node> const &dividendData) {
+			//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+			ForwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime, Node>::
+				traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
+		}
+
+
+	};
+
+	template<typename TimeAxis,
+		typename DeltaTime,
+		typename Node>
+		class ForwardInduction<LatticeType::Trinomial, TimeAxis, DeltaTime, Node> {
+		public:
+			template<typename LatticeObject, typename Generator>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex) {
+				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
+			}
+			template<typename LatticeObject, typename Generator>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
+				std::map<TimeAxis, Node> const &dividendData) {
+				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
+			}
+	};
+
+
+
 
 
 	// =============================================
@@ -536,15 +604,15 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == lattice.maxIndex());
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					lattice(n, i) = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
+					lattice.at(n, i) = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), deltaTime[n]);
 				}
 			}
-			lattice(0, 0) = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime[0]);
+			lattice.at(0, 0) = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), deltaTime[0]);
 		}
 
 		template<typename Node,typename DeltaTime>
@@ -554,15 +622,15 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					lattice(n, i) = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
+					lattice.at(n, i) = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), deltaTime);
 				}
 			}
-			lattice(0, 0) = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime);
+			lattice.at(0, 0) = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), deltaTime);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -573,19 +641,19 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == lattice.maxIndex());
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
-					payoffAdjuster(value, lattice(n, i));
-					lattice(n, i) = value;
+					value = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), deltaTime[n]);
+					payoffAdjuster(value, lattice.at(n, i));
+					lattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime[0]);
-			payoffAdjuster(value, lattice(0, 0));
-			lattice(0, 0) = value;
+			value = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), deltaTime[0]);
+			payoffAdjuster(value, lattice.at(0, 0));
+			lattice.at(0, 0) = value;
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -595,19 +663,19 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
-					payoffAdjuster(value, lattice(n, i));
-					lattice(n, i) = value;
+					value = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), deltaTime);
+					payoffAdjuster(value, lattice.at(n, i));
+					lattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(1, 0), lattice(1, 1), deltaTime);
-			payoffAdjuster(value, lattice(0, 0));
-			lattice(0, 0) = value;
+			value = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), deltaTime);
+			payoffAdjuster(value, lattice.at(0, 0));
+			lattice.at(0, 0) = value;
 		}
 
 
@@ -620,17 +688,17 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == (fixingDates.size() - 1));
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					lattice(fixingDates[n], i) = backwardGenerator(lattice(fixingDates[n + 1], i), 
-																	lattice(fixingDates[n + 1], i + 1),
+					lattice.at(fixingDates[n], i) = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+																	lattice.at(fixingDates[n + 1], i + 1),
 																	deltaTime[n]);
 				}
 			}
-			lattice(fixingDates[0], 0) = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime[0]);
+			lattice.at(fixingDates[0], 0) = backwardGenerator(lattice.at(fixingDates[1], 0), lattice.at(fixingDates[1], 1), deltaTime[0]);
 		}
 
 		template<typename Node, typename TimeAxis,typename DeltaTime>
@@ -641,17 +709,17 @@ namespace lattice_algorithms {
 			auto fixingDates = lattice.fixingDates();
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					lattice(fixingDates[n], i) = backwardGenerator(lattice(fixingDates[n + 1], i), 
-																	lattice(fixingDates[n + 1], i + 1),
+					lattice.at(fixingDates[n], i) = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+																	lattice.at(fixingDates[n + 1], i + 1),
 																	deltaTime);
 				}
 			}
-			lattice(fixingDates[0], 0) = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime);
+			lattice.at(fixingDates[0], 0) = backwardGenerator(lattice.at(fixingDates[1], 0), lattice.at(fixingDates[1], 1), deltaTime);
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -663,21 +731,21 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == (fixingDates.size() - 1));
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					value = backwardGenerator(lattice(fixingDates[n + 1], i),
-											lattice(fixingDates[n + 1], i + 1),
+					value = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+											lattice.at(fixingDates[n + 1], i + 1),
 											deltaTime[n]);
-					payoffAdjuster(value, lattice(fixingDates[n], i));
-					lattice(fixingDates[n], i) = value;
+					payoffAdjuster(value, lattice.at(fixingDates[n], i));
+					lattice.at(fixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime[0]);
-			payoffAdjuster(value, lattice(fixingDates[0], 0));
-			lattice(fixingDates[0], 0) = value;
+			value = backwardGenerator(lattice.at(fixingDates[1], 0), lattice.at(fixingDates[1], 1), deltaTime[0]);
+			payoffAdjuster(value, lattice.at(fixingDates[0], 0));
+			lattice.at(fixingDates[0], 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -688,20 +756,20 @@ namespace lattice_algorithms {
 			auto fixingDates = lattice.fixingDates();
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					value = backwardGenerator(lattice(fixingDates[n + 1], i),
-											lattice(fixingDates[n + 1], i + 1),
+					value = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+											lattice.at(fixingDates[n + 1], i + 1),
 											deltaTime);
-					payoffAdjuster(value,lattice(fixingDates[n], i));
-					lattice(fixingDates[n], i) = value;
+					payoffAdjuster(value,lattice.at(fixingDates[n], i));
+					lattice.at(fixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(fixingDates[1], 0), lattice(fixingDates[1], 1), deltaTime);
-			payoffAdjuster(value, lattice(fixingDates[0], 0));
+			value = backwardGenerator(lattice.at(fixingDates[1], 0), lattice.at(fixingDates[1], 1), deltaTime);
+			payoffAdjuster(value, lattice.at(fixingDates[0], 0));
 			lattice(fixingDates[0], 0) = value;
 		}
 
@@ -714,15 +782,15 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == lattice.maxIndex());
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					lattice(n, i) = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
+					lattice.at(n, i) = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), lattice.at(n + 1, i + 2), deltaTime[n]);
 				}
 			}
-			lattice(0, 0) = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
+			lattice.at(0, 0) = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), lattice.at(1, 2), deltaTime[0]);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -732,15 +800,15 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					lattice(n, i) = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
+					lattice.at(n, i) = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), lattice.at(n + 1, i + 2), deltaTime);
 				}
 			}
-			lattice(0, 0) = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
+			lattice.at(0, 0) = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), lattice.at(1, 2), deltaTime);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -751,19 +819,19 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == lattice.maxIndex());
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
-					payoffAdjuster(value, lattice(n, i));
-					lattice(n, i) = value;
+					value = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), lattice.at(n + 1, i + 2), deltaTime[n]);
+					payoffAdjuster(value, lattice.at(n, i));
+					lattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
-			payoffAdjuster(value, lattice(0, 0));
-			lattice(0, 0) = value;
+			value = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), lattice.at(1, 2), deltaTime[0]);
+			payoffAdjuster(value, lattice.at(0, 0));
+			lattice.at(0, 0) = value;
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -773,19 +841,19 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = lattice.maxIndex();
 			for (auto i = 0; i < lattice.nodesAt(lastIdx).size(); ++i) {
-				lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+				lattice.at(lastIdx, i) = payoff(lattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
-					payoffAdjuster(value, lattice(n, i));
-					lattice(n, i) = value;
+					value = backwardGenerator(lattice.at(n + 1, i), lattice.at(n + 1, i + 1), lattice.at(n + 1, i + 2), deltaTime);
+					payoffAdjuster(value, lattice.at(n, i));
+					lattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
-			payoffAdjuster(value, lattice(0, 0));
-			lattice(0, 0) = value;
+			value = backwardGenerator(lattice.at(1, 0), lattice.at(1, 1), lattice.at(1, 2), deltaTime);
+			payoffAdjuster(value, lattice.at(0, 0));
+			lattice.at(0, 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -797,20 +865,20 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == (fixingDates.size() - 1));
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					lattice(fixingDates[n], i) = backwardGenerator(lattice(fixingDates[n + 1], i),
-						lattice(fixingDates[n + 1], i + 1),
-						lattice(fixingDates[n + 1], i + 2),
+					lattice.at(fixingDates[n], i) = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+						lattice.at(fixingDates[n + 1], i + 1),
+						lattice.at(fixingDates[n + 1], i + 2),
 						deltaTime[n]);
 				}
 			}
-			lattice(fixingDates[0], 0) = backwardGenerator(lattice(fixingDates[1], 0),
-				lattice(fixingDates[1], 1),
-				lattice(fixingDates[1], 2),
+			lattice.at(fixingDates[0], 0) = backwardGenerator(lattice.at(fixingDates[1], 0),
+				lattice.at(fixingDates[1], 1),
+				lattice.at(fixingDates[1], 2),
 				deltaTime[0]);
 		}
 
@@ -822,20 +890,20 @@ namespace lattice_algorithms {
 			auto fixingDates = lattice.fixingDates();
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					lattice(fixingDates[n], i) = backwardGenerator(lattice(fixingDates[n + 1], i),
-						lattice(fixingDates[n + 1], i + 1),
-						lattice(fixingDates[n + 1], i + 2),
+					lattice.at(fixingDates[n], i) = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+						lattice.at(fixingDates[n + 1], i + 1),
+						lattice.at(fixingDates[n + 1], i + 2),
 						deltaTime);
 				}
 			}
-			lattice(fixingDates[0], 0) = backwardGenerator(lattice(fixingDates[1], 0),
-				lattice(fixingDates[1], 1),
-				lattice(fixingDates[1], 2),
+			lattice.at(fixingDates[0], 0) = backwardGenerator(lattice.at(fixingDates[1], 0),
+				lattice.at(fixingDates[1], 1),
+				lattice.at(fixingDates[1], 2),
 				deltaTime);
 		}
 
@@ -848,25 +916,25 @@ namespace lattice_algorithms {
 			assert(deltaTime.size() == (fixingDates.size() - 1));
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					value = backwardGenerator(lattice(fixingDates[n + 1], i),
-						lattice(fixingDates[n + 1], i + 1),
-						lattice(fixingDates[n + 1], i + 2),
+					value = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+						lattice.at(fixingDates[n + 1], i + 1),
+						lattice.at(fixingDates[n + 1], i + 2),
 						deltaTime[n]);
-					payoffAdjuster(value, lattice(fixingDates[n], i));
-					lattice(fixingDates[n], i) = value;
+					payoffAdjuster(value, lattice.at(fixingDates[n], i));
+					lattice.at(fixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(fixingDates[1], 0),
-				lattice(fixingDates[1], 1),
-				lattice(fixingDates[1], 2),
+			value = backwardGenerator(lattice.at(fixingDates[1], 0),
+				lattice.at(fixingDates[1], 1),
+				lattice.at(fixingDates[1], 2),
 				deltaTime[0]);
-			payoffAdjuster(value, lattice(fixingDates[0], 0));
-			lattice(fixingDates[0], 0) = value;
+			payoffAdjuster(value, lattice.at(fixingDates[0], 0));
+			lattice.at(fixingDates[0], 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -877,25 +945,25 @@ namespace lattice_algorithms {
 			auto fixingDates = lattice.fixingDates();
 			TimeAxis lastDate = fixingDates.back();
 			for (auto i = 0; i < lattice.nodesAt(lastDate).size(); ++i) {
-				lattice(lastDate, i) = payoff(lattice(lastDate, i));
+				lattice.at(lastDate, i) = payoff(lattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = fixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < lattice.nodesAt(fixingDates[n]).size(); ++i) {
-					value = backwardGenerator(lattice(fixingDates[n + 1], i),
-						lattice(fixingDates[n + 1], i + 1),
-						lattice(fixingDates[n + 1], i + 2),
+					value = backwardGenerator(lattice.at(fixingDates[n + 1], i),
+						lattice.at(fixingDates[n + 1], i + 1),
+						lattice.at(fixingDates[n + 1], i + 2),
 						deltaTime);
-					payoffAdjuster(value, lattice(fixingDates[n], i));
-					lattice(fixingDates[n], i) = value;
+					payoffAdjuster(value, lattice.at(fixingDates[n], i));
+					lattice.at(fixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(lattice(fixingDates[1], 0),
-				lattice(fixingDates[1], 1),
-				lattice(fixingDates[1], 2),
+			value = backwardGenerator(lattice.at(fixingDates[1], 0),
+				lattice.at(fixingDates[1], 1),
+				lattice.at(fixingDates[1], 2),
 				deltaTime);
-			payoffAdjuster(value, lattice(fixingDates[0], 0));
-			lattice(fixingDates[0], 0) = value;
+			payoffAdjuster(value, lattice.at(fixingDates[0], 0));
+			lattice.at(fixingDates[0], 0) = value;
 		}
 
 
@@ -912,15 +980,15 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					modifiedLattice(n, i) = backwardGenerator(modifiedLattice(n + 1, i), modifiedLattice(n + 1, i + 1), deltaTime[n]);
+					modifiedLattice.at(n, i) = backwardGenerator(modifiedLattice.at(n + 1, i), modifiedLattice.at(n + 1, i + 1), deltaTime[n]);
 				}
 			}
-			modifiedLattice(0, 0) = backwardGenerator(modifiedLattice(1, 0), modifiedLattice(1, 1), deltaTime[0]);
+			modifiedLattice.at(0, 0) = backwardGenerator(modifiedLattice.at(1, 0), modifiedLattice.at(1, 1), deltaTime[0]);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -932,15 +1000,15 @@ namespace lattice_algorithms {
 			assert(sourceLattice.maxIndex() == modifiedLattice.maxIndex());
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					modifiedLattice(n, i) = backwardGenerator(modifiedLattice(n + 1, i), modifiedLattice(n + 1, i + 1), deltaTime);
+					modifiedLattice.at(n, i) = backwardGenerator(modifiedLattice.at(n + 1, i), modifiedLattice.at(n + 1, i + 1), deltaTime);
 				}
 			}
-			modifiedLattice(0, 0) = backwardGenerator(modifiedLattice(1, 0), modifiedLattice(1, 1), deltaTime);
+			modifiedLattice.at(0, 0) = backwardGenerator(modifiedLattice.at(1, 0), modifiedLattice.at(1, 1), deltaTime);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -954,19 +1022,19 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(n + 1, i), modifiedLattice(n + 1, i + 1), deltaTime[n]);
-					payoffAdjuster(value, sourceLattice(n, i));
-					modifiedLattice(n, i) = value;
+					value = backwardGenerator(modifiedLattice.at(n + 1, i), modifiedLattice.at(n + 1, i + 1), deltaTime[n]);
+					payoffAdjuster(value, sourceLattice.at(n, i));
+					modifiedLattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(1, 0), modifiedLattice(1, 1), deltaTime[0]);
-			payoffAdjuster(value, sourceLattice(0, 0));
-			modifiedLattice(0, 0) = value;
+			value = backwardGenerator(modifiedLattice.at(1, 0), modifiedLattice.at(1, 1), deltaTime[0]);
+			payoffAdjuster(value, sourceLattice.at(0, 0));
+			modifiedLattice.at(0, 0) = value;
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -978,19 +1046,19 @@ namespace lattice_algorithms {
 			assert(sourceLattice.maxIndex() == modifiedLattice.maxIndex());
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(n + 1, i), modifiedLattice(n + 1, i + 1), deltaTime);
-					payoffAdjuster(value, sourceLattice(n, i));
-					modifiedLattice(n, i) = value;
+					value = backwardGenerator(modifiedLattice.at(n + 1, i), modifiedLattice.at(n + 1, i + 1), deltaTime);
+					payoffAdjuster(value, sourceLattice.at(n, i));
+					modifiedLattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(1, 0), modifiedLattice(1, 1), deltaTime);
-			payoffAdjuster(value, sourceLattice(0, 0));
-			modifiedLattice(0, 0) = value;
+			value = backwardGenerator(modifiedLattice.at(1, 0), modifiedLattice.at(1, 1), deltaTime);
+			payoffAdjuster(value, sourceLattice.at(0, 0));
+			modifiedLattice.at(0, 0) = value;
 		}
 
 
@@ -1008,18 +1076,18 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 
 			for (auto n = mFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					modifiedLattice(mFixingDates[n], i) = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-																			modifiedLattice(mFixingDates[n + 1], i + 1),
+					modifiedLattice.at(mFixingDates[n], i) = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+																			modifiedLattice.at(mFixingDates[n + 1], i + 1),
 																			deltaTime[n]);
 				}
 			}
-			modifiedLattice(mFixingDates[0], 0) = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-																	modifiedLattice(mFixingDates[1], 1),
+			modifiedLattice.at(mFixingDates[0], 0) = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+																	modifiedLattice.at(mFixingDates[1], 1),
 																	deltaTime[0]);
 		}
 
@@ -1035,18 +1103,18 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 
 			for (auto n = mFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					modifiedLattice(mFixingDates[n], i) = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-																			modifiedLattice(mFixingDates[n + 1], i + 1),
+					modifiedLattice.at(mFixingDates[n], i) = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+																			modifiedLattice.at(mFixingDates[n + 1], i + 1),
 																			deltaTime);
 				}
 			}
-			modifiedLattice(mFixingDates[0], 0) = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-															modifiedLattice(mFixingDates[1], 1), deltaTime);
+			modifiedLattice.at(mFixingDates[0], 0) = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+															modifiedLattice.at(mFixingDates[1], 1), deltaTime);
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -1063,23 +1131,23 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = mFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-											modifiedLattice(mFixingDates[n + 1], i + 1),
+					value = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+											modifiedLattice.at(mFixingDates[n + 1], i + 1),
 											deltaTime[n]);
-					payoffAdjuster(value, sourceLattice(sFixingDates[n], i)   );
-					modifiedLattice(mFixingDates[n], i) = value;
+					payoffAdjuster(value, sourceLattice.at(sFixingDates[n], i)   );
+					modifiedLattice.at(mFixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-										modifiedLattice(mFixingDates[1], 1),
+			value = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+										modifiedLattice.at(mFixingDates[1], 1),
 										deltaTime[0]);
-			payoffAdjuster(value, sourceLattice(sFixingDates[0], 0));
-			modifiedLattice(mFixingDates[0], 0) = value;
+			payoffAdjuster(value, sourceLattice.at(sFixingDates[0], 0));
+			modifiedLattice.at(mFixingDates[0], 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -1094,21 +1162,21 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = mFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-											modifiedLattice(mFixingDates[n + 1], i + 1),
+					value = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+											modifiedLattice.at(mFixingDates[n + 1], i + 1),
 											deltaTime);
-					payoffAdjuster(value, sourceLattice(mFixingDates[n], i));
-					modifiedLattice(mFixingDates[n], i) = value;
+					payoffAdjuster(value, sourceLattice.at(mFixingDates[n], i));
+					modifiedLattice.at(mFixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(mFixingDates[1], 0), modifiedLattice(mFixingDates[1], 1), deltaTime);
-			payoffAdjuster(value, sourceLattice(mFixingDates[0], 0));
-			modifiedLattice(mFixingDates[0], 0) = value;
+			value = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0), modifiedLattice.at(mFixingDates[1], 1), deltaTime);
+			payoffAdjuster(value, sourceLattice.at(mFixingDates[0], 0));
+			modifiedLattice.at(mFixingDates[0], 0) = value;
 		}
 
 
@@ -1123,19 +1191,19 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					modifiedLattice(n, i) = backwardGenerator(modifiedLattice(n + 1, i),
-															modifiedLattice(n + 1, i + 1), 
-															modifiedLattice(n + 1, i + 2), deltaTime[n]);
+					modifiedLattice.at(n, i) = backwardGenerator(modifiedLattice.at(n + 1, i),
+															modifiedLattice.at(n + 1, i + 1),
+															modifiedLattice.at(n + 1, i + 2), deltaTime[n]);
 				}
 			}
-			modifiedLattice(0, 0) = backwardGenerator(modifiedLattice(1, 0), 
-													modifiedLattice(1, 1), 
-													modifiedLattice(1, 2), deltaTime[0]);
+			modifiedLattice.at(0, 0) = backwardGenerator(modifiedLattice.at(1, 0),
+													modifiedLattice.at(1, 1),
+													modifiedLattice.at(1, 2), deltaTime[0]);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -1147,19 +1215,19 @@ namespace lattice_algorithms {
 			assert(sourceLattice.maxIndex() == modifiedLattice.maxIndex());
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					modifiedLattice(n, i) = backwardGenerator(modifiedLattice(n + 1, i), 
-																modifiedLattice(n + 1, i + 1), 
-																modifiedLattice(n + 1, i + 2), deltaTime);
+					modifiedLattice.at(n, i) = backwardGenerator(modifiedLattice.at(n + 1, i),
+																modifiedLattice.at(n + 1, i + 1),
+																modifiedLattice.at(n + 1, i + 2), deltaTime);
 				}
 			}
-			modifiedLattice(0, 0) = backwardGenerator(modifiedLattice(1, 0),
-												modifiedLattice(1, 1), 
-												modifiedLattice(1, 2), deltaTime);
+			modifiedLattice.at(0, 0) = backwardGenerator(modifiedLattice.at(1, 0),
+												modifiedLattice.at(1, 1),
+												modifiedLattice.at(1, 2), deltaTime);
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -1173,21 +1241,21 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(n + 1, i),
-												modifiedLattice(n + 1, i + 1),
-												modifiedLattice(n + 1, i + 2), deltaTime[n]);
-					payoffAdjuster(value, sourceLattice(n, i));
-					modifiedLattice(n, i) = value;
+					value = backwardGenerator(modifiedLattice.at(n + 1, i),
+												modifiedLattice.at(n + 1, i + 1),
+												modifiedLattice.at(n + 1, i + 2), deltaTime[n]);
+					payoffAdjuster(value, sourceLattice.at(n, i));
+					modifiedLattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(1, 0), modifiedLattice(1, 1), modifiedLattice(1, 2), deltaTime[0]);
-			payoffAdjuster(value, sourceLattice(0, 0));
-			modifiedLattice(0, 0) = value;
+			value = backwardGenerator(modifiedLattice.at(1, 0), modifiedLattice.at(1, 1), modifiedLattice.at(1, 2), deltaTime[0]);
+			payoffAdjuster(value, sourceLattice.at(0, 0));
+			modifiedLattice.at(0, 0) = value;
 		}
 
 		template<typename Node, typename DeltaTime>
@@ -1200,21 +1268,21 @@ namespace lattice_algorithms {
 
 			std::size_t lastIdx = modifiedLattice.maxIndex();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastIdx).size(); ++i) {
-				modifiedLattice(lastIdx, i) = payoff(modifiedLattice(lastIdx, i));
+				modifiedLattice.at(lastIdx, i) = payoff(modifiedLattice.at(lastIdx, i));
 			}
 			Node value{};
 			for (auto n = lastIdx - 1; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(n).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(n + 1, i), 
-											modifiedLattice(n + 1, i + 1), 
-											modifiedLattice(n + 1, i + 2), deltaTime);
-					payoffAdjuster(value, sourceLattice(n, i));
-					modifiedLattice(n, i) = value;
+					value = backwardGenerator(modifiedLattice.at(n + 1, i),
+											modifiedLattice.at(n + 1, i + 1),
+											modifiedLattice.at(n + 1, i + 2), deltaTime);
+					payoffAdjuster(value, sourceLattice.at(n, i));
+					modifiedLattice.at(n, i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(1, 0), modifiedLattice(1, 1), modifiedLattice(1, 2), deltaTime);
-			payoffAdjuster(value, sourceLattice(0, 0));
-			modifiedLattice(0, 0) = value;
+			value = backwardGenerator(modifiedLattice.at(1, 0), modifiedLattice.at(1, 1), modifiedLattice.at(1, 2), deltaTime);
+			payoffAdjuster(value, sourceLattice.at(0, 0));
+			modifiedLattice.at(0, 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -1231,19 +1299,19 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 			for (auto n = sFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					modifiedLattice(mFixingDates[n], i) = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-																			modifiedLattice(mFixingDates[n + 1], i + 1),
-																			modifiedLattice(mFixingDates[n + 1], i + 2),
+					modifiedLattice.at(mFixingDates[n], i) = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+																			modifiedLattice.at(mFixingDates[n + 1], i + 1),
+																			modifiedLattice.at(mFixingDates[n + 1], i + 2),
 																			deltaTime[n]);
 				}
 			}
-			modifiedLattice(mFixingDates[0], 0) = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-																	modifiedLattice(mFixingDates[1], 1),
-																	modifiedLattice(mFixingDates[1], 2),
+			modifiedLattice.at(mFixingDates[0], 0) = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+																	modifiedLattice.at(mFixingDates[1], 1),
+																	modifiedLattice.at(mFixingDates[1], 2),
 																	deltaTime[0]);
 		}
 
@@ -1259,20 +1327,20 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 
 			for (auto n = sFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					modifiedLattice(mFixingDates[n], i) = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-																			modifiedLattice(mFixingDates[n + 1], i + 1),
-																			modifiedLattice(mFixingDates[n + 1], i + 2),
+					modifiedLattice.at(mFixingDates[n], i) = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+																			modifiedLattice.at(mFixingDates[n + 1], i + 1),
+																			modifiedLattice.at(mFixingDates[n + 1], i + 2),
 																			deltaTime);
 				}
 			}
-			modifiedLattice(mFixingDates[0], 0) = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-																	modifiedLattice(mFixingDates[1], 1),
-																	modifiedLattice(mFixingDates[1], 2),
+			modifiedLattice.at(mFixingDates[0], 0) = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+																	modifiedLattice.at(mFixingDates[1], 1),
+																	modifiedLattice.at(mFixingDates[1], 2),
 																	deltaTime);
 		}
 
@@ -1290,25 +1358,25 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = mFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-												modifiedLattice(mFixingDates[n + 1], i + 1),
-												modifiedLattice(mFixingDates[n + 1], i + 2),
+					value = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+												modifiedLattice.at(mFixingDates[n + 1], i + 1),
+												modifiedLattice.at(mFixingDates[n + 1], i + 2),
 												deltaTime[n]);
-					payoffAdjuster(value, sourceLattice(mFixingDates[n], i));
-					modifiedLattice(mFixingDates[n], i) = value;
+					payoffAdjuster(value, sourceLattice.at(mFixingDates[n], i));
+					modifiedLattice.at(mFixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-										modifiedLattice(mFixingDates[1], 1),
-										modifiedLattice(mFixingDates[1], 2),
+			value = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+										modifiedLattice.at(mFixingDates[1], 1),
+										modifiedLattice.at(mFixingDates[1], 2),
 										deltaTime[0]);
-			payoffAdjuster(value, sourceLattice(mFixingDates[0], 0));
-			modifiedLattice(mFixingDates[0], 0) = value;
+			payoffAdjuster(value, sourceLattice.at(mFixingDates[0], 0));
+			modifiedLattice.at(mFixingDates[0], 0) = value;
 		}
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
@@ -1323,25 +1391,25 @@ namespace lattice_algorithms {
 
 			TimeAxis lastDate = mFixingDates.back();
 			for (auto i = 0; i < modifiedLattice.nodesAt(lastDate).size(); ++i) {
-				modifiedLattice(lastDate, i) = payoff(modifiedLattice(lastDate, i));
+				modifiedLattice.at(lastDate, i) = payoff(modifiedLattice.at(lastDate, i));
 			}
 			Node value{};
 			for (auto n = mFixingDates.size() - 2; n > 0; --n) {
 				for (auto i = 0; i < modifiedLattice.nodesAt(mFixingDates[n]).size(); ++i) {
-					value = backwardGenerator(modifiedLattice(mFixingDates[n + 1], i),
-											modifiedLattice(mFixingDates[n + 1], i + 1),
-											modifiedLattice(mFixingDates[n + 1], i + 2),
+					value = backwardGenerator(modifiedLattice.at(mFixingDates[n + 1], i),
+											modifiedLattice.at(mFixingDates[n + 1], i + 1),
+											modifiedLattice.at(mFixingDates[n + 1], i + 2),
 											deltaTime);
-					payoffAdjuster(value, sourceLattice(mFixingDates[n], i));
-					modifiedLattice(mFixingDates[n], i) = value;
+					payoffAdjuster(value, sourceLattice.at(mFixingDates[n], i));
+					modifiedLattice.at(mFixingDates[n], i) = value;
 				}
 			}
-			value = backwardGenerator(modifiedLattice(mFixingDates[1], 0),
-										modifiedLattice(mFixingDates[1], 1),
-										modifiedLattice(mFixingDates[1], 2),
+			value = backwardGenerator(modifiedLattice.at(mFixingDates[1], 0),
+										modifiedLattice.at(mFixingDates[1], 1),
+										modifiedLattice.at(mFixingDates[1], 2),
 										deltaTime);
-			payoffAdjuster(value, sourceLattice(mFixingDates[0], 0));
-			modifiedLattice(mFixingDates[0], 0) = value;
+			payoffAdjuster(value, sourceLattice.at(mFixingDates[0], 0));
+			modifiedLattice.at(mFixingDates[0], 0) = value;
 		}
 
 	}
@@ -1462,6 +1530,60 @@ namespace lattice_algorithms {
 		PayoffAdjuster<Node&, Node> const &payoffAdjuster, DeltaTime deltaTime) {
 		_backward_induction_lattice_trinomial_mod_adj_impl(sourceLattice,modifiedLattice, backwardGenerator, payoff, payoffAdjuster, deltaTime, std::is_compound<DeltaTime>());
 	}
+
+
+
+	// ==============================================================================
+	// ==================== Backward Induction Algorithms ===========================
+	// ==============================================================================
+
+	
+	template<LatticeType Type,
+		typename TimeAxis,
+		typename DeltaTime>
+		class BackwardInduction {};
+
+
+	template<typename TimeAxis,
+		typename DeltaTime>
+		class BackwardInduction<LatticeType::Binomial, TimeAxis, DeltaTime> {
+		public:
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
+				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster));
+			}
+
+	};
+
+	template<typename TimeAxis,
+		typename DeltaTime>
+		class BackwardInduction<LatticeType::Trinomial, TimeAxis, DeltaTime> {
+		public:
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
+				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
+			}
+	};
+
+
 
 
 

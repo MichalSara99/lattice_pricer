@@ -5,12 +5,12 @@
 #include<boost/date_time/gregorian/gregorian.hpp>
 #include<boost/date_time/gregorian/gregorian_types.hpp>
 
-#include"lattice_structure.h"
+//#include"lattice_structure.h"
 #include"lattice_algorithms_t.h"
-#include"lattice_utility_t.h"
-#include"lattice_model_t.h"
-#include"lattice_examples.h"
-#include"lattice_greeks_t.h"
+//#include"lattice_utility_t.h"
+//#include"lattice_model_t.h"
+//#include"lattice_examples.h"
+//#include"lattice_greeks_t.h"
 
 using namespace boost::gregorian;
 
@@ -59,16 +59,48 @@ int main(int argc, char const *argv[]) {
 	//bmLattice();
 
 	//indexedLatticeBinomialDelta();
-	crrIndexedLatticeGreeks();
-	mcrrIndexedLatticeGreeks();
-	jrIndexedLatticeGreeks();
-	trimIndexedLatticeGreeks();
-	tmIndexedLatticeGreeks();
-	lrIndexedLatticeGreeks();
-	bmIndexedLatticeGreeks();
+	//crrIndexedLatticeGreeks();
+	//mcrrIndexedLatticeGreeks();
+	//jrIndexedLatticeGreeks();
+	//trimIndexedLatticeGreeks();
+	//tmIndexedLatticeGreeks();
+	//lrIndexedLatticeGreeks();
+	//bmIndexedLatticeGreeks();
 
+	//indexedLatticeTrinomialForwardInduction();
+	//indexedLatticeTrinomialForwardInductionNew();
+	//latticeBinomialForwardInduction();
+	//latticeBinomialForwardInductionNew();
 
+	//latticeTrinomialForwardInduction();
+	//latticeTrinomialForwardInductionNew();
+	//indexedLatticeBinomialForwardInductionDividend();
+	//indexedLatticeBinomialForwardInductionDividendNew();
 	
+	//indexedLatticeTrinomialForwardInductionDividends();
+	//indexedLatticeTrinomialForwardInductionDividendsNew();
+
+	//latticeBinomialForwardInductionDividends();
+	//latticeBinomialForwardInductionDividendsNew();
+
+
+	//latticeTrinomialForwardInductionDividend();
+	//latticeTrinomialForwardInductionDividendNew();
+	
+
+	//indexedLatticeBinomialBackwardInduction();
+	//indexedLatticeBinomialBackwardInductionNew();
+
+	//indexedLatticeTrinomialBackwardInduction();
+	//indexedLatticeTrinomialBackwardInductionNew();
+
+	//latticeBinomialBackwardInduction();
+	//latticeBinomialBackwardInductionNew();
+
+
+	latticeTrinomialBackwardInduction();
+	latticeTrinomialBackwardInductionNew();
+
 	std::cout << "\n";
 	std::cin.get();
 	std::cin.get();

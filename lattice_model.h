@@ -10,6 +10,7 @@ namespace lattice_model {
 	using lattice_miscellaneous::OptionData;
 	using lattice_types::LeafForwardGenerator;
 	using lattice_types::LeafBackwardGenerator;
+	using lattice_types::LatticeType;
 
 
 	template<std::size_t FactorCount,typename T>
@@ -30,6 +31,8 @@ namespace lattice_model {
 		// Factor count:
 		enum { FactorCount = 1 };
 
+		// LatticeType:
+		LatticeType latticeType()const { return LatticeType::Binomial; }
 	};
 
 	template<typename T>
@@ -45,6 +48,9 @@ namespace lattice_model {
 		// Factor count:
 		enum { FactorCount = 2 };
 
+		// LatticeType:
+		LatticeType latticeType()const { return LatticeType::Binomial; }
+
 	};
 
 	template<typename T>
@@ -58,6 +64,9 @@ namespace lattice_model {
 
 		// Factor count:
 		enum { FactorCount = 1 };
+
+		// LatticeType:
+		LatticeType latticeType()const { return LatticeType::Trinomial; }
 
 	};
 
@@ -75,6 +84,9 @@ namespace lattice_model {
 
 		// Factor count:
 		enum { FactorCount = 2 };
+
+		// LatticeType:
+		LatticeType latticeType()const { return LatticeType::Trinomial; }
 	};
 
 	// =============================================================================================

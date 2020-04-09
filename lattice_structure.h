@@ -10,6 +10,7 @@
 #include<initializer_list>
 #include"lattice_types.h"
 #include"lattice_miscellaneous.h"
+#include"lattice_macros.h"
 
 namespace lattice_structure {
 
@@ -28,17 +29,37 @@ namespace lattice_structure {
 		template<typename Arg>
 		void buildTree_impl(Arg const &arg, std::false_type);
 
+		std::size_t indexOf_impl(TimeAxis time, std::true_type)const;
+
+		std::size_t indexOf_impl(TimeAxis time, std::false_type)const;
+
 		Node apex_impl(std::true_type)const;
 
 		Node apex_impl(std::false_type)const;
 
-		Node const &operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const;
+		Node const &at_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const;
 
-		Node const &operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const;
+		Node const &at_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const;
+
+		Node const &operator_const_impl(std::size_t timeIdx, std::size_t leafIdx, std::true_type)const;
+
+		Node const &operator_const_impl(std::size_t timeIdx, std::size_t leafIdx, std::false_type)const;
+
+		Node &operator_impl(std::size_t timeIdx, std::size_t leafIdx, std::true_type);
+
+		Node &operator_impl(std::size_t timeIdx, std::size_t leafIdx, std::false_type);
 
 		NodeContainerType nodesAt_impl(TimeAxis timeIdx, std::true_type)const;
 
 		NodeContainerType nodesAt_impl(TimeAxis timeIdx, std::false_type)const;
+
+		NodeContainerType nodesAtIdx_impl(std::size_t idx, std::true_type)const;
+
+		NodeContainerType nodesAtIdx_impl(std::size_t idx, std::false_type)const;
+
+		TimeAxis const &timeAt_impl(std::size_t idx, std::true_type)const;
+
+		TimeAxis const &timeAt_impl(std::size_t idx, std::false_type)const;
 
 	public:
 		typedef typename std::conditional<std::is_integral<TimeAxis>::value,
@@ -61,12 +82,21 @@ namespace lattice_structure {
 
 		constexpr std::size_t timeDimension()const { return std::distance(tree_.begin(), tree_.end()); }
 		
-		Node const &operator()(TimeAxis timeIdx, std::size_t leafIdx)const {
-			return operator_impl(timeIdx, leafIdx, is_map<TreeType>());
+
+		Node const &at(TimeAxis timeIdx, std::size_t leafIdx)const {
+			return at_impl(timeIdx, leafIdx, is_map<TreeType>());
 		}
 
-		Node &operator()(TimeAxis timeIdx, std::size_t leafIdx) {
+		Node &at(TimeAxis timeIdx, std::size_t leafIdx) {
 			return (this->tree_[timeIdx][leafIdx]);
+		}
+
+		Node const &operator()(std::size_t timeIdx, std::size_t leafIdx)const {
+			return operator_const_impl(timeIdx, leafIdx, is_map<TreeType>());
+		}
+
+		Node &operator()(std::size_t timeIdx, std::size_t leafIdx) {
+			return operator_impl(timeIdx, leafIdx, is_map<TreeType>());
 		}
 			
 		NodeContainerType nodesAt(TimeAxis timeIdx)const {
@@ -75,6 +105,18 @@ namespace lattice_structure {
 
 		NodeContainerType &nodesAt(TimeAxis timeIdx) {
 			return this->tree_[timeIdx];
+		}
+
+		NodeContainerType nodesAtIdx(std::size_t idx)const {
+			return nodesAtIdx_impl(idx, is_map<TreeType>());
+		}
+
+		std::size_t indexOf(TimeAxis time)const {
+			return indexOf_impl(time, is_map<TreeType>());
+		}
+
+		TimeAxis const &timeAt(std::size_t idx)const {
+			return timeAt_impl(idx, is_map<TreeType>());
 		}
 
 		Node apex()const;
@@ -98,10 +140,80 @@ namespace lattice_structure {
 
 
 	template<LatticeType Type,
-			typename Node,
-			typename TimeAxis,
-			typename NodeContainerType>
-	Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const {
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		NodeContainerType GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::nodesAtIdx_impl(std::size_t idx, std::true_type)const {
+		LASSERT(idx >= 0, "Index must be nonegative");
+		auto first = this->tree_.cbegin();
+		if (idx == 0) {
+			return first->second;
+		}
+		else {
+			auto itr = std::next(first, idx);
+			return itr->second;
+		}
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		NodeContainerType GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::nodesAtIdx_impl(std::size_t idx, std::false_type)const {
+		LASSERT(idx >= 0, "Index must be nonegative");
+		return this->tree_[idx];
+	}
+
+
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		TimeAxis const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::timeAt_impl(std::size_t idx, std::true_type)const {
+		LASSERT(idx >= 0, "Index must be nonegative");
+		auto first = this->tree_.cbegin();
+		if (idx == 0) {
+			return first->first;
+		}
+		else {
+			auto itr = std::next(first, idx);
+			return itr->first;
+		}
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		TimeAxis const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::timeAt_impl(std::size_t idx, std::false_type)const {
+		return idx;
+	}
+
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		std::size_t GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::indexOf_impl(TimeAxis timeIdx, std::true_type)const {
+		typename TreeType::const_iterator citer(this->tree_.find(timeIdx));
+		return ((citer != this->tree_.cend()) ? (std::distance(this->tree_.cbegin(), citer) ) : throw std::out_of_range("Error: timeIdx out of range.\n"));
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		std::size_t GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::indexOf_impl(TimeAxis timeIdx, std::false_type)const {
+		return timeIdx;
+	}
+
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::at_impl(TimeAxis timeIdx, std::size_t leafIdx, std::true_type)const {
 		typename TreeType::const_iterator citer(this->tree_.find(timeIdx));
 		return ((citer != this->tree_.end()) ? (citer->second[leafIdx]) : throw std::out_of_range("Error: timeIdx out of range.\n"));
 	}
@@ -110,8 +222,72 @@ namespace lattice_structure {
 		typename Node,
 		typename TimeAxis,
 		typename NodeContainerType>
-	Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const {
+		Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::at_impl(TimeAxis timeIdx, std::size_t leafIdx, std::false_type)const {
 		return (this->tree_[timeIdx][leafIdx]);
+	}
+
+	template<LatticeType Type,
+			typename Node,
+			typename TimeAxis,
+			typename NodeContainerType>
+	Node &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(std::size_t timeIdx, std::size_t leafIdx, std::true_type) {
+		LASSERT(timeIdx >= 0, "Index must be nonegative");
+		auto first = this->tree_.begin();
+		if (timeIdx == 0) {
+			return first->second[leafIdx];
+		}
+		else {
+			auto itr = std::next(first, timeIdx);
+			return itr->second[leafIdx];
+		}
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+	Node &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_impl(std::size_t timeIdx, std::size_t leafIdx, std::false_type) {
+		LASSERT(timeIdx >= 0, "Index must be nonegative");
+		auto first = this->tree_.begin();
+		if (timeIdx == 0) {
+			return (*first)[leafIdx];
+		}
+		else {
+			auto itr = std::next(first, timeIdx);
+			return (*itr)[leafIdx];
+		}
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_const_impl(std::size_t timeIdx, std::size_t leafIdx, std::true_type)const {
+		LASSERT(timeIdx >= 0, "Index must be nonegative");
+		auto first = this->tree_.cbegin();
+		if (timeIdx == 0) {
+			return first->second[leafIdx];
+		}
+		else {
+			auto itr = std::next(first, timeIdx);
+			return itr->second[leafIdx];
+		}
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		Node const &GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::operator_const_impl(std::size_t timeIdx, std::size_t leafIdx, std::false_type)const {
+		LASSERT(timeIdx >= 0, "Index must be nonegative");
+		auto first = this->tree_.cbegin();
+		if (timeIdx == 0) {
+			return *first[leafIdx];
+		}
+		else {
+			auto itr = std::next(first, timeIdx);
+			return *itr[leafIdx];
+		}
 	}
 
 	template<LatticeType Type,
