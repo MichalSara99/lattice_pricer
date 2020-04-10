@@ -8,8 +8,8 @@
 //#include"lattice_structure.h"
 #include"lattice_algorithms_t.h"
 //#include"lattice_utility_t.h"
-//#include"lattice_model_t.h"
-//#include"lattice_examples.h"
+#include"lattice_model_t.h"
+#include"lattice_examples.h"
 //#include"lattice_greeks_t.h"
 
 using namespace boost::gregorian;
@@ -98,8 +98,98 @@ int main(int argc, char const *argv[]) {
 	//latticeBinomialBackwardInductionNew();
 
 
-	latticeTrinomialBackwardInduction();
-	latticeTrinomialBackwardInductionNew();
+	//latticeTrinomialBackwardInduction();
+	//latticeTrinomialBackwardInductionNew();
+
+	//crrIndexedLattice();
+	//crrIndexedLatticeNew();
+
+	//mcrrIndexedLattice();
+	//mcrrIndexedLatticeNew();
+
+	//jrIndexedLattice();
+	//jrIndexedLatticeNew();
+
+	//trimIndexedLattice();
+	//trimIndexedLatticeNew();
+
+	//tmIndexedLattice();
+	//tmIndexedLatticeNew();
+
+	//lrIndexedLattice();
+	//lrIndexedLatticeNew();
+
+	//bmIndexedLattice();
+	//bmIndexedLatticeNew();
+
+	//crrIndexedLatticeAmerican();
+	//crrIndexedLatticeAmericanNew();
+
+	//mcrrIndexedLatticeAmerican();
+	//mcrrIndexedLatticeAmericanNew();
+
+
+	//jrIndexedLatticeAmerican();
+	//jrIndexedLatticeAmericanNew();
+
+	//trimIndexedLatticeAmerican();
+	//trimIndexedLatticeAmericanNew();
+
+	//tmIndexedLatticeAmerican();
+	//tmIndexedLatticeAmericanNew();
+
+	//lrIndexedLatticeAmerican();
+	//lrIndexedLatticeAmericanNew();
+
+	//crrLattice();
+	//crrLatticeNew();
+
+	//mcrrLattice();
+	//mcrrLatticeNew();
+
+	//jrLattice();
+	//jrLatticeNew();
+
+	//trimLattice();
+	//trimLatticeNew();
+
+	//tmLattice();
+	//tmLatticeNew();
+
+	//lrLattice();
+	//lrLatticeNew();
+
+	//bmLattice();
+	//bmLatticeNew();
+
+	//crrLatticeAmerican();
+	//crrLatticeAmericanNew();
+
+
+	//crrBinomialLatticeParallelPricing();
+	//crrBinomialLatticeParallelPricingNew();
+
+	//crrBinomialLatticeParallelPricingScoped();
+	//crrBinomialLatticeParallelPricingScopedNew();
+
+	//mcrrBinomialLatticeParallelPricingScoped();
+	//mcrrBinomialLatticeParallelPricingScopedNew();
+	
+
+	//jrBinomialLatticeParallelPricingScoped();
+	//jrBinomialLatticeParallelPricingScopedNew();
+
+	//trimBinomialLatticeParallelPricingScoped();
+	//trimBinomialLatticeParallelPricingScopedNew();
+
+
+	//tmBinomialLatticeParallelPricingScoped();
+	//tmBinomialLatticeParallelPricingScopedNew();
+
+
+	lrBinomialLatticeParallelPricingScoped();
+	lrBinomialLatticeParallelPricingScopedNew();
+
 
 	std::cout << "\n";
 	std::cin.get();

@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{79F5901B-037B-460D-8010-39F9904D414C}</ProjectGuid>
     <RootNamespace>latticepricer</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,6 +74,14 @@
     <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
     <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
