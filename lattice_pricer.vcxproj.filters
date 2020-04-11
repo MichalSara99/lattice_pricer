@@ -77,5 +77,8 @@
     <ClInclude Include="lattice_backward_traversals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

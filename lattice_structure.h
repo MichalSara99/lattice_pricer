@@ -68,6 +68,9 @@ namespace lattice_structure {
 
 		typedef typename TreeType::iterator Iterator_type;
 		typedef typename TreeType::const_iterator Const_iterator_type;
+		typedef Node Node_type;
+		typedef TimeAxis TimeAxis_type;
+		typedef NodeContainerType NodeContainerType_type;
 
 	protected:
 		TreeType tree_;
@@ -78,7 +81,7 @@ namespace lattice_structure {
 	public:
 		TreeType const &tree()const { return this->tree_; }
 
-		LatticeType type()const { return Type; }
+		static constexpr LatticeType type(){ return Type; }
 
 		constexpr std::size_t timeDimension()const { return std::distance(tree_.begin(), tree_.end()); }
 		
@@ -282,11 +285,11 @@ namespace lattice_structure {
 		LASSERT(timeIdx >= 0, "Index must be nonegative");
 		auto first = this->tree_.cbegin();
 		if (timeIdx == 0) {
-			return *first[leafIdx];
+			return (*first)[leafIdx];
 		}
 		else {
 			auto itr = std::next(first, timeIdx);
-			return *itr[leafIdx];
+			return (*itr)[leafIdx];
 		}
 	}
 

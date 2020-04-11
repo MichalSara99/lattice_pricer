@@ -68,128 +68,96 @@ int main(int argc, char const *argv[]) {
 	//bmIndexedLatticeGreeks();
 
 	//indexedLatticeTrinomialForwardInduction();
-	//indexedLatticeTrinomialForwardInductionNew();
+
 	//latticeBinomialForwardInduction();
-	//latticeBinomialForwardInductionNew();
+
 
 	//latticeTrinomialForwardInduction();
-	//latticeTrinomialForwardInductionNew();
+
 	//indexedLatticeBinomialForwardInductionDividend();
-	//indexedLatticeBinomialForwardInductionDividendNew();
 	
 	//indexedLatticeTrinomialForwardInductionDividends();
-	//indexedLatticeTrinomialForwardInductionDividendsNew();
 
 	//latticeBinomialForwardInductionDividends();
-	//latticeBinomialForwardInductionDividendsNew();
 
 
 	//latticeTrinomialForwardInductionDividend();
-	//latticeTrinomialForwardInductionDividendNew();
+
 	
 
 	//indexedLatticeBinomialBackwardInduction();
-	//indexedLatticeBinomialBackwardInductionNew();
+
 
 	//indexedLatticeTrinomialBackwardInduction();
-	//indexedLatticeTrinomialBackwardInductionNew();
+
 
 	//latticeBinomialBackwardInduction();
-	//latticeBinomialBackwardInductionNew();
+
 
 
 	//latticeTrinomialBackwardInduction();
-	//latticeTrinomialBackwardInductionNew();
 
 	//crrIndexedLattice();
-	//crrIndexedLatticeNew();
 
 	//mcrrIndexedLattice();
-	//mcrrIndexedLatticeNew();
 
 	//jrIndexedLattice();
-	//jrIndexedLatticeNew();
 
 	//trimIndexedLattice();
-	//trimIndexedLatticeNew();
 
 	//tmIndexedLattice();
-	//tmIndexedLatticeNew();
 
 	//lrIndexedLattice();
-	//lrIndexedLatticeNew();
 
 	//bmIndexedLattice();
-	//bmIndexedLatticeNew();
 
 	//crrIndexedLatticeAmerican();
-	//crrIndexedLatticeAmericanNew();
 
 	//mcrrIndexedLatticeAmerican();
-	//mcrrIndexedLatticeAmericanNew();
 
 
 	//jrIndexedLatticeAmerican();
-	//jrIndexedLatticeAmericanNew();
 
 	//trimIndexedLatticeAmerican();
-	//trimIndexedLatticeAmericanNew();
 
 	//tmIndexedLatticeAmerican();
-	//tmIndexedLatticeAmericanNew();
 
 	//lrIndexedLatticeAmerican();
-	//lrIndexedLatticeAmericanNew();
 
 	//crrLattice();
-	//crrLatticeNew();
 
 	//mcrrLattice();
-	//mcrrLatticeNew();
 
 	//jrLattice();
-	//jrLatticeNew();
 
 	//trimLattice();
-	//trimLatticeNew();
 
 	//tmLattice();
-	//tmLatticeNew();
 
 	//lrLattice();
-	//lrLatticeNew();
 
 	//bmLattice();
-	//bmLatticeNew();
 
 	//crrLatticeAmerican();
-	//crrLatticeAmericanNew();
 
 
 	//crrBinomialLatticeParallelPricing();
-	//crrBinomialLatticeParallelPricingNew();
 
 	//crrBinomialLatticeParallelPricingScoped();
-	//crrBinomialLatticeParallelPricingScopedNew();
 
 	//mcrrBinomialLatticeParallelPricingScoped();
-	//mcrrBinomialLatticeParallelPricingScopedNew();
-	
 
 	//jrBinomialLatticeParallelPricingScoped();
-	//jrBinomialLatticeParallelPricingScopedNew();
 
 	//trimBinomialLatticeParallelPricingScoped();
-	//trimBinomialLatticeParallelPricingScopedNew();
-
 
 	//tmBinomialLatticeParallelPricingScoped();
-	//tmBinomialLatticeParallelPricingScopedNew();
 
 
-	lrBinomialLatticeParallelPricingScoped();
-	lrBinomialLatticeParallelPricingScopedNew();
 
+	//lrBinomialLatticeParallelPricingScoped();
+	
+	mergeIndexedBinomial();
 
 	std::cout << "\n";
 	std::cin.get();

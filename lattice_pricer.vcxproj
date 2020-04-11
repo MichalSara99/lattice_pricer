@@ -150,6 +150,7 @@
     <ClInclude Include="lattice_structure.h" />
     <ClInclude Include="lattice_structure_t.h" />
     <ClInclude Include="lattice_forward_traversals.h" />
+    <ClInclude Include="lattice_traits.h" />
     <ClInclude Include="lattice_types.h" />
     <ClInclude Include="lattice_utility.h" />
     <ClInclude Include="lattice_utility_t.h" />
