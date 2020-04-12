@@ -22,10 +22,6 @@ void crrBinomialLatticeParallelPricing() {
 	std::cout << "\nPricing with std::thread: \n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_model::CoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
@@ -170,10 +166,6 @@ void crrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::CoxRubinsteinRossModel;
@@ -311,10 +303,6 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::ModifiedCoxRubinsteinRossModel;
@@ -452,10 +440,6 @@ void jrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::JarrowRuddModel;
@@ -595,10 +579,6 @@ void trimBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::TrigeorgisModel;
@@ -739,10 +719,6 @@ void tmBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::TianModel;
@@ -883,10 +859,6 @@ void lrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_miscellaneous::OptionData;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::LeisenReimerModel;

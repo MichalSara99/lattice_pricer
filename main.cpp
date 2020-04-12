@@ -157,7 +157,12 @@ int main(int argc, char const *argv[]) {
 
 	//lrBinomialLatticeParallelPricingScoped();
 	
-	mergeIndexedBinomial();
+	//mergeIndexedBinomial();
+	//mergeIndexedTrinomial();
+
+	mergeBinomial();
+
+	mergeTrinomial();
 
 	std::cout << "\n";
 	std::cin.get();
