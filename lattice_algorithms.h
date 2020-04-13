@@ -41,7 +41,7 @@ namespace lattice_algorithms {
 	public:
 		template<typename LatticeObject,typename Generator>
 		void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,Node apex) {
-			//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+			LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 			ForwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime, Node>::
 				traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
 		}
@@ -49,7 +49,7 @@ namespace lattice_algorithms {
 		template<typename LatticeObject, typename Generator>
 		void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
 			std::map<TimeAxis,Node> const &dividendData) {
-			//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+			LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 			ForwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime, Node>::
 				traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
 		}
@@ -64,14 +64,14 @@ namespace lattice_algorithms {
 		public:
 			template<typename LatticeObject, typename Generator>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex) {
-				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
 			}
 			template<typename LatticeObject, typename Generator>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
 				std::map<TimeAxis, Node> const &dividendData) {
-				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
 			}
@@ -94,14 +94,14 @@ namespace lattice_algorithms {
 		public:
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
-				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 			}
 
 			template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
-				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster));
 			}
@@ -114,14 +114,14 @@ namespace lattice_algorithms {
 		public:
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
-				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 			}
 
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
-				//LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
 				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
 			}
@@ -154,6 +154,11 @@ namespace lattice_algorithms {
 				MergePolicy<TimeAxis>::runParallel(result, latticeObject, latticeObjects...);
 			}
 			return result;
+		}
+
+		template<typename LatticeObject>
+			auto operator()(LaunchPolicy launch, LatticeObject latticeObject)const {
+			return latticeObject;
 		}
 
 	};

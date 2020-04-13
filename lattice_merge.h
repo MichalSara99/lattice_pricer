@@ -74,6 +74,7 @@ template<typename LatticeObject,
 	return result;
 }
 
+
 template<typename TimeAxis>
 template<typename ResultLattice,
 	typename LatticeObject,
@@ -88,7 +89,7 @@ template<typename ResultLattice,
 		[&](std::size_t t) {
 		nodesSize = latticeObject.nodesAtIdx(t).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			resultLattice(t, i) = std::make_tuple(latticeObject(t, i), latticeObjects(t, i)...);
+			resultLattice(t, i) = Traits::holder(latticeObject(t, i), latticeObjects(t, i)...);
 		}
 	});
 }
@@ -106,7 +107,7 @@ template<typename ResultLattice,
 	for (auto t = 0; t <= lastIdx; ++t) {
 		nodesSize = latticeObject.nodesAtIdx(t).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			resultLattice(t, i) = std::make_tuple(latticeObject(t, i), latticeObjects(t, i)...);
+			resultLattice(t, i) = Traits::holder(latticeObject(t, i), latticeObjects(t, i)...);
 		}
 	}
 }

@@ -10,10 +10,6 @@
 namespace lattice_greeks {
 
 	using lattice_types::LatticeType;
-	using lattice_types::LeafForwardGenerator;
-	using lattice_types::LeafBackwardGenerator;
-	using lattice_types::Payoff;
-	using lattice_types::PayoffAdjuster;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
 

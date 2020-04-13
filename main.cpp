@@ -1,13 +1,14 @@
 #include<iostream>
 #include<string>
 #include<set>
+#include<tuple>
+#include<array>
 
 #include<boost/date_time/gregorian/gregorian.hpp>
 #include<boost/date_time/gregorian/gregorian_types.hpp>
 
-//#include"lattice_structure.h"
+#include"lattice_structure_t.h"
 #include"lattice_algorithms_t.h"
-//#include"lattice_utility_t.h"
 #include"lattice_model_t.h"
 #include"lattice_examples.h"
 //#include"lattice_greeks_t.h"
@@ -29,34 +30,7 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
-	//crrBinomialLatticeParallelPricing();
-	//mcrrBinomialLatticeParallelPricingScoped();
-	//jrBinomialLatticeParallelPricingScoped();
-	//trimBinomialLatticeParallelPricingScoped();
-	//tmBinomialLatticeParallelPricingScoped();
-	//lrBinomialLatticeParallelPricingScoped();
-	//pascalTriangleIndexedTest();
-	//pascalTriangleTest();
-
-	//mergeIndexedBinomial();
-	//mergeBinomial();
-
-
-	//crrIndexedLattice();
-	//mcrrIndexedLattice();
-	//jrIndexedLattice();
-	//trimIndexedLattice();
-	//tmIndexedLattice();
-	//lrIndexedLattice();
-	//bmIndexedLattice();
-
-	//crrLattice();
-	//mcrrLattice();
-	//jrLattice();
-	//trimLattice();
-	//tmLattice();
-	//lrLattice();
-	//bmLattice();
+	// == lattice_greeks_t.h ====
 
 	//indexedLatticeBinomialDelta();
 	//crrIndexedLatticeGreeks();
@@ -67,102 +41,36 @@ int main(int argc, char const *argv[]) {
 	//lrIndexedLatticeGreeks();
 	//bmIndexedLatticeGreeks();
 
-	//indexedLatticeTrinomialForwardInduction();
 
-	//latticeBinomialForwardInduction();
-
-
-	//latticeTrinomialForwardInduction();
-
-	//indexedLatticeBinomialForwardInductionDividend();
-	
-	//indexedLatticeTrinomialForwardInductionDividends();
-
-	//latticeBinomialForwardInductionDividends();
+	// == lattice_structure_t.h ====
+	// testIndexedLatticeCreation();
+	// testLatticeCreation();
 
 
-	//latticeTrinomialForwardInductionDividend();
+	// == lattice_algorithms_t.h ====
+	//	testIndexedForwardInduction();
+	//	testForwardInduction();
 
-	
+	//	testIndexedForwardInductionDividends();
+	//	testForwardInductionDividends();
 
-	//indexedLatticeBinomialBackwardInduction();
+	//	testIndexedBackwardInductionDividends();
+	//	testBackwardInductionDividends();
 
-
-	//indexedLatticeTrinomialBackwardInduction();
-
-
-	//latticeBinomialBackwardInduction();
+	// testIndexedMerge();
+	 testMerge();
 
 
 
-	//latticeTrinomialBackwardInduction();
 
-	//crrIndexedLattice();
+	// == lattice_model_t.h ===
+	//	testIndexedEuropeanLattices();
+	//	testIndexedAmericanLattices();
 
-	//mcrrIndexedLattice();
-
-	//jrIndexedLattice();
-
-	//trimIndexedLattice();
-
-	//tmIndexedLattice();
-
-	//lrIndexedLattice();
-
-	//bmIndexedLattice();
-
-	//crrIndexedLatticeAmerican();
-
-	//mcrrIndexedLatticeAmerican();
+	//	testEuropeanLattices();
+	//	testAmericanLattices();
 
 
-	//jrIndexedLatticeAmerican();
-
-	//trimIndexedLatticeAmerican();
-
-	//tmIndexedLatticeAmerican();
-
-	//lrIndexedLatticeAmerican();
-
-	//crrLattice();
-
-	//mcrrLattice();
-
-	//jrLattice();
-
-	//trimLattice();
-
-	//tmLattice();
-
-	//lrLattice();
-
-	//bmLattice();
-
-	//crrLatticeAmerican();
-
-
-	//crrBinomialLatticeParallelPricing();
-
-	//crrBinomialLatticeParallelPricingScoped();
-
-	//mcrrBinomialLatticeParallelPricingScoped();
-
-	//jrBinomialLatticeParallelPricingScoped();
-
-	//trimBinomialLatticeParallelPricingScoped();
-
-	//tmBinomialLatticeParallelPricingScoped();
-
-
-
-	//lrBinomialLatticeParallelPricingScoped();
-	
-	//mergeIndexedBinomial();
-	//mergeIndexedTrinomial();
-
-	mergeBinomial();
-
-	mergeTrinomial();
 
 	std::cout << "\n";
 	std::cin.get();

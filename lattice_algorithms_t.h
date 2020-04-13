@@ -2,7 +2,7 @@
 #if !defined(_LATTICE_ALGORITHMS_T)
 #define _LATTICE_ALGORITHMS_T
 
-
+#include"lattice_model.h"
 #include"lattice_algorithms.h"
 #include"lattice_utility.h"
 #include<iostream>
@@ -13,7 +13,59 @@
 
 using namespace boost::gregorian;
 
+// ===============================================================================
+// ========================== Define some arbitrary model ========================
+// ===============================================================================
+
+template<typename T = double>
+class AbitraryBinomialModel :public lattice_model::BinomialModel<1, T> {
+public:
+	// Forward generator
+	std::tuple<T, T> operator()(T value, T dt) override {
+		double u = 2.0;
+		double d = 1.0 / u;
+		return std::make_tuple(u*value, d*value);
+	}
+
+	// Backward generator
+	T operator()(T upValue, T downValue, T dt) override {
+		double p = 0.5;
+		return (p*upValue + (1.0 - p)*downValue);
+	}
+
+	static std::string const name() {
+		return std::string{ "Arbitrary binomial model" };
+	}
+};
+
+template<typename T = double>
+class AbitraryTrinomialModel :public lattice_model::TrinomialModel<1, T> {
+public:
+	// Forward generator
+	std::tuple<T, T, T> operator()(T value, T dt) override {
+		double u = 2.0;
+		double d = 1.0 / u;
+		double m = (u + d)*0.5;
+		return std::make_tuple(u*value, m*value, d*value);
+	}
+
+	// Backward generator
+	T operator()(T upValue,T midValue, T downValue, T dt) override {
+		double p = (1.0 / 3.0);
+		return (p*upValue + p * midValue + p * downValue);
+	}
+
+	static std::string const name() {
+		return std::string{ "Arbitrary trinomial model" };
+	}
+};
+// ===============================================================================
+// ===============================================================================
+
+
+// =====================================================================================
 // ============================= Testing forward-induction algos =======================
+// =====================================================================================
 
 void indexedLatticeBinomialForwardInduction() {
 
@@ -24,34 +76,19 @@ void indexedLatticeBinomialForwardInduction() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double>::TreeType).name() << "\n";
 
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+	// Instantiate a binomial model:
+	AbitraryBinomialModel<> model;
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
+	// Forward induction algo:
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial, std::size_t, double, double> forward_binomial_induction;
-
 	forward_binomial_induction fwd_induction;
-	fwd_induction(il, fwdgen, dt,1.0);
+	fwd_induction(il, model, dt,1.0);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	std::cout << "Price: " << il.apex() << "\n\n";
 }
@@ -65,42 +102,21 @@ void indexedLatticeTrinomialForwardInduction() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double>::TreeType).name() << "\n";
 
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial, std::size_t, double, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(il, fwdgen, dt,1.0 );
+	fwd_induction(il, model, dt,1.0 );
 	std::cout << "After forward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	std::cout << "Price: " << il.apex() << "\n\n";
 }
-
-
-
-
-
 
 
 void latticeBinomialForwardInduction() {
@@ -123,36 +139,20 @@ void latticeBinomialForwardInduction() {
 		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
 	}
 
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-	std::cout << "\n";
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+	// Instantiate a binomial model:
+	AbitraryBinomialModel<> model;
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial,
 		date, std::vector<double>, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(la, fwdgen, deltas, 1.0);
+	fwd_induction(la, model, deltas, 1.0);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
@@ -179,44 +179,57 @@ void latticeTrinomialForwardInduction() {
 		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
 	}
 
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-	std::cout << "\n";
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial,
 		date, std::vector<double>, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(la, fwdgen, deltas, 1.0);
+	fwd_induction(la, model, deltas, 1.0);
+
 	std::cout << "After forward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
 
-//
-//// === discretely paid dividends ===
-//
-//
+
+
+void testIndexedForwardInduction() {
+	std::cout << "=====================================================\n";
+	std::cout << "========= Indexed Forward Induction - TEST ==========\n";
+	std::cout << "=====================================================\n";
+
+	indexedLatticeBinomialForwardInduction();
+	indexedLatticeTrinomialForwardInduction();
+
+
+	std::cout << "=====================================================\n";
+}
+
+void testForwardInduction() {
+	std::cout << "=====================================================\n";
+	std::cout << "============ Forward Induction - TEST ===============\n";
+	std::cout << "=====================================================\n";
+
+	latticeBinomialForwardInduction();
+	latticeTrinomialForwardInduction();
+
+
+	std::cout << "=====================================================\n";
+}
+
+
+// ==============================================================================================
+// ================== Testing forward-induction with discretely paid dividends ==================
+// ==============================================================================================
+
 
 
 void indexedLatticeBinomialForwardInductionDividend() {
@@ -230,34 +243,20 @@ void indexedLatticeBinomialForwardInductionDividend() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double>::TreeType).name() << "\n";
 
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryBinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial,
 		std::size_t, double, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(il, fwdgen, dt, 1.0, dividends);
+	fwd_induction(il, model, dt, 1.0, dividends);
 	std::cout << "After forward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	std::cout << "Price: " << il.apex() << "\n\n";
 }
@@ -274,43 +273,38 @@ void indexedLatticeTrinomialForwardInductionDividends() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double>::TreeType).name() << "\n";
 
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial,
 		std::size_t, double, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(il, fwdgen, dt, 1.0, dividends);
+	fwd_induction(il, model, dt, 1.0, dividends);
 	std::cout << "After forward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	std::cout << "Price: " << il.apex() << "\n\n";
 }
-
 //
 //
+void testIndexedForwardInductionDividends() {
+	std::cout << "=====================================================\n";
+	std::cout << "===== Indexed Forward Induction Dividends - TEST ====\n";
+	std::cout << "=====================================================\n";
+
+	indexedLatticeBinomialForwardInductionDividend();
+	indexedLatticeTrinomialForwardInductionDividends();
 
 
+	std::cout << "=====================================================\n";
+}
+//
+//
 void latticeBinomialForwardInductionDividends() {
 
 	auto today = date(day_clock::local_day());
@@ -334,36 +328,22 @@ void latticeBinomialForwardInductionDividends() {
 		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
 	}
 
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-	std::cout << "\n";
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+
+	// Instantiate a trinomial model:
+	AbitraryBinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial,
 		date,std::vector<double>, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(la, fwdgen, deltas, 1.0, dividends);
+	fwd_induction(la, model, deltas, 1.0, dividends);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
@@ -394,48 +374,45 @@ void latticeTrinomialForwardInductionDividend() {
 		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
 	}
 
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-	std::cout << "\n";
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial,
 		date, std::vector<double>, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(la, fwdgen, deltas, 1.0, dividends);
+	fwd_induction(la, model, deltas, 1.0, dividends);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
 
-//
-////
-////// ============================= Testing backward-induction algos =======================
-////
-//
+void testForwardInductionDividends() {
+	std::cout << "=====================================================\n";
+	std::cout << "======= Forward Induction Dividends - TEST ==========\n";
+	std::cout << "=====================================================\n";
+
+	latticeBinomialForwardInductionDividends();
+	latticeTrinomialForwardInductionDividend();
 
 
+	std::cout << "=====================================================\n";
+}
+
+
+
+//// ======================================================================================
+//// ============================= Testing backward-induction algos =======================
+//// ======================================================================================
+//
+//
 void indexedLatticeBinomialBackwardInduction() {
 
 	const int N = 3;
@@ -445,40 +422,21 @@ void indexedLatticeBinomialBackwardInduction() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double>::TreeType).name() << "\n";
 
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryBinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial,
 		std::size_t,double, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(il, fwdgen,dt, 1.0);
+	fwd_induction(il, model,dt, 1.0);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-
-	auto backgen = [](double upValue, double downValue, double dt) {
-		double p = 0.5;
-		return (p*upValue + (1.0 - p)*downValue);
-	};
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	auto payoff = [](double S) {
 		return S;
@@ -488,16 +446,10 @@ void indexedLatticeBinomialBackwardInduction() {
 		std::size_t, double> backward_binomial_induction;
 
 	backward_binomial_induction bwrd_induction;
-	bwrd_induction(il, backgen, dt, payoff);
+	bwrd_induction(il, model, dt, payoff);
 
 	std::cout << "After backward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	std::cout << "Price: " << il.apex() << "\n\n";
 }
@@ -514,40 +466,20 @@ void indexedLatticeTrinomialBackwardInduction() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(N);
 	std::cout << "type of tree: " << typeid(lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double>::TreeType).name() << "\n";
 
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial,
 		std::size_t, double, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(il, fwdgen, dt, 1.0);
+	fwd_induction(il, model, dt, 1.0);
 	std::cout << "After forward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-
-	auto backgen = [](double upValue, double midValue, double downValue, double dt) {
-		double p = (1.0 / 3.0);
-		return (p*upValue + p * midValue + p * downValue);
-	};
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	auto payoff = [](double S) {
 		return S;
@@ -557,21 +489,30 @@ void indexedLatticeTrinomialBackwardInduction() {
 		std::size_t, double> backward_trinomial_induction;
 
 	backward_trinomial_induction bwrd_induction;
-	bwrd_induction(il, backgen, dt, payoff);
+	bwrd_induction(il, model, dt, payoff);
 
 	std::cout << "After backward induction step:\n";
-	for (auto const &v : il.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(il, il.cbegin(), il.cend());
 
 	std::cout << "Price: " << il.apex() << "\n\n";
 
 }
 
+
+void testIndexedBackwardInductionDividends() {
+	std::cout << "=====================================================\n";
+	std::cout << "======== Indexed Backward Induction  - TEST =========\n";
+	std::cout << "=====================================================\n";
+
+	indexedLatticeBinomialBackwardInduction();
+	indexedLatticeTrinomialBackwardInduction();
+
+
+	std::cout << "=====================================================\n";
+}
+
+
+//
 void latticeBinomialBackwardInduction() {
 
 
@@ -587,42 +528,21 @@ void latticeBinomialBackwardInduction() {
 		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
 	}
 
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-	std::cout << "\n";
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryBinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial,
 		date, std::vector<double>,double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(la, fwdgen, deltas, 1.0);
+	fwd_induction(la, model, deltas, 1.0);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-
-
-	auto backgen = [](double upValue, double downValue, double dt) {
-		double p = 0.5;
-		return (p*upValue + (1.0 - p)*downValue);
-	};
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	auto payoff = [](double S) {
 		return S;
@@ -632,16 +552,10 @@ void latticeBinomialBackwardInduction() {
 		date, std::vector<double>> backward_binomial_induction;
 
 	backward_binomial_induction bwrd_induction;
-	bwrd_induction(la, backgen,deltas, payoff);
+	bwrd_induction(la, model,deltas, payoff);
 
 	std::cout << "After backward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 
 	std::cout << "Price: " << la.apex() << "\n\n";
@@ -663,42 +577,21 @@ void latticeTrinomialBackwardInduction() {
 		deltas[t] = ((fixingDates[t + 1] - fixingDates[t]).days() / daysInYear);
 	}
 
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-	std::cout << "\n";
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial,
 		date, std::vector<double>, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(la, fwdgen, deltas, 1.0);
+	fwd_induction(la, model, deltas, 1.0);
 
 	std::cout << "After forward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
-
-	auto backgen = [](double upValue, double midValue, double downValue, double dt) {
-		double p = (1.0 / 3.0);
-		return (p*upValue + p * midValue + p * downValue);
-	};
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	auto payoff = [](double S) {
 		return S;
@@ -708,23 +601,30 @@ void latticeTrinomialBackwardInduction() {
 		date, std::vector<double>> backward_trinomial_induction;
 
 	backward_trinomial_induction bwrd_induction;
-	bwrd_induction(la, backgen, deltas, payoff);
+	bwrd_induction(la, model, deltas, payoff);
 
 	std::cout << "After backward induction step:\n";
-	for (auto const &l : la.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << e << ",";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(la, la.cbegin(), la.cend());
 
 	std::cout << "Price: " << la.apex() << "\n\n";
 }
 
+void testBackwardInductionDividends() {
+	std::cout << "=====================================================\n";
+	std::cout << "============ Backward Induction  - TEST =============\n";
+	std::cout << "=====================================================\n";
 
-//
-//
+	latticeBinomialBackwardInduction();
+	latticeTrinomialBackwardInduction();
+
+
+	std::cout << "=====================================================\n";
+}
+
+// ============================================================================================
+// =============================== Testing merging algo =======================================
+// ============================================================================================	
+
 void mergeIndexedBinomial() {
 	const int N = 3;
 	const double maturity{ 1.0 };
@@ -735,26 +635,20 @@ void mergeIndexedBinomial() {
 
 	lattice_utility::print(stockTree,stockTree.begin(), stockTree.end());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryBinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial, std::size_t, double, double> forward_induction;
 	forward_induction fwd_induction;
-	fwd_induction(stockTree, fwdgen,dt, 1.0);
+	fwd_induction(stockTree, model,dt, 1.0);
 
 	std::cout << "After forward induction step:\n";
 	lattice_utility::print(stockTree,stockTree.begin(), stockTree.end());
-
+	
+	// make a copy for merging
 	auto optionTree = stockTree;
-
-	auto backgen = [](double upValue, double downValue, double dt) {
-		double p = 0.5;
-		return (p*upValue + (1.0 - p)*downValue);
-	};
 
 	auto payoff = [](double S) {
 		return S;
@@ -763,30 +657,21 @@ void mergeIndexedBinomial() {
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial, std::size_t, double> backward_induction;
 	backward_induction bwd_induction;
 
-	bwd_induction(optionTree, backgen, dt, payoff);
+	bwd_induction(optionTree, model, dt, payoff);
 	std::cout << "After backward induction step:\n";
 	lattice_utility::print(optionTree,optionTree.begin(), optionTree.end());
 
 	std::cout << "Price: " << optionTree.apex() << "\n\n";
 
 	std::cout << "Merging stockTree with optionTree:\n";
-	//auto mergedTree = lattice_algorithms::merge(stockTree, optionTree,lattice_types::Launch::Parallel);
-
 	typedef lattice_algorithms::MergeLattices<std::size_t> merge;
-	merge mergeThree;
+	merge merge2;
 
-	auto mergedTree = mergeThree(lattice_types::LaunchPolicy::Parallel,stockTree, optionTree, stockTree);
-
-	for (auto const &v : mergedTree.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << "(" << std::get<0>(e) << "," << std::get<1>(e) <<","<< std::get<2>(e) << "),";
-		}
-		std::cout << "]\n";
-	}
+	auto merged = merge2(lattice_types::LaunchPolicy::Parallel, stockTree, optionTree);
+	lattice_utility::print(merged, merged.cbegin(), merged.cend());
 }
 //
-//
+
 void mergeIndexedTrinomial() {
 
 	const int N = 3;
@@ -798,59 +683,57 @@ void mergeIndexedTrinomial() {
 
 	lattice_utility::print(stockTree, stockTree.begin(), stockTree.end());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial, std::size_t, double, double> forward_induction;
 	forward_induction fwd_induction;
 
-	fwd_induction(stockTree, fwdgen,dt, 1.0);
+	fwd_induction(stockTree, model,dt, 1.0);
 	std::cout << "After forward induction step:\n";
 	lattice_utility::print(stockTree, stockTree.begin(), stockTree.end());
-
-	auto backgen = [](double upValue, double midValue, double downValue, double dt) {
-		double p = (1.0 / 3.0);
-		return (p*upValue + p * midValue + p * downValue);
-	};
 
 	auto payoff = [](double S) {
 		return S;
 	};
-
+	// Make a copy for merging
 	auto optionTree = stockTree;
 
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Trinomial, std::size_t, double> backward_induction;
 	backward_induction bwd_induction;
 
-	bwd_induction(optionTree, backgen,dt, payoff);
+	bwd_induction(optionTree, model,dt, payoff);
 	std::cout << "After backward induction step:\n";
 	lattice_utility::print(optionTree,optionTree.begin(), optionTree.end());
 
 	std::cout << "Price: " << optionTree.apex() << "\n\n";
 
 	std::cout << "Merged stockTree and optionTree:\n";
-
 	typedef lattice_algorithms::MergeLattices<std::size_t> merge;
-	merge mergeThree;
+	merge merge2;
 
-	auto mergedTree = mergeThree(lattice_types::LaunchPolicy::Parallel,stockTree, optionTree, stockTree);
-
-	for (auto const &v : mergedTree.tree()) {
-		std::cout << "[";
-		for (auto const &e : v) {
-			std::cout << "(" << std::get<0>(e) << "," << std::get<1>(e)<<","<< std::get<2>(e) << "),";
-		}
-		std::cout << "]\n";
-	}
+	auto merged = merge2(lattice_types::LaunchPolicy::Parallel, stockTree, optionTree);
+	lattice_utility::print(merged, merged.cbegin(), merged.cend());
 
 }
-//
-//
+
+void testIndexedMerge() {
+	std::cout << "=====================================================\n";
+	std::cout << "============ Merging Indexed Trees - TEST ===========\n";
+	std::cout << "=====================================================\n";
+
+	mergeIndexedBinomial();
+	mergeIndexedTrinomial();
+
+
+	std::cout << "=====================================================\n";
+}
+
+
+////
+////
 void mergeBinomial() {
 
 	auto today = date(day_clock::local_day());
@@ -867,25 +750,19 @@ void mergeBinomial() {
 
 	lattice_utility::print(stockTree, stockTree.begin(), stockTree.end());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		return std::make_tuple(u*value, d*value);
-	};
+
+	// Instantiate a trinomial model:
+	AbitraryBinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Binomial, date, std::vector<double>, double> forward_induction;
 	forward_induction fwd_induction;
 
-	fwd_induction(stockTree, fwdgen, deltas, 1.0);
+	fwd_induction(stockTree, model, deltas, 1.0);
 	std::cout << "After forward induction step:\n";
 	lattice_utility::print(stockTree, stockTree.begin(), stockTree.end());
 
-
-	auto backgen = [](double upValue, double downValue, double dt) {
-		double p = 0.5;
-		return (p*upValue + (1.0 - p)*downValue);
-	};
 
 	auto payoff = [](double S) {
 		return S;
@@ -896,7 +773,7 @@ void mergeBinomial() {
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial, date,std::vector<double>> backward_induction;
 	backward_induction bwd_induction;
 
-	bwd_induction(optionTree, backgen, deltas,payoff);
+	bwd_induction(optionTree, model, deltas,payoff);
 	std::cout << "After backward induction step:\n";
 	lattice_utility::print(optionTree, optionTree.begin(), optionTree.end());
 
@@ -904,18 +781,12 @@ void mergeBinomial() {
 	std::cout << "Price: " << optionTree.apex() << "\n\n";
 
 	typedef lattice_algorithms::MergeLattices<date> merge;
-	merge mergeThree;
+	merge merge3;
 
-	auto mergedTree = mergeThree(lattice_types::LaunchPolicy::Parallel,stockTree, optionTree, stockTree);
+	auto merged = merge3(lattice_types::LaunchPolicy::Parallel,stockTree, optionTree, stockTree);
 	std::cout << "Merged stockTree and optionTree:\n";
 
-	for (auto const &l : mergedTree.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << "(" << std::get<0>(e) << "," << std::get<1>(e)<<","<< std::get<2>(e) << "),";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(merged, merged.begin(), merged.end());
 
 }
 //
@@ -935,25 +806,19 @@ void mergeTrinomial() {
 
 	lattice_utility::print(stockTree,stockTree.begin(), stockTree.end());
 
-	auto fwdgen = [](double value, double dt)->std::tuple<double, double, double> {
-		// Parameters to ensure recombining lattice (test purposes)
-		double u = 2.0;
-		double d = 1.0 / u;
-		double m = (u + d)*0.5;
-		return std::make_tuple(u*value, m*value, d*value);
-	};
+
+	// Instantiate a trinomial model:
+	AbitraryTrinomialModel<> model;
+
+	std::cout << "Model: " << decltype(model)::name() << "\n";
 
 	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::Trinomial, date, std::vector<double>, double> forward_induction;
 	forward_induction fwd_induction;
 
-	fwd_induction(stockTree, fwdgen, deltas, 1.0);
+	fwd_induction(stockTree, model, deltas, 1.0);
 	std::cout << "After forward induction step:\n";
 	lattice_utility::print(stockTree, stockTree.begin(), stockTree.end());
 
-	auto backgen = [](double upValue, double midValue, double downValue, double dt) {
-		double p = (1.0 / 3.0);
-		return (p*upValue + p * midValue + p * downValue);
-	};
 
 	auto payoff = [](double S) {
 		return S;
@@ -964,27 +829,32 @@ void mergeTrinomial() {
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Trinomial, date, std::vector<double>> backward_induction;
 	backward_induction bwd_induction;
 
-	bwd_induction(optionTree, backgen,deltas, payoff);
+	bwd_induction(optionTree, model,deltas, payoff);
 	std::cout << "After backward induction step:\n";
 	lattice_utility::print(optionTree, optionTree.begin(), optionTree.end());
 	std::cout << "Price: " << optionTree.apex() << "\n\n";
 
 	typedef lattice_algorithms::MergeLattices<date> merge;
-	merge mergeThree;
+	merge merge3;
 
-	auto mergedTree = mergeThree(lattice_types::LaunchPolicy::Sequential,stockTree, optionTree, stockTree);
+	auto merged = merge3(lattice_types::LaunchPolicy::Sequential,stockTree, optionTree, stockTree);
 	std::cout << "Merged stockTree and optionTree:\n";
 
-	for (auto const &l : mergedTree.tree()) {
-		std::cout << "(" << l.first << "): [";
-		for (auto const &e : l.second) {
-			std::cout << "(" << std::get<0>(e) << "," << std::get<1>(e) <<","<<std::get<2>(e)<< "),";
-		}
-		std::cout << "]\n";
-	}
+	lattice_utility::print(merged, merged.begin(), merged.end());
 
 }
 
+void testMerge() {
+	std::cout << "=====================================================\n";
+	std::cout << "================= Merging Trees - TEST ==============\n";
+	std::cout << "=====================================================\n";
+
+	mergeBinomial();
+	mergeTrinomial();
+
+
+	std::cout << "=====================================================\n";
+}
 
 //
 //void pascalTriangleIndexedTest() {

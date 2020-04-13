@@ -8,6 +8,13 @@
 
 namespace lattice_miscellaneous {
 
+	static std::string const clipComma(std::string str) {
+		const std::string lstr{ str };
+		const std::size_t sz = lstr.size();
+		return str.substr(0, sz - 2);
+	}
+
+
 	template<typename T>
 	T sign(T x) {
 		if (x < 0)
