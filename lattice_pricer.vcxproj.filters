@@ -83,5 +83,8 @@
     <ClInclude Include="lattice_merge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_policy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

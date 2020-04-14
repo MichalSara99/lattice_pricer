@@ -4,354 +4,161 @@
 
 
 #include"lattice_structure.h"
+#include"lattice_policy.h"
 #include<numeric>
 #include<cassert>
 
 namespace lattice_greeks {
 
 	using lattice_types::LatticeType;
-	using lattice_structure::IndexedLattice;
-	using lattice_structure::Lattice;
+	using lattice_policy::greeks::DeltaPolicy;
+	using lattice_policy::greeks::GammaPolicy;
+	using lattice_policy::greeks::ThetaPolicy;
+
+	// ==============================================================================
+	// ================================= Greeks =====================================
+	// ==============================================================================
 
 
-	// implementation details of delta:
-
-	namespace {
-
-		template<typename Node>
-		Node _delta_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-											IndexedLattice<LatticeType::Binomial, Node> const &priceLattice) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first);
-			auto u_itr = std::next(u_first);
-			auto u_change = (u_itr->at(1) - u_itr->at(0));
-			auto p_change = (p_itr->at(1) - p_itr->at(0));
-			return (p_change / u_change);
+	template<typename TimeAxis>
+	class Greeks {
+	private:
+		template<typename LatticeObject,
+			typename Itr1,
+			typename Itr2,
+			typename Policy = DeltaPolicy<LatticeObject::type()>>
+		static auto _delta_impl(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice,
+			Itr1 uItr,Itr2 pItr,std::true_type) {
+			return Policy::sensitivity<typename LatticeObject::Node_type>(uItr, pItr);
+		}
+		template<typename LatticeObject,
+			typename Itr1,
+			typename Itr2,
+			typename Policy = DeltaPolicy<LatticeObject::type()>>
+		static auto _delta_impl(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice,
+			Itr1 uItr, Itr2 pItr, std::false_type) {
+			auto u_itr = &uItr->second;
+			auto p_itr = &pItr->second;
+			return Policy::sensitivity<typename LatticeObject::Node_type>(u_itr,p_itr);
 		}
 
-		template<typename Node>
-		Node _delta_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-											IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first);
-			auto u_itr = std::next(u_first);
-			auto u_change = ((u_itr->at(2) - u_itr->at(1)) + (u_itr->at(1) - u_itr->at(0)));
-			auto p_change = (p_itr->at(2) - p_itr->at(0));
-			return (p_change / u_change);
+		template<typename LatticeObject,
+			typename Itr1,
+			typename Itr2,
+			typename Policy = GammaPolicy<LatticeObject::type()>>
+			static auto _gamma_impl(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice,
+				Itr1 uItr, Itr2 pItr, std::true_type) {
+			return Policy::sensitivity<typename LatticeObject::Node_type>(uItr, pItr);
+		}
+		template<typename LatticeObject,
+			typename Itr1,
+			typename Itr2,
+			typename Policy = GammaPolicy<LatticeObject::type()>>
+			static auto _gamma_impl(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice,
+				Itr1 uItr, Itr2 pItr, std::false_type) {
+			auto u_itr = &uItr->second;
+			auto p_itr = &pItr->second;
+			return Policy::sensitivity<typename LatticeObject::Node_type>(u_itr, p_itr);
 		}
 
-
-		template<typename Node, typename TimeAxis>
-		Node _delta_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-											Lattice<LatticeType::Binomial, Node, TimeAxis> const &priceLattice) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first);
-			auto u_itr = std::next(u_first);
-			auto u_change = (u_itr->at(1) - u_itr->at(0));
-			auto p_change = (p_itr->at(1) - p_itr->at(0));
-			return (p_change / u_change);
+		template<typename LatticeObject,
+			typename Itr,
+			typename Node,
+			typename Policy = ThetaPolicy<LatticeObject::type()>>
+			static auto _theta_impl_(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice,
+				Itr pItr, Node delta1, Node delta2,Node price, std::true_type) {
+			auto mid = pItr->at(1);
+			return Policy::sensitivity<typename LatticeObject::Node_type>(delta1, delta2, mid, price);
 		}
 
-		template<typename Node, typename TimeAxis>
-		Node _delta_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-											Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first);
-			auto u_itr = std::next(u_first);
-			auto u_change = ((u_itr->at(2) - u_itr->at(1)) + (u_itr->at(1) - u_itr->at(0)));
-			auto p_change = (p_itr->at(2) - p_itr->at(0));
-			return (p_change / u_change);
+		template<typename LatticeObject,
+			typename Itr,
+			typename Node,
+			typename Policy = ThetaPolicy<LatticeObject::type()>>
+			static auto _theta_impl_(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice,
+				Itr pItr, Node delta1, Node delta2,Node price ,std::false_type) {
+			auto mid = (pItr->second).at(1);
+			return Policy::sensitivity<typename LatticeObject::Node_type>(delta1, delta2, mid, price);
 		}
 
-
-	}
-
-
-
-
-	template<typename Node>
-	Node delta(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-		IndexedLattice<LatticeType::Binomial, Node> const &priceLattice) {
-		return _delta_indexed_binomial_impl(underlyingLattice, priceLattice);
-	}
-
-	template<typename Node>
-	Node delta(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-		IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice) {
-		return _delta_indexed_trinomial_impl(underlyingLattice, priceLattice);
-	}
-
-
-	template<typename Node, typename TimeAxis>
-	Node delta(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-		Lattice<LatticeType::Binomial,Node,TimeAxis> const &priceLattice) {
-		return _delta_lattice_binomial_impl(underlyingLattice, priceLattice);
-	}
-
-	template<typename Node, typename TimeAxis>
-	Node delta(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-		Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice) {
-		return _delta_lattice_trinomial_impl(underlyingLattice, priceLattice);
-	}
-
-	// implementation details of gamma:
-
-	namespace {
-
-		template<typename Node>
-		Node _gamma_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-			IndexedLattice<LatticeType::Binomial, Node> const &priceLattice) {
-			assert(priceLattice.timeDimension() >= 3);
-			assert(underlyingLattice.timeDimension() >= 3);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first,2);
-			auto u_itr = std::next(u_first,2);
-			auto p_uu = p_itr->at(2);
-			auto p_ud = p_itr->at(1);
-			auto p_dd = p_itr->at(0);
-			auto u_uu = u_itr->at(2);
-			auto u_ud = u_itr->at(1);
-			auto u_dd = u_itr->at(0);
-			return (((p_uu-p_ud)/(u_uu-u_ud)) - ((p_ud - p_dd) / (u_ud - u_dd))) / (0.5*(u_uu - u_dd));
-		}
-
-		template<typename Node>
-		Node _gamma_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-			IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first);
-			auto u_itr = std::next(u_first);
-			auto p_uu = p_itr->at(2);
-			auto p_ud = p_itr->at(1);
-			auto p_dd = p_itr->at(0);
-			auto u_uu = u_itr->at(2);
-			auto u_ud = u_itr->at(1);
-			auto u_dd = u_itr->at(0);
-			return ((p_uu - 2.0*p_ud + p_dd) / ((u_uu - u_ud)*(u_ud - u_dd)));
-		}
-
-
-		template<typename Node, typename TimeAxis>
-		Node _gamma_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-			Lattice<LatticeType::Binomial, Node, TimeAxis> const &priceLattice) {
-			assert(priceLattice.timeDimension() >= 3);
-			assert(underlyingLattice.timeDimension() >= 3);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first, 2);
-			auto u_itr = std::next(u_first, 2);
-			auto p_uu = p_itr->at(2);
-			auto p_ud = p_itr->at(1);
-			auto p_dd = p_itr->at(0);
-			auto u_uu = u_itr->at(2);
-			auto u_ud = u_itr->at(1);
-			auto u_dd = u_itr->at(0);
-			return (((p_uu - p_ud) / (u_uu - u_ud)) - ((p_ud - p_dd) / (u_ud - u_dd))) / (0.5*(u_uu - u_dd));
-		}
-
-		template<typename Node, typename TimeAxis>
-		Node _gamma_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-			Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto u_first = underlyingLattice.cbegin();
-			auto p_itr = std::next(p_first);
-			auto u_itr = std::next(u_first);
-			auto p_uu = p_itr->at(2);
-			auto p_ud = p_itr->at(1);
-			auto p_dd = p_itr->at(0);
-			auto u_uu = u_itr->at(2);
-			auto u_ud = u_itr->at(1);
-			auto u_dd = u_itr->at(0);
-			return ((p_uu - 2.0*p_ud + p_dd) / ((u_uu - u_ud)*(u_ud - u_dd)));
-		}
-
-	}
-
-
-	template<typename Node>
-	Node gamma(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-		IndexedLattice<LatticeType::Binomial, Node> const &priceLattice) {
-		return _gamma_indexed_binomial_impl(underlyingLattice, priceLattice);
-	}
-
-	template<typename Node>
-	Node gamma(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-		IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice) {
-		return _gamma_indexed_trinomial_impl(underlyingLattice, priceLattice);
-	}
-
-
-	template<typename Node, typename TimeAxis>
-	Node gamma(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-		Lattice<LatticeType::Binomial, Node, TimeAxis> const &priceLattice) {
-		return _gamma_lattice_binomial_impl(underlyingLattice, priceLattice);
-	}
-
-	template<typename Node, typename TimeAxis>
-	Node gamma(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-		Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice) {
-		return _gamma_lattice_trinomial_impl(underlyingLattice, priceLattice);
-	}
-
-
-	// implementation details of theta:
-
-	namespace {
-
-		template<typename Node, typename DeltaTime>
-		Node _theta_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-			IndexedLattice<LatticeType::Binomial, Node> const &priceLattice, DeltaTime deltaTime,std::true_type) {
-			assert(priceLattice.timeDimension() >= 3);
-			assert(underlyingLattice.timeDimension() >= 3);
-			assert(deltaTime.size() >= 2);
+		template<typename LatticeObject,
+			typename DeltaTime,
+			typename Policy = ThetaPolicy<LatticeObject::type()>>
+			static auto _theta_impl(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice, DeltaTime const &deltaTime, std::true_type) {
+			LASSERT(underlyingLattice.type() == priceLattice.type(), "Mismatch of lattice types");
+			LASSERT(underlyingLattice.timeDimension() >= 3, "Lattice must have at least three periods");
+			LASSERT(priceLattice.timeDimension() >= 3, "Lattice must have at least three periods");
 			auto p_first = priceLattice.cbegin();
 			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first, 2);
+			std::size_t offSet = 1;
+			if (LatticeObject::type() == LatticeType::Binomial) {
+				offSet = 2;
+			}
+			auto p_itr = std::next(p_first, offSet);
 			auto delta_1 = deltaTime.at(0);
 			auto delta_2 = deltaTime.at(1);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (delta_1 + delta_2));
+
+			return _theta_impl_(underlyingLattice, priceLattice, p_itr, delta_1, delta_2, price,
+				std::is_integral<typename LatticeObject::TimeAxis_type>());
 		}
 
-		template<typename Node,typename DeltaTime>
-		Node _theta_indexed_binomial_impl(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-			IndexedLattice<LatticeType::Binomial, Node> const &priceLattice, DeltaTime deltaTime, std::false_type) {
-			assert(priceLattice.timeDimension() >= 3);
-			assert(underlyingLattice.timeDimension() >= 3);
+		template<typename LatticeObject,
+			typename DeltaTime,
+			typename Policy = ThetaPolicy<LatticeObject::type()>>
+			static auto _theta_impl(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice, DeltaTime const &deltaTime, std::false_type) {
+			LASSERT(underlyingLattice.type() == priceLattice.type(), "Mismatch of lattice types");
+			LASSERT(underlyingLattice.timeDimension() >= 3, "Lattice must have at least three periods");
+			LASSERT(priceLattice.timeDimension() >= 3, "Lattice must have at least three periods");
 			auto p_first = priceLattice.cbegin();
 			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first, 2);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (deltaTime + deltaTime));
+			std::size_t offSet = 1;
+			if (LatticeObject::type() == LatticeType::Binomial) {
+				offSet = 2;
+			}
+			auto p_itr = std::next(p_first, offSet);
+			return _theta_impl_(underlyingLattice, priceLattice, p_itr, deltaTime, deltaTime, price,
+				std::is_integral<typename LatticeObject::TimeAxis_type>());
 		}
 
-
-
-		template<typename Node, typename DeltaTime>
-		Node _theta_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-			IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice, DeltaTime deltaTime, std::true_type) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			assert(deltaTime.size() >= 1);
+	public:
+		template<typename LatticeObject>
+			static auto delta(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice) {
+			LASSERT(underlyingLattice.type() == priceLattice.type(), "Mismatch of lattice types");
+			LASSERT(underlyingLattice.timeDimension() >= 2, "Lattice must have at least three periods");
+			LASSERT(priceLattice.timeDimension() >= 2, "Lattice must have at least three periods");
 			auto p_first = priceLattice.cbegin();
-			auto price = priceLattice.apex();
+			auto u_first = underlyingLattice.cbegin();
 			auto p_itr = std::next(p_first);
-			auto delta = deltaTime.at(0);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (delta));
+			auto u_itr = std::next(u_first);
+			return _delta_impl(underlyingLattice, priceLattice, u_itr, p_itr,
+				std::is_integral<typename LatticeObject::TimeAxis_type>());
 		}
 
-		template<typename Node, typename DeltaTime>
-		Node _theta_indexed_trinomial_impl(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-			IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice, DeltaTime deltaTime, std::false_type) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
+		template<typename LatticeObject>
+			static auto gamma(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice) {
+			LASSERT(underlyingLattice.type() == priceLattice.type(), "Mismatch of lattice types");
+			LASSERT(underlyingLattice.timeDimension() >= 3, "Lattice must have at least three periods");
+			LASSERT(priceLattice.timeDimension() >= 3, "Lattice must have at least three periods");
 			auto p_first = priceLattice.cbegin();
-			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (deltaTime));
+			auto u_first = underlyingLattice.cbegin();
+			std::size_t offSet = 1;
+			if (LatticeObject::type() == LatticeType::Binomial) {
+				offSet = 2;
+			}
+			auto p_itr = std::next(p_first, offSet);
+			auto u_itr = std::next(u_first, offSet);
+			return _gamma_impl(underlyingLattice, priceLattice, u_itr, p_itr,
+				std::is_integral<typename LatticeObject::TimeAxis_type>());
+		}
+
+		template<typename LatticeObject,
+			typename DeltaTime>
+			static auto theta(LatticeObject const &underlyingLattice, LatticeObject const &priceLattice, DeltaTime const &deltaTime) {
+			return _theta_impl(underlyingLattice, priceLattice, deltaTime, std::is_compound<DeltaTime>());
 		}
 
 
-		template<typename Node, typename TimeAxis, typename DeltaTime>
-		Node _theta_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-			Lattice<LatticeType::Binomial, Node, TimeAxis> const &priceLattice, DeltaTime deltaTime, std::true_type) {
-			assert(priceLattice.timeDimension() >= 3);
-			assert(underlyingLattice.timeDimension() >= 3);
-			assert(deltaTime.size() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first, 2);
-			auto delta_1 = deltaTime.at(0);
-			auto delta_2 = deltaTime.at(1);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (delta_1 + delta_2));
-		}
-
-		template<typename Node, typename TimeAxis, typename DeltaTime>
-		Node _theta_lattice_binomial_impl(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-			Lattice<LatticeType::Binomial, Node, TimeAxis> const &priceLattice, DeltaTime deltaTime, std::false_type) {
-			assert(priceLattice.timeDimension() >= 3);
-			assert(underlyingLattice.timeDimension() >= 3);
-			auto p_first = priceLattice.cbegin();
-			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first, 2);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (2.0*deltaTime));
-		}
-
-		template<typename Node, typename TimeAxis, typename DeltaTime>
-		Node _theta_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-			Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice, DeltaTime deltaTime, std::true_type) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			assert(deltaTime.size() >= 1);
-			auto p_first = priceLattice.cbegin();
-			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first);
-			auto delta = deltaTime.at(0);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (delta));
-		}
-
-		template<typename Node, typename TimeAxis, typename DeltaTime>
-		Node _theta_lattice_trinomial_impl(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-			Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice, DeltaTime deltaTime, std::false_type) {
-			assert(priceLattice.timeDimension() >= 2);
-			assert(underlyingLattice.timeDimension() >= 2);
-			auto p_first = priceLattice.cbegin();
-			auto price = priceLattice.apex();
-			auto p_itr = std::next(p_first);
-			auto p_mid = p_itr->at(1);
-			return ((p_mid - price) / (deltaTime));
-		}
-
-	}
-
-
-	template<typename Node, typename DeltaTime>
-	Node theta(IndexedLattice<LatticeType::Binomial, Node> const &underlyingLattice,
-		IndexedLattice<LatticeType::Binomial, Node> const &priceLattice, DeltaTime deltaTime) {
-		return _theta_indexed_binomial_impl(underlyingLattice, priceLattice,deltaTime, std::is_compound<DeltaTime>());
-	}
-
-	template<typename Node, typename DeltaTime>
-	Node theta(IndexedLattice<LatticeType::Trinomial, Node> const &underlyingLattice,
-		IndexedLattice<LatticeType::Trinomial, Node> const &priceLattice, DeltaTime deltaTime) {
-		return _theta_indexed_trinomial_impl(underlyingLattice, priceLattice, deltaTime, std::is_compound<DeltaTime>());
-	}
-
-
-	template<typename Node, typename TimeAxis, typename DeltaTime>
-	Node theta(Lattice<LatticeType::Binomial, Node, TimeAxis> const& underlyingLattice,
-		Lattice<LatticeType::Binomial, Node, TimeAxis> const &priceLattice, DeltaTime deltaTime) {
-		return _theta_lattice_binomial_impl(underlyingLattice, priceLattice, deltaTime,std::is_compound<DeltaTime>());
-	}
-
-	template<typename Node, typename TimeAxis, typename DeltaTime>
-	Node theta(Lattice<LatticeType::Trinomial, Node, TimeAxis>const& underlyingLattice,
-		Lattice<LatticeType::Trinomial, Node, TimeAxis>const& priceLattice, DeltaTime deltaTime) {
-		return _theta_lattice_trinomial_impl(underlyingLattice, priceLattice,deltaTime, std::is_compound<DeltaTime>());
-	}
+	};
 
 
 

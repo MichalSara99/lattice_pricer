@@ -11,7 +11,7 @@
 #include"lattice_algorithms_t.h"
 #include"lattice_model_t.h"
 #include"lattice_examples.h"
-//#include"lattice_greeks_t.h"
+#include"lattice_greeks_t.h"
 
 using namespace boost::gregorian;
 
@@ -31,6 +31,8 @@ int main(int argc, char const *argv[]) {
 	std::cout << "===============================================\n";
 
 	// == lattice_greeks_t.h ====
+	 testIndexedLatticesGreeks();
+	 testLatticesGreeks();
 
 	//indexedLatticeBinomialDelta();
 	//crrIndexedLatticeGreeks();
@@ -58,7 +60,7 @@ int main(int argc, char const *argv[]) {
 	//	testBackwardInductionDividends();
 
 	// testIndexedMerge();
-	 testMerge();
+	// testMerge();
 
 
 
