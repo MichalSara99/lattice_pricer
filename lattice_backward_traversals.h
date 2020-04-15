@@ -113,10 +113,10 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			lattice(n, i) = generator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
+			lattice(n, i) = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
 		}
 	}
-	lattice(0, 0) = generator(lattice(1, 0), lattice(1, 1), deltaTime[0]);
+	lattice(0, 0) = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), deltaTime[0]);
 }
 
 
@@ -136,10 +136,10 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			lattice(n, i) = generator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
+			lattice(n, i) = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
 		}
 	}
-	lattice(0, 0) = generator(lattice(1, 0), lattice(1, 1), deltaTime);
+	lattice(0, 0) = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), deltaTime);
 
 }
 
@@ -161,12 +161,12 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			auto value = generator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
+			auto value = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime[n]);
 			payoffAdjuster(value, lattice(n, i));
 			lattice(n, i) = value;
 		}
 	}
-	auto lastValue = generator(lattice(1, 0), lattice(1, 1), deltaTime[0]);
+	auto lastValue = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), deltaTime[0]);
 	payoffAdjuster(lastValue, lattice(0, 0));
 	lattice(0, 0) = lastValue;
 }
@@ -189,12 +189,12 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			auto value = generator(lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
+			auto value = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), deltaTime);
 			payoffAdjuster(value, lattice(n, i));
 			lattice(n, i) = value;
 		}
 	}
-	auto lastValue = generator(lattice(1, 0), lattice(1, 1), deltaTime);
+	auto lastValue = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), deltaTime);
 	payoffAdjuster(lastValue, lattice(0, 0));
 	lattice(0, 0) = lastValue;
 }
@@ -216,10 +216,10 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			lattice(n, i) = generator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
+			lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
 		}
 	}
-	lattice(0, 0) = generator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
+	lattice(0, 0) = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
 
 }
 
@@ -239,10 +239,10 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			lattice(n, i) = generator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
+			lattice(n, i) = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
 		}
 	}
-	lattice(0, 0) = generator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
+	lattice(0, 0) = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
 
 }
 
@@ -264,12 +264,12 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			auto value  = generator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
+			auto value  = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime[n]);
 			payoffAdjuster(value, lattice(n, i));
 			lattice(n, i) = value;
 		}
 	}
-	auto lastValue = generator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
+	auto lastValue = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime[0]);
 	payoffAdjuster(lastValue, lattice(0, 0));
 	lattice(0, 0) = lastValue;
 }
@@ -292,12 +292,12 @@ _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &d
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			auto value = generator(lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
+			auto value = generator(lattice(n, i),lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), deltaTime);
 			payoffAdjuster(value, lattice(n, i));
 			lattice(n, i) = value;
 		}
 	}
-	auto lastValue = generator(lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
+	auto lastValue = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), lattice(1, 2), deltaTime);
 	payoffAdjuster(lastValue, lattice(0, 0));
 	lattice(0, 0) = lastValue;
 }

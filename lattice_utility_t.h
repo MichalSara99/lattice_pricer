@@ -4,6 +4,10 @@
 
 #include<iostream>
 #include"lattice_utility.h"
+#include<boost/date_time/gregorian/gregorian.hpp>
+#include<boost/date_time/gregorian/gregorian_types.hpp>
+
+using namespace boost::gregorian;
 
 void utilityTest1() {
 

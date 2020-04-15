@@ -53,7 +53,7 @@ int main(int argc, char const *argv[]) {
 	//	testIndexedForwardInduction();
 	//	testForwardInduction();
 
-	//	testIndexedForwardInductionDividends();
+	//  testIndexedForwardInductionDividends();
 	//	testForwardInductionDividends();
 
 	//	testIndexedBackwardInductionDividends();

@@ -11,6 +11,7 @@ namespace lattice_model {
 	using lattice_types::LeafForwardGenerator;
 	using lattice_types::LeafBackwardGenerator;
 	using lattice_types::LatticeType;
+	using lattice_types::AssetClass;
 
 
 	template<std::size_t FactorCount,typename T>
@@ -26,13 +27,15 @@ namespace lattice_model {
 		virtual std::tuple<T, T> operator()(T value, T dt) = 0;
 
 		// Backward generator:
-		virtual T operator()(T upValue, T downValue, T dt) = 0;
+		virtual T operator()(T currValue,T upValue, T downValue, T dt) = 0;
 
 		// Factor count:
 		enum { FactorCount = 1 };
 
 		// LatticeType:
 		LatticeType latticeType()const { return LatticeType::Binomial; }
+
+
 	};
 
 	template<typename T>
@@ -43,8 +46,8 @@ namespace lattice_model {
 							LeafForwardGenerator<T, T, T>> forwardGenerator()const = 0;
 
 		// Forward generator 2:
-		virtual std::pair<LeafBackwardGenerator<T, T, T, T>,
-							LeafBackwardGenerator<T, T, T, T>> backwardGenerator()const = 0;
+		virtual std::pair<LeafBackwardGenerator<T, T ,T, T, T>,
+							LeafBackwardGenerator<T, T, T, T, T>> backwardGenerator()const = 0;
 		// Factor count:
 		enum { FactorCount = 2 };
 
@@ -60,7 +63,7 @@ namespace lattice_model {
 		virtual std::tuple<T, T, T> operator()(T value, T dt) = 0;
 
 		// Backward generator:
-		virtual T operator()(T upValue,T midValue, T downValue, T dt) = 0;
+		virtual T operator()(T currValue,T upValue,T midValue, T downValue, T dt) = 0;
 
 		// Factor count:
 		enum { FactorCount = 1 };
@@ -79,14 +82,15 @@ namespace lattice_model {
 			LeafForwardGenerator<T, T, T,T>> forwardGenerator()const = 0;
 
 		// Forward generator 2:
-		virtual std::pair<LeafBackwardGenerator<T, T, T, T>,
-			LeafBackwardGenerator<T, T, T, T>> backwardGenerator()const = 0;
+		virtual std::pair<LeafBackwardGenerator<T,T, T, T, T,T>,
+			LeafBackwardGenerator<T,T, T, T, T,T>> backwardGenerator()const = 0;
 
 		// Factor count:
 		enum { FactorCount = 2 };
 
 		// LatticeType:
 		LatticeType latticeType()const { return LatticeType::Trinomial; }
+
 	};
 
 	// =============================================================================================
@@ -118,8 +122,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator
-		T operator()(T upValue, T downValue, T dt) override {
-			T q = option_.DividentRate;
+		T operator()(T currValue, T upValue, T downValue, T dt) override {
 			T r = option_.RiskFreeRate;
 			T disc = std::exp(-1.0*r*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
@@ -128,6 +131,8 @@ namespace lattice_model {
 		static std::string const name() {
 			return std::string{ "Cox-Rubinstein-Ross model" };
 		}
+
+		static AssetClass const assetClass() { return AssetClass::Equity; }
 	};
 
 
@@ -158,7 +163,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator:
-		T operator()(T upValue, T downValue, T dt) override {
+		T operator()(T currValue, T upValue, T downValue, T dt) override {
 			T q = option_.DividentRate;
 			T s = option_.Underlying;
 			T sig = option_.Volatility;
@@ -176,6 +181,7 @@ namespace lattice_model {
 		static std::string const name() {
 			return std::string{ "Modified Cox-Rubinstein-Ross model" };
 		}
+		static AssetClass const assetClass() { return AssetClass::Equity; }
 	};
 
 	// =====================================================================================
@@ -206,8 +212,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator
-		T operator()(T upValue, T downValue, T dt) override {
-			T q = option_.DividentRate;
+		T operator()(T currValue, T upValue, T downValue, T dt) override {
 			T r = option_.RiskFreeRate;
 			T disc = std::exp(-1.0*r *dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
@@ -216,6 +221,7 @@ namespace lattice_model {
 		static std::string const name(){
 			return std::string{ "Jarrow-Rudd model" };
 		}
+		static AssetClass const assetClass() { return AssetClass::Equity; }
 	};
 
 	// =====================================================================================
@@ -243,8 +249,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator:
-		T operator()(T upValue, T downValue, T dt)override {
-			T q = option_.DividentRate;
+		T operator()(T currValue, T upValue, T downValue, T dt)override {
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
@@ -256,6 +261,8 @@ namespace lattice_model {
 		static std::string const name()  {
 			return std::string{ "Trigeorgis model" };
 		}
+
+		static AssetClass const assetClass() { return AssetClass::Equity; }
 	};
 
 	// ===============================================================================
@@ -284,7 +291,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator:
-		T operator()(T upValue, T downValue, T dt)override {
+		T operator()(T currValue,T upValue, T downValue, T dt)override {
 			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
@@ -300,6 +307,8 @@ namespace lattice_model {
 		static std::string const name(){
 			return std::string{ "Tian model" };
 		}
+
+		static AssetClass const assetClass() { return AssetClass::Equity; }
 	};
 
 	// ========================================================================================
@@ -341,7 +350,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator:
-		T operator()(T upValue, T downValue, T dt)override {
+		T operator()(T currValue, T upValue, T downValue, T dt)override {
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T q = option_.DividentRate;
@@ -360,6 +369,51 @@ namespace lattice_model {
 			return std::string{ "Leisen-Reimer model" };
 		}
 
+		static AssetClass const assetClass() { return AssetClass::Equity; }
+
+	};
+
+
+	// =============================================================================================
+	// ======================== Black-Derman-Toy model (binomial lattice) ==========================
+	// =============================================================================================
+
+
+	template<typename T = double>
+	class BlackDermanToyModel :public BinomialModel<1, T> {
+	private:
+		T prob_;
+		std::vector<T> theta_;
+		OptionData<T> option_;
+		std::size_t thetaCounter_;
+
+	public:
+		BlackDermanToyModel(OptionData<T>const &optionData,std::vector<T> const &theta)
+			:option_{ optionData }, prob_{ 0.5 },
+			theta_{ theta }, thetaCounter_{ 0 } {
+		}
+
+		// Forward generator
+		std::tuple<T, T> operator()(T value, T dt) override {
+			T sig = option_.Volatility;
+			T sqrtdt = std::sqrt(dt);
+			T up = std::exp(sig*sqrtdt);
+			T down = 1.0 / up;
+			T theta = theta_.at(thetaCounter_++);
+			return std::make_tuple(up*theta*value, down*theta*value);
+		}
+
+		// Backward generator
+		T operator()(T currValue, T upValue, T downValue, T dt) override {
+			T disc = std::exp(-1.0*currValue*dt);
+			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
+		}
+
+		static std::string const name() {
+			return std::string{ "Black-Derman-Toy model" };
+		}
+
+		static AssetClass const assetClass() { return AssetClass::InterestRate; }
 	};
 
 
@@ -387,7 +441,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator
-		T operator()(T upValue,T midValue,T downValue, T dt) override {
+		T operator()(T currValue, T upValue,T midValue,T downValue, T dt) override {
 			T q = option_.DividentRate;
 			T r = option_.RiskFreeRate;
 			T sig = option_.Volatility;
@@ -404,6 +458,8 @@ namespace lattice_model {
 		static std::string const name() {
 			return std::string{ "Boyle model" };
 		}
+
+		static AssetClass const assetClass() { return AssetClass::Equity; }
 	};
 
 }

@@ -51,7 +51,7 @@ void crrIndexedLattice() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = crr;
+	
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
@@ -272,7 +272,7 @@ void tmIndexedLattice() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = tm;
+
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
@@ -386,7 +386,6 @@ void bmIndexedLattice() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double, double> backGen = bm;
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
@@ -572,7 +571,7 @@ void jrIndexedLatticeAmerican() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = jr;
+
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
@@ -629,7 +628,7 @@ void trimIndexedLatticeAmerican() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = trim;
+
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
@@ -687,7 +686,7 @@ void tmIndexedLatticeAmerican() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = tm;
+
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
@@ -749,7 +748,7 @@ void lrIndexedLatticeAmerican() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	lattice_types::LeafBackwardGenerator<double, double, double, double> backGen = lr;
+
 	// Prepare payoff:
 	double K = option.Strike;
 	auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };

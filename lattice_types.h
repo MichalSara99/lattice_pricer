@@ -12,6 +12,8 @@ namespace lattice_types {
 
 	enum class LatticeType { Binomial, Trinomial };
 
+	enum class AssetClass { InterestRate, Equity };
+
 	template<typename Node,typename ...Nodes>
 	using LeafForwardGenerator = std::function<std::tuple<Nodes...>(Node,Node)>;
 

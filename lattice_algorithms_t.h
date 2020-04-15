@@ -28,7 +28,7 @@ public:
 	}
 
 	// Backward generator
-	T operator()(T upValue, T downValue, T dt) override {
+	T operator()(T currValue, T upValue, T downValue, T dt) override {
 		double p = 0.5;
 		return (p*upValue + (1.0 - p)*downValue);
 	}
@@ -50,7 +50,7 @@ public:
 	}
 
 	// Backward generator
-	T operator()(T upValue,T midValue, T downValue, T dt) override {
+	T operator()(T currValue,T upValue,T midValue, T downValue, T dt) override {
 		double p = (1.0 / 3.0);
 		return (p*upValue + p * midValue + p * downValue);
 	}
