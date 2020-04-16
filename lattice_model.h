@@ -24,7 +24,7 @@ namespace lattice_model {
 	class BinomialModel<1,T> {
 	public:
 		// Forward generator:
-		virtual std::tuple<T, T> operator()(T value, T dt) = 0;
+		virtual std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx,std::size_t timeIdx) = 0;
 
 		// Backward generator:
 		virtual T operator()(T currValue,T upValue, T downValue, T dt) = 0;
@@ -60,7 +60,7 @@ namespace lattice_model {
 	class TrinomialModel<1,T> {
 	public:
 		// Forward generator:
-		virtual std::tuple<T, T, T> operator()(T value, T dt) = 0;
+		virtual std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) = 0;
 
 		// Backward generator:
 		virtual T operator()(T currValue,T upValue,T midValue, T downValue, T dt) = 0;
@@ -110,7 +110,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
 			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
@@ -132,7 +132,7 @@ namespace lattice_model {
 			return std::string{ "Cox-Rubinstein-Ross model" };
 		}
 
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
 
 
@@ -151,7 +151,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt)override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx)override {
 			T s = option_.Underlying;
 			T sig = option_.Volatility;
 			T k = option_.Strike;
@@ -181,7 +181,7 @@ namespace lattice_model {
 		static std::string const name() {
 			return std::string{ "Modified Cox-Rubinstein-Ross model" };
 		}
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
 
 	// =====================================================================================
@@ -199,7 +199,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt)override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx)override {
 			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
@@ -221,7 +221,7 @@ namespace lattice_model {
 		static std::string const name(){
 			return std::string{ "Jarrow-Rudd model" };
 		}
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
 
 	// =====================================================================================
@@ -240,7 +240,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
 			T sig = option_.Volatility;
 			T x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
 			T up = std::exp(x);
@@ -262,7 +262,7 @@ namespace lattice_model {
 			return std::string{ "Trigeorgis model" };
 		}
 
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
 
 	// ===============================================================================
@@ -279,7 +279,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
 			T q = option_.DividentRate;
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
@@ -308,7 +308,7 @@ namespace lattice_model {
 			return std::string{ "Tian model" };
 		}
 
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
 
 	// ========================================================================================
@@ -331,7 +331,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
 			T sig = option_.Volatility;
 			T r = option_.RiskFreeRate;
 			T q = option_.DividentRate;
@@ -369,7 +369,7 @@ namespace lattice_model {
 			return std::string{ "Leisen-Reimer model" };
 		}
 
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 
 	};
 
@@ -385,22 +385,21 @@ namespace lattice_model {
 		T prob_;
 		std::vector<T> theta_;
 		OptionData<T> option_;
-		std::size_t thetaCounter_;
 
 	public:
-		BlackDermanToyModel(OptionData<T>const &optionData,std::vector<T> const &theta)
-			:option_{ optionData }, prob_{ 0.5 },
-			theta_{ theta }, thetaCounter_{ 0 } {
+		BlackDermanToyModel(OptionData<T>const &optionData)
+			:option_{ optionData }, prob_{ 0.5 } {
 		}
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
+			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
 			T sig = option_.Volatility;
 			T sqrtdt = std::sqrt(dt);
-			T up = std::exp(sig*sqrtdt);
-			T down = 1.0 / up;
-			T theta = theta_.at(thetaCounter_++);
-			return std::make_tuple(up*theta*value, down*theta*value);
+			T up = std::exp(sig*(leafIdx + 1)*sqrtdt);
+			T down = std::exp(sig*leafIdx*sqrtdt);
+			T theta = theta_.at(timeIdx - 1);
+			return std::make_tuple(down*theta, up*theta);
 		}
 
 		// Backward generator
@@ -409,11 +408,45 @@ namespace lattice_model {
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
+		void setTheta(std::vector<T> const &theta) { theta_(theta); }
+
 		static std::string const name() {
 			return std::string{ "Black-Derman-Toy model" };
 		}
 
-		static AssetClass const assetClass() { return AssetClass::InterestRate; }
+		OptionData<T> const &optionData()const { return option_; }
+
+		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
+
+		// Calibration objective function:
+		auto calibrationObjective()const {
+
+			T sig = option_.Volatility;
+
+			return [=](T theta,T dt,T discount, std::vector<T> const &arrowDebreuStates)->T {
+				T sqrtdt = std::sqrt(dt);
+				T sum{ 0.0 };
+				std::size_t const statesSize = arrowDebreuStates.size();
+				for (std::size_t i = 0; i < statesSize; ++i) {
+					sum += arrowDebreuStates.at(i) / (1.0 + theta * std::exp(sig*i*sqrtdt));
+				}
+				return ((sum - discount)*(sum - discount));
+			};
+		}
+
+		// Calibration forward function:
+		auto calibrationForwardGenerator()const {
+			T sig = option_.Volatility;
+
+			return [=](T theta,T dt, std::size_t leafIdx)->std::tuple<T, T> {
+				T sqrtdt = std::sqrt(dt);
+				T up = std::exp(sig*(leafIdx + 1)*sqrtdt);
+				T down = std::exp(sig*leafIdx*sqrtdt);
+				return std::make_tuple( down*theta, up*theta);
+			};
+
+		}
+
 	};
 
 
@@ -431,7 +464,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T, T> operator()(T value, T dt) override {
+		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
 			T sig = option_.Volatility;
 			T expon = sig * std::sqrt(2.0*dt);
 			T up = std::exp(expon);
@@ -459,7 +492,7 @@ namespace lattice_model {
 			return std::string{ "Boyle model" };
 		}
 
-		static AssetClass const assetClass() { return AssetClass::Equity; }
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
 
 }

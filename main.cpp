@@ -13,6 +13,8 @@
 #include"lattice_examples.h"
 #include"lattice_greeks_t.h"
 
+#include"lattice_calibrator_ir_t.h"
+
 using namespace boost::gregorian;
 
 
@@ -30,9 +32,11 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
+	testIndexedBDT();
+
 	// == lattice_greeks_t.h ====
-	 testIndexedLatticesGreeks();
-	 testLatticesGreeks();
+	// testIndexedLatticesGreeks();
+	// testLatticesGreeks();
 
 	//indexedLatticeBinomialDelta();
 	//crrIndexedLatticeGreeks();

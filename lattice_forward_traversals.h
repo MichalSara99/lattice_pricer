@@ -116,7 +116,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+			tuple = generator(lattice(t - 1, l), deltaTime[t - 1],l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 		}
@@ -135,7 +135,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime);
+			tuple = generator(lattice(t - 1, l), deltaTime,l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 		}
@@ -158,7 +158,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+			tuple = generator(lattice(t - 1, l), deltaTime[t - 1],l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 		}
@@ -180,7 +180,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 			factor *= (factor - nextExItr->second);
 		}
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+			tuple = generator(lattice(t - 1, l), deltaTime[t - 1],l,t);
 			lattice(t, l) = factor * std::get<0>(tuple);
 			lattice(t, l + 1) = factor * std::get<1>(tuple);
 		}
@@ -200,7 +200,7 @@ _traverse(LatticeObject &lattice, Generator &&generator,  DeltaTime const &delta
 	std::tuple<Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime);
+			tuple = generator(lattice(t - 1, l), deltaTime,l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 		}
@@ -223,7 +223,7 @@ _traverse(LatticeObject &lattice, Generator &&generator,  DeltaTime const &delta
 			factor *= (factor - nextExItr->second);
 		}
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime);
+			tuple = generator(lattice(t - 1, l), deltaTime,l,t);
 			lattice(t, l) = factor * std::get<0>(tuple);
 			lattice(t, l + 1) = factor * std::get<1>(tuple);
 		}
@@ -247,7 +247,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+			tuple = generator(lattice(t - 1, l), deltaTime[t - 1],l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 			lattice(t, l + 2) = std::get<2>(tuple);
@@ -267,7 +267,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime);
+			tuple = generator(lattice(t - 1, l), deltaTime,l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 			lattice(t, l + 2) = std::get<2>(tuple);
@@ -291,7 +291,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+			tuple = generator(lattice(t - 1, l), deltaTime[t - 1],l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 			lattice(t, l + 2) = std::get<2>(tuple);
@@ -314,7 +314,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 			factor *= (factor - nextExItr->second);
 		}
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime[t - 1]);
+			tuple = generator(lattice(t - 1, l), deltaTime[t - 1],l,t);
 			lattice(t, l) = factor * std::get<0>(tuple);
 			lattice(t, l + 1) = factor * std::get<1>(tuple);
 			lattice(t, l + 2) = factor * std::get<2>(tuple);
@@ -335,7 +335,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 	std::tuple<Node, Node, Node> tuple;
 	for (std::size_t t = 1; t < lattice.timeDimension(); ++t) {
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime);
+			tuple = generator(lattice(t - 1, l), deltaTime,l,t);
 			lattice(t, l) = std::get<0>(tuple);
 			lattice(t, l + 1) = std::get<1>(tuple);
 			lattice(t, l + 2) = std::get<2>(tuple);
@@ -359,7 +359,7 @@ _traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaT
 			factor *= (factor - nextExItr->second);
 		}
 		for (std::size_t l = 0; l < lattice.nodesAtIdx(t - 1).size(); ++l) {
-			tuple = generator(lattice(t - 1, l), deltaTime);
+			tuple = generator(lattice(t - 1, l), deltaTime,l,t);
 			lattice(t, l) = factor * std::get<0>(tuple);
 			lattice(t, l + 1) = factor * std::get<1>(tuple);
 			lattice(t, l + 2) = factor * std::get<2>(tuple);

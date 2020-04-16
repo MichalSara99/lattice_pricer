@@ -86,5 +86,17 @@
     <ClInclude Include="lattice_policy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_calibrator_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_calibrator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_calibrator_ir.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_calibrator_ir_t.h">
+      <Filter>Header Files\unit_tests</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

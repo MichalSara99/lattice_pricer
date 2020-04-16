@@ -9,6 +9,7 @@
 #include"lattice_algorithms.h"
 #include"lattice_model_components.h"
 
+
 #include<iostream>
 #include<numeric>
 
