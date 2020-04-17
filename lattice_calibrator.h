@@ -44,9 +44,9 @@ namespace lattice_calibrator {
 
 
 		template<typename LatticeObject,typename Generator>
-		std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject, Node>>
+		std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject, Node>> const
 			operator()(LatticeObject &rateLattice, Generator &&generator,
-						DeltaTime const &deltaTime) {
+						DeltaTime const &deltaTime) const {
 			LASSERT(rateLattice.type() == generator.latticeType(), "Mismatch between lattice types");
 			LASSERT(generator.assetClass() == AssetClass::InterestRate, "Mismatch between asset classes");
 			return CalibratorIR<LatticeType::Binomial, TimeAxis, DeltaTime, DiscountCurve, Node>::
