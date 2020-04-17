@@ -24,6 +24,11 @@ namespace lattice_miscellaneous {
 		return 0;
 	}
 
+	template<typename T>
+	T lerp(T y0, T y1, T t) {
+		return std::fma(t, (y1 - y0), y0);
+	}
+
 
 	template<typename T,
 			typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>

@@ -6,6 +6,7 @@
 #include<cmath>
 #include"lattice_types.h"
 #include"lattice_calibrator_results.h"
+#include"lattice_miscellaneous.h"
 
 
 #include"optimization_methods/unconstrained_optimization.h"
@@ -16,7 +17,9 @@ namespace lattice_calibrator_ir {
 	using lattice_calibrator_results::CalibratorResults;
 	using lattice_types::AssetClass;
 	using optimization_odm::GoldenSectionMethod;
+	using optimization_odm::PowellMethod;
 	using optimization_odm::Range;
+	using lattice_miscellaneous::lerp;
 
 	// ==============================================================================
 	// ========================== CalibratorIR ======================================
@@ -106,7 +109,13 @@ lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Binomial,TimeAxi
 	std::size_t nodesSize{ 0 };
 
 	LatticeObject arrowDebreuLattice(rateLattice);
-	const Node rateApex = (-1.0*std::log(_discount(1, discountCurve)) / deltaTime[0]);
+	// Take 10 % of the deltaTime:
+	const Node dt_0 = 0.05 * deltaTime[0];
+	// Linear interpolation between today discount factor (which is 1) and next discount factor 
+	// with maturity dt_0:
+	const Node d_0 = lerp(_discount(0, discountCurve), _discount(1, discountCurve), dt_0);
+	// get the near-today short rate:
+	const Node rateApex = (-1.0*std::log(d_0) / dt_0);
 	rateLattice(0, 0) = rateApex;
 	arrowDebreuLattice(0, 0) = 1.0;
 
@@ -163,6 +172,7 @@ _calibrate_impl(LatticeObject &rateLattice, Generator &&generator, DeltaTime con
 	auto range = Range<Node>{ 0.005,1.0 };
 	auto tol = 10e-7;
 	GoldenSectionMethod<Node> gsm{ range,tol };
+	//PowellMethod<> gsm{ range,0.05,0.1,tol };
 	// prepare container for optimizers:
 	std::vector<std::tuple<Node, Node, Node, std::size_t>> optimizers;
 
@@ -173,7 +183,13 @@ _calibrate_impl(LatticeObject &rateLattice, Generator &&generator, DeltaTime con
 	std::size_t nodesSize{ 0 };
 
 	LatticeObject arrowDebreuLattice(rateLattice);
-	const Node rateApex = (-1.0*std::log(_discount(1, discountCurve)) / deltaTime);
+	// Take 10 % of the deltaTime:
+	const Node dt_0 = 0.05 * deltaTime;
+	// Linear interpolation between today discount factor (which is 1) and next discount factor 
+	// with maturity dt_0:
+	const Node d_0 = lerp(_discount(0, discountCurve), _discount(1, discountCurve), dt_0);
+	// get the near-today short rate:
+	const Node rateApex = (-1.0*std::log(d_0) / dt_0);
 	rateLattice(0, 0) = rateApex;
 	arrowDebreuLattice(0, 0) = 1.0;
 
