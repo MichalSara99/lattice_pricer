@@ -14,6 +14,10 @@ namespace lattice_types {
 
 	enum class AssetClass { InterestRate, Equity };
 
+	enum class DiscountingStyle { Continuous, Discrete };
+
+	enum class MinimizerMethod { Analytic, Numeric };
+
 	template<typename Node,typename ...Nodes>
 	using LeafForwardGenerator = std::function<std::tuple<Nodes...>(Node,Node,std::size_t)>;
 

@@ -12,7 +12,7 @@ namespace lattice_model {
 	using lattice_types::LeafBackwardGenerator;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-
+	using lattice_types::MinimizerMethod;
 
 	template<std::size_t FactorCount,typename T>
 	class BinomialModel{};
@@ -418,19 +418,29 @@ namespace lattice_model {
 
 		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
 
+		// Calibration minimizer:
+		auto calibrationMinimizer()const {
+			// analytical theta via continuous/discrete discounting is not available here 
+		}
+
+
 		// Calibration objective function:
 		auto calibrationObjective()const {
 
 			T sig = option_.Volatility;
 
-			return [=](T theta,T dt,T discount, std::vector<T> const &arrowDebreuStates)->T {
-				T sqrtdt = std::sqrt(dt);
+			return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
+				std::vector<T> const &arrowDebreuStates,std::function<T(T, T)>const &dcf)->T {
+
+				T const sqrtdt = std::sqrt(dt);
 				T sum{ 0.0 };
+				T rate{ 0.0 };
 				std::size_t const statesSize = arrowDebreuStates.size();
 				for (std::size_t i = 0; i < statesSize; ++i) {
-					sum += arrowDebreuStates.at(i) / (1.0 + theta * std::exp(sig*i*sqrtdt));
+					rate = theta * std::exp(sig*i*sqrtdt);
+					sum += arrowDebreuStates.at(i) * dcf(rate, dt);
 				}
-				return ((sum - discount)*(sum - discount));
+				return ((sum - marketDiscount)*(sum - marketDiscount));
 			};
 		}
 
@@ -438,11 +448,128 @@ namespace lattice_model {
 		auto calibrationForwardGenerator()const {
 			T sig = option_.Volatility;
 
-			return [=](T theta,T dt, std::size_t leafIdx)->std::tuple<T, T> {
+			return [=](T theta,T value,T dt, std::size_t leafIdx)->std::tuple<T, T> {
 				T sqrtdt = std::sqrt(dt);
 				T up = std::exp(sig*(leafIdx + 1)*sqrtdt);
 				T down = std::exp(sig*leafIdx*sqrtdt);
 				return std::make_tuple( down*theta, up*theta);
+			};
+
+		}
+
+	};
+
+	// =============================================================================================
+	// ================================ Ho-Lee model (binomial lattice) ============================
+	// =============================================================================================
+
+
+	template<typename T = double>
+	class HoLeeModel :public BinomialModel<1, T> {
+	private:
+		T prob_;
+		std::vector<T> theta_;
+		OptionData<T> option_;
+
+	public:
+		HoLeeModel(OptionData<T>const &optionData)
+			:option_{ optionData }, prob_{ 0.5 } {
+		}
+
+		// Forward generator
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) override {
+			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
+			T sig = option_.Volatility;
+			T sqrtdt = std::sqrt(dt);
+			T sigdt = sig * sqrtdt;
+			T mean = value + theta_.at(timeIdx - 1)*dt;
+			T up = mean + sigdt;
+			T down = mean - sigdt;
+			return std::make_tuple(down, up);
+		}
+
+		// Backward generator
+		T operator()(T currValue, T upValue, T downValue, T dt) override {
+			T disc = std::exp(-1.0*currValue*dt);
+			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
+		}
+
+		void setTheta(std::vector<T> const &theta) { theta_(theta); }
+
+		static std::string const name() {
+			return std::string{ "Ho-Lee model" };
+		}
+
+		OptionData<T> const &optionData()const { return option_; }
+
+		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
+
+
+		// Calibration minimizer:
+		auto calibrationMinimizer()const {
+			T sig = option_.Volatility;
+
+			// analytical theta via continuous discounting:
+			return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
+				std::vector<T> const &arrowDebreuStates)->T {
+
+				const std::size_t prevNodeSize = prevRateStates.size();
+				std::vector<T> rateStates(prevNodeSize + 1);
+				T const sqrtdt = std::sqrt(dt);
+				T sum{ 0.0 };
+
+				for (std::size_t l = 0; l < prevNodeSize; ++l) {
+					rateStates[l] = prevRateStates.at(l) - sig * sqrtdt;     //down l
+					rateStates[l + 1] = prevRateStates.at(l)  + sig * sqrtdt; //up l + 1  
+				}
+
+				std::size_t const statesSize = arrowDebreuStates.size();
+				for (std::size_t i = 0; i < statesSize; ++i) {
+					sum += arrowDebreuStates.at(i) * std::exp(-1.0*rateStates.at(i) * dt);
+				}
+				sum = (sum / marketDiscount);
+				return std::log(sum) / (dt*dt);
+			};
+		}
+
+
+		// Calibration objective function:
+		auto calibrationObjective()const {
+
+			T sig = option_.Volatility;
+
+			return [=](T theta, T dt, T marketDiscount,std::vector<T> const &prevRateStates,
+				std::vector<T> const &arrowDebreuStates,std::function<T(T, T)>const &dcf)->T {
+
+				const std::size_t prevNodeSize = prevRateStates.size();
+				std::vector<T> rateStates(prevNodeSize + 1);
+				T const sqrtdt = std::sqrt(dt);
+				T sum{ 0.0 };
+
+				for (std::size_t l = 0; l < prevNodeSize; ++l) {
+					rateStates[l] = prevRateStates.at(l) + (theta * dt) - sig * sqrtdt;     //down l
+					rateStates[l + 1] = prevRateStates.at(l) + (theta * dt) + sig * sqrtdt; //up l + 1  
+				}
+
+				std::size_t const statesSize = arrowDebreuStates.size();
+				for (std::size_t i = 0; i < statesSize; ++i) {
+					sum += arrowDebreuStates.at(i) * dcf(rateStates.at(i), dt);
+				}
+				return ((sum - marketDiscount)*(sum - marketDiscount));
+			};
+		}
+
+		// Calibration forward function:
+		auto calibrationForwardGenerator()const {
+			T sig = option_.Volatility;
+
+			return [=](T theta,T value, T dt, std::size_t leafIdx)->std::tuple<T, T> {
+				T sqrtdt = std::sqrt(dt);
+				T sigdt = sig * sqrtdt;
+				T mean = value + theta*dt;
+				T down = mean - sigdt;
+				T up = mean + sigdt;
+				return std::make_tuple(down, up);
 			};
 
 		}

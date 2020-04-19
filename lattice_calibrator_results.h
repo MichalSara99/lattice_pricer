@@ -19,12 +19,12 @@ namespace lattice_calibrator_results {
 	// ==============================================================================
 
 	template<AssetClass AClass,
-			typename LatticeObject,
-			typename Node>
+			typename LatticeObject>
 	struct CalibratorResults {};
 
-	template<typename LatticeObject,typename Node>
-	struct CalibratorResults<AssetClass::InterestRate, LatticeObject, Node> {
+	template<typename LatticeObject>
+	struct CalibratorResults<AssetClass::InterestRate, LatticeObject> {
+		typedef typename LatticeObject::Node_type Node;
 
 		std::vector<std::tuple<Node, Node, Node, std::size_t>> 
 			thetaOptimizers;

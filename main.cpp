@@ -33,6 +33,9 @@ int main(int argc, char const *argv[]) {
 	std::cout << "===============================================\n";
 
 	testIndexedBDT();
+	testIndexedHL();
+	testBDT();
+	testHL();
 
 	// == lattice_greeks_t.h ====
 	// testIndexedLatticesGreeks();

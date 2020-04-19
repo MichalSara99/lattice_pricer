@@ -23,18 +23,16 @@ namespace lattice_calibrator {
 			AssetClass AClass,
 			typename TimeAxis,
 			typename DeltaTime,
-			typename DiscountCurve,
-			typename Node>
+			typename DiscountCurve>
 	class Calibrator {};
 
 
 
 	template<typename TimeAxis,
 		typename DeltaTime,
-		typename DiscountCurve,
-		typename Node>
+		typename DiscountCurve>
 	class Calibrator<LatticeType::Binomial,AssetClass::InterestRate,
-						TimeAxis,DeltaTime, DiscountCurve,Node> {
+						TimeAxis,DeltaTime, DiscountCurve> {
 	private:
 		DiscountCurve discountCurve_;
 
@@ -44,12 +42,12 @@ namespace lattice_calibrator {
 
 
 		template<typename LatticeObject,typename Generator>
-		std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject, Node>> const
+		std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
 			operator()(LatticeObject &rateLattice, Generator &&generator,
 						DeltaTime const &deltaTime) const {
 			LASSERT(rateLattice.type() == generator.latticeType(), "Mismatch between lattice types");
 			LASSERT(generator.assetClass() == AssetClass::InterestRate, "Mismatch between asset classes");
-			return CalibratorIR<LatticeType::Binomial, TimeAxis, DeltaTime, DiscountCurve, Node>::
+			return CalibratorIR<LatticeType::Binomial, TimeAxis, DeltaTime, DiscountCurve>::
 				calibrate(rateLattice, std::forward<Generator>(generator), deltaTime, this->discountCurve_);
 		}
 	
@@ -60,10 +58,9 @@ namespace lattice_calibrator {
 
 	template<typename TimeAxis,
 		typename DeltaTime,
-		typename DiscountCurve,
-		typename Node>
+		typename DiscountCurve>
 	class Calibrator<LatticeType::Trinomial, AssetClass::InterestRate,
-		TimeAxis, DeltaTime, DiscountCurve, Node> {
+		TimeAxis, DeltaTime, DiscountCurve> {
 
 
 	};
