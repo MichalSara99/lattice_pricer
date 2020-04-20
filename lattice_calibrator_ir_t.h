@@ -59,7 +59,7 @@ void testIndexedBDT() {
 
 	// Print the part of generated lattice:
 	auto first = rateTree.begin();
-	auto last = std::next(first, 10);
+	auto last = std::next(first, 17);
 	lattice_utility::print(rateTree, first, last);
 
 	// Print theta:
@@ -70,24 +70,6 @@ void testIndexedBDT() {
 		std::cout << "fun value: " << std::get<1>(tpl) << "|";
 		std::cout << "iterations: " << std::get<3>(tpl) << "\n";
 	}
-
-	//// Backward induction:
-
-	//// Prepare payoff:
-	//double K = option.Strike;
-	//auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-
-	//typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial,
-	//	std::size_t, double> backward_binomial_induction;
-	//backward_binomial_induction brd_induction;
-
-	//brd_induction(il, crr, dt, call_payoff);
-
-	//// Print the part of generated lattice:
-	//lattice_utility::print(il, first, last);
-	//// Print apex: value of option:
-	//std::cout << "Price of call: " << il.apex() << "\n\n";
-
 
 }
 
@@ -154,7 +136,7 @@ void testBDT() {
 
 	// Print the part of generated lattice:
 	auto first = rateTree.begin();
-	auto last = std::next(first, 10);
+	auto last = std::next(first, 17);
 	lattice_utility::print(rateTree, first, last);
 
 	// Print theta:
@@ -165,24 +147,6 @@ void testBDT() {
 		std::cout << "fun value: " << std::get<1>(tpl) << "|";
 		std::cout << "iterations: " << std::get<3>(tpl) << "\n";
 	}
-
-	//// Backward induction:
-
-	//// Prepare payoff:
-	//double K = option.Strike;
-	//auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-
-	//typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial,
-	//	std::size_t, double> backward_binomial_induction;
-	//backward_binomial_induction brd_induction;
-
-	//brd_induction(il, crr, dt, call_payoff);
-
-	//// Print the part of generated lattice:
-	//lattice_utility::print(il, first, last);
-	//// Print apex: value of option:
-	//std::cout << "Price of call: " << il.apex() << "\n\n";
-
 
 }
 
@@ -231,8 +195,8 @@ void testIndexedHL() {
 
 	// Print the part of generated lattice:
 	auto first = rateTree.begin();
-	//auto last = std::next(first, 10);
-	lattice_utility::print(rateTree, first, rateTree.end());
+	auto last = std::next(first, 17);
+	lattice_utility::print(rateTree, first, last);
 
 	// Print theta:
 	std::cout << "\n";
@@ -242,25 +206,6 @@ void testIndexedHL() {
 		std::cout << "fun value: " << std::get<1>(tpl) << "|";
 		std::cout << "iterations: " << std::get<3>(tpl) << "\n";
 	}
-
-	//// Backward induction:
-
-	//// Prepare payoff:
-	//double K = option.Strike;
-	//auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-
-	//typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial,
-	//	std::size_t, double> backward_binomial_induction;
-	//backward_binomial_induction brd_induction;
-
-	//brd_induction(il, crr, dt, call_payoff);
-
-	//// Print the part of generated lattice:
-	//lattice_utility::print(il, first, last);
-	//// Print apex: value of option:
-	//std::cout << "Price of call: " << il.apex() << "\n\n";
-
-
 }
 
 
@@ -325,7 +270,7 @@ void testHL() {
 
 	// Print the part of generated lattice:
 	auto first = rateTree.begin();
-	auto last = std::next(first, 10);
+	auto last = std::next(first, 17);
 	lattice_utility::print(rateTree, first, last);
 
 	// Print theta:
@@ -336,25 +281,6 @@ void testHL() {
 		std::cout << "fun value: " << std::get<1>(tpl) << "|";
 		std::cout << "iterations: " << std::get<3>(tpl) << "\n";
 	}
-
-	//// Backward induction:
-
-	//// Prepare payoff:
-	//double K = option.Strike;
-	//auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-
-	//typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial,
-	//	std::size_t, double> backward_binomial_induction;
-	//backward_binomial_induction brd_induction;
-
-	//brd_induction(il, crr, dt, call_payoff);
-
-	//// Print the part of generated lattice:
-	//lattice_utility::print(il, first, last);
-	//// Print apex: value of option:
-	//std::cout << "Price of call: " << il.apex() << "\n\n";
-
-
 }
 
 

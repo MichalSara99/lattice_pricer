@@ -38,6 +38,7 @@ namespace lattice_miscellaneous {
 		T Volatility;
 		T RiskFreeRate;
 		T DividentRate;
+		T ReversionSpeed;
 		T Correlation;
 	};
 

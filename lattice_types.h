@@ -18,6 +18,8 @@ namespace lattice_types {
 
 	enum class MinimizerMethod { Analytic, Numeric };
 
+	enum class LatticeClass { Normal, MeanReverting };
+
 	template<typename Node,typename ...Nodes>
 	using LeafForwardGenerator = std::function<std::tuple<Nodes...>(Node,Node,std::size_t)>;
 
