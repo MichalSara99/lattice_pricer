@@ -121,7 +121,7 @@ void testBDT() {
 	};
 
 	// 
-	std::size_t year{ 365 };
+	std::size_t year{ 180 };
 	std::size_t periods{ discount_curve.size() - 1 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
@@ -293,7 +293,7 @@ void testHL() {
 	};
 
 	// 
-	std::size_t year{ 365 };
+	std::size_t year{ 180 };
 	std::size_t periods{ discount_curve.size() - 1 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
