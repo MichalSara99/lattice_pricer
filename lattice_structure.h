@@ -16,8 +16,13 @@ namespace lattice_structure {
 
 	using lattice_types::LatticeType;
 	using lattice_types::LatticeClass;
+	using lattice_miscellaneous::MeanRevertingParams;
 	using lattice_miscellaneous::is_map;
 
+
+	// =======================================================================================
+	// =============================== GeneralLattice ========================================
+	// =======================================================================================
 
 	template<LatticeType Type,
 			typename Node,
@@ -30,6 +35,12 @@ namespace lattice_structure {
 
 		template<typename Arg>
 		void buildTree_impl(Arg const &arg, std::false_type);
+
+		template<typename Arg,typename DeltaTime>
+		void buildRevertingTree_impl(Arg const &arg,MeanRevertingParams<Node> const &params,DeltaTime const &deltaTime, std::true_type);
+
+		template<typename Arg,typename DeltaTime>
+		void buildRevertingTree_impl(Arg const &arg, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime, std::false_type);
 
 		std::size_t indexOf_impl(TimeAxis time, std::true_type)const;
 
@@ -63,6 +74,16 @@ namespace lattice_structure {
 
 		TimeAxis const &timeAt_impl(std::size_t idx, std::false_type)const;
 
+		template<typename DeltaTime>
+		typename DeltaTime::value_type const getDeltaTime_impl(std::size_t idx, DeltaTime const &deltaTime, std::true_type)const {
+			return deltaTime.at(idx);
+		}
+
+		template<typename DeltaTime>
+		DeltaTime const getDeltaTime_impl(std::size_t idx, DeltaTime const &deltaTime, std::false_type)const {
+			return deltaTime;
+		}
+
 	public:
 		typedef typename std::conditional<std::is_integral<TimeAxis>::value,
 								std::vector<NodeContainerType>,
@@ -77,8 +98,16 @@ namespace lattice_structure {
 	protected:
 		TreeType tree_;
 
+		template<typename DeltaTime>
+		auto const getDeltaTime(std::size_t idx, DeltaTime const &deltaTime)const  {
+			return getDeltaTime_impl(idx, deltaTime, std::is_compound<DeltaTime>());
+		}
+
 		template<typename Arg>
 		void buildTree(Arg const &arg);
+
+		template<typename Arg,typename DeltaTime>
+		void buildRevertingTree(Arg const &arg, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime);
 
 	public:
 		TreeType const &tree()const { return this->tree_; }
@@ -354,6 +383,65 @@ namespace lattice_structure {
 	}
 
 
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		template<typename Arg,typename DeltaTime>
+	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildRevertingTree_impl(Arg const &arg,MeanRevertingParams<Node> const &params,DeltaTime const &deltaTime, std::true_type) {
+		auto numberNodes = [&](std::size_t timeIdx) {
+			auto intRep = static_cast<std::underlying_type<LatticeType>::type>(LatticeType::Trinomial);
+			if (timeIdx >= 1) {
+				auto dt = this->getDeltaTime(timeIdx - 1, deltaTime);
+				std::size_t maxStatesUp = static_cast<std::size_t>(std::floor(1 / (2.0*params.ReversionSpeed*dt))) + 1;
+				std::size_t normalNodesSize = ((intRep + 1)*(timeIdx + 1) - (intRep));
+				return std::min(normalNodesSize, 2 * maxStatesUp + 1);
+			}
+			else {
+				return ((intRep + 1)*(timeIdx + 1) - (intRep));
+			}
+		};
+		for (std::size_t t = 0; t < arg.size(); ++t) {
+			tree_[arg[t]] = std::move(NodeContainerType(numberNodes(t)));
+		}
+	}
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		template<typename Arg, typename DeltaTime>
+	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildRevertingTree_impl(Arg const &arg, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime, std::false_type) {
+		auto numberNodes = [&](std::size_t timeIdx) {
+			auto intRep = static_cast<std::underlying_type<LatticeType>::type>(LatticeType::Trinomial);
+			if (timeIdx >= 1) {
+				auto dt = this->getDeltaTime(timeIdx - 1, deltaTime);
+				std::size_t maxStatesUp = static_cast<std::size_t>(std::floor(1 / (2.0*params.ReversionSpeed*dt))) + 1;
+				std::size_t normalNodesSize = ((intRep + 1)*(timeIdx + 1) - (intRep));
+				return std::min(normalNodesSize, 2 * maxStatesUp + 1);
+			}
+			else {
+				return ((intRep + 1)*(timeIdx + 1) - (intRep));
+			}
+		};
+		tree_.reserve(arg);
+		for (std::size_t t = 0; t <= arg; ++t) {
+			tree_.emplace_back(NodeContainerType(numberNodes(t)));
+		}
+	}
+
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+		template<typename Arg,typename DeltaTime>
+	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildRevertingTree(Arg const &arg,MeanRevertingParams<Node> const &params,DeltaTime const &deltaTime) {
+		buildRevertingTree_impl(arg, params, deltaTime, std::is_compound<Arg>());
+	}
+
+
 	template<LatticeType Type,
 		typename Node,
 		typename TimeAxis,
@@ -379,7 +467,11 @@ namespace lattice_structure {
 	}
 
 
-	// IndexedLattice:
+	// =======================================================================================
+	// =============================== IndexedLattice ========================================
+	// =======================================================================================
+
+
 	template<LatticeType Type,
 		typename Node>
 	class IndexedLattice :public GeneralLattice<Type, Node, std::size_t, std::vector<Node>> {
@@ -430,58 +522,11 @@ namespace lattice_structure {
 		std::size_t maxIndex()const { return maxIndex_; }
 	};
 
-	// MeanRevertingIndexedLattice:
-	template<LatticeType Type,
-		typename Node>
-		class MeanRevertingIndexedLattice :public GeneralLattice<Type, Node, std::size_t, std::vector<Node>> {
-		private:
-			std::size_t minIndex_{ 0 };
-			std::size_t maxIndex_;
-		public:
-			MeanRevertingIndexedLattice(std::size_t numberPeriods)
-				:maxIndex_{ numberPeriods } {
-				this->buildTree(numberPeriods);
-			}
-			virtual ~MeanRevertingIndexedLattice() {}
 
+	// =======================================================================================
+	// =================================== Lattice ===========================================
+	// =======================================================================================
 
-			MeanRevertingIndexedLattice(MeanRevertingIndexedLattice<Type, Node> const &other)
-				:minIndex_{ other.minIndex_ },
-				maxIndex_{ other.maxIndex_ } {
-				this->tree_ = other.tree_;
-			}
-
-			MeanRevertingIndexedLattice(MeanRevertingIndexedLattice<Type, Node> &&other)noexcept
-				:minIndex_{ std::move(other.minIndex_) },
-				maxIndex_{ std::move(other.maxIndex_) } {
-				this->tree_ = std::move(other.tree_);
-			}
-
-			MeanRevertingIndexedLattice &operator=(MeanRevertingIndexedLattice<Type, Node> const &other) {
-				if (this != &other) {
-					minIndex_ = other.minIndex_;
-					maxIndex_ = other.maxIndex_;
-					this->tree_ = other.tree_;
-				}
-				return *this;
-			}
-
-			MeanRevertingIndexedLattice &operator=(MeanRevertingIndexedLattice<Type, Node> &&other) noexcept {
-				if (this != &other) {
-					minIndex_ = std::move(other.minIndex_);
-					maxIndex_ = std::move(other.maxIndex_);
-					this->tree_ = std::move(other.tree_);
-				}
-				return *this;
-			}
-
-			static LatticeClass const latticeClass() { return LatticeClass::MeanReverting; }
-
-			std::size_t minIndex()const { return minIndex_; }
-			std::size_t maxIndex()const { return maxIndex_; }
-	};
-
-	// Lattice:
 	template<LatticeType Type,
 			typename Node,
 			typename TimeAxis>
@@ -545,48 +590,102 @@ namespace lattice_structure {
 
 	};
 
-	// MeanRevertingLattice:
-	template<LatticeType Type,
-		typename Node,
+
+	// =======================================================================================
+	// ========================= MeanRevertingIndexedLattice =================================
+	// = Make sense only for trinomial trees so far											 =
+	// =======================================================================================
+
+	template<typename Node>
+		class MeanRevertingIndexedLattice 
+			:public GeneralLattice<LatticeType::Trinomial, Node, std::size_t, std::vector<Node>> {
+		private:
+			std::size_t minIndex_{ 0 };
+			std::size_t maxIndex_;
+		public:
+			template<typename DeltaTime>
+			MeanRevertingIndexedLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
+				:maxIndex_{ numberPeriods } {
+				this->buildRevertingTree(numberPeriods, params, deltaTime);
+			}
+			virtual ~MeanRevertingIndexedLattice() {}
+
+
+			MeanRevertingIndexedLattice(MeanRevertingIndexedLattice<Node> const &other)
+				:minIndex_{ other.minIndex_ },
+				maxIndex_{ other.maxIndex_ } {
+				this->tree_ = other.tree_;
+			}
+
+			MeanRevertingIndexedLattice(MeanRevertingIndexedLattice<Node> &&other)noexcept
+				:minIndex_{ std::move(other.minIndex_) },
+				maxIndex_{ std::move(other.maxIndex_) } {
+				this->tree_ = std::move(other.tree_);
+			}
+
+			MeanRevertingIndexedLattice &operator=(MeanRevertingIndexedLattice<Node> const &other) {
+				if (this != &other) {
+					minIndex_ = other.minIndex_;
+					maxIndex_ = other.maxIndex_;
+					this->tree_ = other.tree_;
+				}
+				return *this;
+			}
+
+			MeanRevertingIndexedLattice &operator=(MeanRevertingIndexedLattice<Node> &&other) noexcept {
+				if (this != &other) {
+					minIndex_ = std::move(other.minIndex_);
+					maxIndex_ = std::move(other.maxIndex_);
+					this->tree_ = std::move(other.tree_);
+				}
+				return *this;
+			}
+
+			static LatticeClass const latticeClass() { return LatticeClass::MeanReverting; }
+
+			std::size_t minIndex()const { return minIndex_; }
+			std::size_t maxIndex()const { return maxIndex_; }
+	};
+
+
+	// =======================================================================================
+	// ============================== MeanRevertingLattice ===================================
+	// = Make sense only for trinomial trees so far											 =
+	// =======================================================================================
+
+	template<typename Node,
 		typename TimeAxis>
-		class MeanRevertingLattice :public GeneralLattice<Type, Node, TimeAxis, std::vector<Node>> {
+		class MeanRevertingLattice 
+			:public GeneralLattice<LatticeType::Trinomial, Node, TimeAxis, std::vector<Node>> {
+
 		private:
 			std::set<TimeAxis> fixingDatesSet_;
 			std::vector<TimeAxis> fixingDates_;
 
 		public:
-			MeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet)
+			template<typename DeltaTime>
+			MeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
 				:fixingDatesSet_{ fixingDatesSet } {
 				fixingDates_.reserve(fixingDatesSet_.size());
 				for (auto e : fixingDatesSet_) {
 					fixingDates_.emplace_back(std::move(e));
 				}
-				this->buildTree(fixingDates_);
+				this->buildRevertingTree(fixingDates_, params, deltaTime);
 			}
-
-			MeanRevertingLattice(std::initializer_list<TimeAxis> const &fixingDates)
-				:fixingDatesSet_{ fixingDates } {
-				fixingDates_.reserve(fixingDatesSet_.size());
-				for (auto e : fixingDatesSet_) {
-					fixingDates_.emplace_back(std::move(e));
-				}
-				this->buildTree(fixingDates_);
-			}
-
 
 			virtual ~MeanRevertingLattice() {}
 
-			MeanRevertingLattice(MeanRevertingLattice<Type, Node, TimeAxis> const &other)
+			MeanRevertingLattice(MeanRevertingLattice<Node, TimeAxis> const &other)
 				:fixingDates_{ other.fixingDates_ } {
 				this->tree_ = other.tree_;
 			}
 
-			MeanRevertingLattice(MeanRevertingLattice<Type, Node, TimeAxis> &&other)noexcept
+			MeanRevertingLattice(MeanRevertingLattice<Node, TimeAxis> &&other)noexcept
 				:fixingDates_{ std::move(other.fixingDates_) } {
 				this->tree_ = std::move(other.tree_);
 			}
 
-			MeanRevertingLattice &operator=(MeanRevertingLattice<Type, Node, TimeAxis> const &other) {
+			MeanRevertingLattice &operator=(MeanRevertingLattice<Node, TimeAxis> const &other) {
 				if (this != &other) {
 					fixingDates_ = other.fixingDates_;
 					this->tree = other.tree_;
@@ -594,7 +693,7 @@ namespace lattice_structure {
 				return *this;
 			}
 
-			MeanRevertingLattice &operator=(MeanRevertingLattice<Type, Node, TimeAxis> &&other)noexcept {
+			MeanRevertingLattice &operator=(MeanRevertingLattice<Node, TimeAxis> &&other)noexcept {
 				if (this != &other) {
 					fixingDates_ = std::move(other.fixingDates_);
 					this->tree = std::move(other.tree_);
@@ -605,8 +704,6 @@ namespace lattice_structure {
 			static LatticeClass const latticeClass() { return LatticeClass::MeanReverting; }
 
 			std::vector<TimeAxis> fixingDates()const { return fixingDates_; }
-
-
 	};
 
 

@@ -42,6 +42,10 @@ namespace lattice_miscellaneous {
 		T Correlation;
 	};
 
+	template<typename T>
+		struct MeanRevertingParams {
+		T ReversionSpeed;
+	};
 
 
 

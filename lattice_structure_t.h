@@ -3,6 +3,7 @@
 #define _LATTICE_STRUCTURE_T
 
 #include"lattice_structure.h"
+#include"lattice_miscellaneous.h"
 #include"lattice_utility.h"
 #include<iostream>
 #include<boost/date_time/gregorian/gregorian.hpp>
@@ -119,5 +120,84 @@ void testLatticeCreation() {
 
 }
 
+
+
+void createMeanRevertingTrinomialIndexedLattice() {
+
+	using lattice_miscellaneous::MeanRevertingParams;
+
+	MeanRevertingParams<double> revertingParams;
+	revertingParams.ReversionSpeed = 0.25;
+	double dt{ 0.5 };
+
+	lattice_structure::MeanRevertingIndexedLattice<double> il(15, revertingParams, 0.5);
+	std::cout << "type of tree: " << typeid(lattice_structure::MeanRevertingIndexedLattice<double>::TreeType).name() << "\n";
+
+	lattice_utility::print(il, il.begin(), il.end());
+
+	std::cout << il(0, 0) << "\n";
+	auto first = il(0, 0);
+	il(0, 0) = 3.1415;
+	std::cout << il(0, 0) << "\n";
+
+	std::cout << "copy assignment: \n";
+	auto il_copy = il;
+	lattice_utility::print(il_copy, il_copy.begin(), il_copy.end());
+
+}
+
+
+
+void createMeanRevertingTrinomialLattice() {
+	using lattice_miscellaneous::MeanRevertingParams;
+
+	MeanRevertingParams<float> revertingParams;
+	revertingParams.ReversionSpeed = 0.25;
+
+	std::size_t daysInhalfYear{ 125 };
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDatesSet;
+	std::vector<date> fixingDates;
+
+	fixingDatesSet.emplace(today);
+	fixingDates.emplace_back(today);
+	for (std::size_t t = 1; t <= 15; ++t) {
+		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
+		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));
+	}
+
+	float daysInYear{ 365.0 };
+	std::vector<float> timeDeltas(fixingDates.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fixingDates[i + 1] - fixingDates[i]).days() / daysInYear);
+	}
+
+	lattice_structure::MeanRevertingLattice<float, date>
+		la(fixingDatesSet, revertingParams, timeDeltas);
+
+	lattice_utility::print(la, la.begin(), la.end());
+
+
+	std::cout << la.at(date(day_clock::local_day()), 0) << "\n";
+	auto first_node = la.at(today, 0);
+	la.at(today, 0) = 3.1415;
+	std::cout << la.at(today, 0) << "\n";
+	std::cout << "copy assignment: \n";
+	auto la_copy = la;
+	lattice_utility::print(la_copy, la_copy.begin(), la_copy.end());
+}
+
+
+void testMeanRevertingLatticeCreation() {
+	std::cout << "=======================================================\n";
+	std::cout << "==== Mean-Reverting Lattices Creation - TEST ==========\n";
+	std::cout << "=======================================================\n";
+
+	createMeanRevertingTrinomialIndexedLattice();
+	createMeanRevertingTrinomialLattice();
+
+	std::cout << "=======================================================\n";
+
+}
 
 #endif //_LATTICE_STRUCTURE_T
