@@ -188,6 +188,68 @@ void createMeanRevertingTrinomialLattice() {
 }
 
 
+void createMeanRevertingTrinomialLattice1() {
+	using lattice_miscellaneous::MeanRevertingParams;
+
+	MeanRevertingParams<float> revertingParams;
+	revertingParams.ReversionSpeed = 0.25;
+
+	std::size_t daysInYear{ 365 };
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDatesSet;
+	std::vector<date> fixingDates;
+
+	fixingDatesSet.emplace(today);
+	fixingDates.emplace_back(today);
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 1));
+	fixingDates.emplace_back(today + date_duration(daysInYear*1));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 2));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 2));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 3));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 3));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 4));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 4));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 5));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 5));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 7));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 7));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 10));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 10));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 15));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 15));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 20));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 20));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 25));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 25));
+	fixingDatesSet.emplace(today + date_duration(daysInYear * 30));
+	fixingDates.emplace_back(today + date_duration(daysInYear * 30));
+
+
+
+	float daysInYearFloat{ 365.0 };
+	std::vector<float> timeDeltas(fixingDates.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fixingDates[i + 1] - fixingDates[i]).days() / daysInYearFloat);
+	}
+
+	lattice_structure::MeanRevertingLattice<float, date>
+		la(fixingDatesSet, revertingParams, timeDeltas);
+
+	lattice_utility::print(la, la.begin(), la.end());
+
+	auto idx = la.firstRevertingIdx();
+	std::cout << "First mean-reverting timeidx:" << idx << "\n";
+
+	std::cout << "\n\n";
+	std::cout << la.at(date(day_clock::local_day()), 0) << "\n";
+	auto first_node = la.at(today, 0);
+	la.at(today, 0) = 3.1415;
+	std::cout << la.at(today, 0) << "\n";
+	std::cout << "copy assignment: \n";
+	auto la_copy = la;
+	lattice_utility::print(la_copy, la_copy.begin(), la_copy.end());
+}
+
 void testMeanRevertingLatticeCreation() {
 	std::cout << "=======================================================\n";
 	std::cout << "==== Mean-Reverting Lattices Creation - TEST ==========\n";
@@ -195,6 +257,7 @@ void testMeanRevertingLatticeCreation() {
 
 	createMeanRevertingTrinomialIndexedLattice();
 	createMeanRevertingTrinomialLattice();
+	createMeanRevertingTrinomialLattice1();
 
 	std::cout << "=======================================================\n";
 

@@ -7,6 +7,7 @@
 #include<set>
 #include<type_traits>
 #include<string>
+#include<numeric>
 #include<initializer_list>
 #include"lattice_types.h"
 #include"lattice_miscellaneous.h"
@@ -30,6 +31,8 @@ namespace lattice_structure {
 			typename NodeContainerType>
 	class GeneralLattice {
 	private:
+		std::size_t firstRevertIdx_;
+
 		template<typename Arg>
 		void buildTree_impl(Arg const &arg, std::true_type);
 
@@ -75,12 +78,13 @@ namespace lattice_structure {
 		TimeAxis const &timeAt_impl(std::size_t idx, std::false_type)const;
 
 		template<typename DeltaTime>
-		typename DeltaTime::value_type const getDeltaTime_impl(std::size_t idx, DeltaTime const &deltaTime, std::true_type)const {
-			return deltaTime.at(idx);
+		typename DeltaTime::value_type const getMinDeltaTime_impl(DeltaTime const &deltaTime, std::true_type)const {
+			auto itr = std::min_element(deltaTime.cbegin(), deltaTime.cend());
+			return *itr;
 		}
 
 		template<typename DeltaTime>
-		DeltaTime const getDeltaTime_impl(std::size_t idx, DeltaTime const &deltaTime, std::false_type)const {
+		DeltaTime const getMinDeltaTime_impl(DeltaTime const &deltaTime, std::false_type)const {
 			return deltaTime;
 		}
 
@@ -98,9 +102,11 @@ namespace lattice_structure {
 	protected:
 		TreeType tree_;
 
+		void _firstRevertingIdx();
+
 		template<typename DeltaTime>
-		auto const getDeltaTime(std::size_t idx, DeltaTime const &deltaTime)const  {
-			return getDeltaTime_impl(idx, deltaTime, std::is_compound<DeltaTime>());
+		auto const getMinDeltaTime(DeltaTime const &deltaTime)const  {
+			return getMinDeltaTime_impl(deltaTime, std::is_compound<DeltaTime>());
 		}
 
 		template<typename Arg>
@@ -170,7 +176,25 @@ namespace lattice_structure {
 		Iterator_type end() {
 			return this->tree_.end();
 		}
+
+		std::size_t const firstRevertingIdx()const { return this->firstRevertIdx_; }
 	};
+
+
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::_firstRevertingIdx(){
+		std::vector<int> states;
+		const std::size_t treeSize = timeDimension();
+		for (std::size_t t = 0; t < treeSize; ++t) {
+			states.push_back(nodesAtIdx(t).size());
+		}
+		std::adjacent_difference(states.begin(), states.end(), states.begin());
+		auto zeroItr = std::find_if(states.begin(), states.end(), [](int val) {return val == Node{}; });
+		this->firstRevertIdx_ = (std::distance(states.begin(), zeroItr) - 1);
+	}
 
 
 	template<LatticeType Type,
@@ -390,17 +414,13 @@ namespace lattice_structure {
 		typename NodeContainerType>
 		template<typename Arg,typename DeltaTime>
 	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildRevertingTree_impl(Arg const &arg,MeanRevertingParams<Node> const &params,DeltaTime const &deltaTime, std::true_type) {
+		auto const dt = getMinDeltaTime(deltaTime);
+		std::size_t const maxStatesUp = static_cast<std::size_t>(std::floor(1 / (2.0*params.ReversionSpeed*dt))) + 1;
+		auto const intRep = static_cast<std::underlying_type<LatticeType>::type>(LatticeType::Trinomial);
+
 		auto numberNodes = [&](std::size_t timeIdx) {
-			auto intRep = static_cast<std::underlying_type<LatticeType>::type>(LatticeType::Trinomial);
-			if (timeIdx >= 1) {
-				auto dt = this->getDeltaTime(timeIdx - 1, deltaTime);
-				std::size_t maxStatesUp = static_cast<std::size_t>(std::floor(1 / (2.0*params.ReversionSpeed*dt))) + 1;
-				std::size_t normalNodesSize = ((intRep + 1)*(timeIdx + 1) - (intRep));
-				return std::min(normalNodesSize, 2 * maxStatesUp + 1);
-			}
-			else {
-				return ((intRep + 1)*(timeIdx + 1) - (intRep));
-			}
+			std::size_t normalNodesSize = ((intRep + 1)*(timeIdx + 1) - (intRep));
+			return std::min(normalNodesSize, 2 * maxStatesUp + 1);
 		};
 		for (std::size_t t = 0; t < arg.size(); ++t) {
 			tree_[arg[t]] = std::move(NodeContainerType(numberNodes(t)));
@@ -413,17 +433,14 @@ namespace lattice_structure {
 		typename NodeContainerType>
 		template<typename Arg, typename DeltaTime>
 	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildRevertingTree_impl(Arg const &arg, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime, std::false_type) {
+		
+		auto const dt = getMinDeltaTime(deltaTime);
+		std::size_t const maxStatesUp = static_cast<std::size_t>(std::floor(1 / (2.0*params.ReversionSpeed*dt))) + 1;
+		auto const intRep = static_cast<std::underlying_type<LatticeType>::type>(LatticeType::Trinomial);
+		
 		auto numberNodes = [&](std::size_t timeIdx) {
-			auto intRep = static_cast<std::underlying_type<LatticeType>::type>(LatticeType::Trinomial);
-			if (timeIdx >= 1) {
-				auto dt = this->getDeltaTime(timeIdx - 1, deltaTime);
-				std::size_t maxStatesUp = static_cast<std::size_t>(std::floor(1 / (2.0*params.ReversionSpeed*dt))) + 1;
-				std::size_t normalNodesSize = ((intRep + 1)*(timeIdx + 1) - (intRep));
-				return std::min(normalNodesSize, 2 * maxStatesUp + 1);
-			}
-			else {
-				return ((intRep + 1)*(timeIdx + 1) - (intRep));
-			}
+			std::size_t normalNodesSize = ((intRep + 1)*(timeIdx + 1) - (intRep));
+			return std::min(normalNodesSize, 2 * maxStatesUp + 1);
 		};
 		tree_.reserve(arg);
 		for (std::size_t t = 0; t <= arg; ++t) {
@@ -607,6 +624,7 @@ namespace lattice_structure {
 			MeanRevertingIndexedLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
 				:maxIndex_{ numberPeriods } {
 				this->buildRevertingTree(numberPeriods, params, deltaTime);
+				this->_firstRevertingIdx();
 			}
 			virtual ~MeanRevertingIndexedLattice() {}
 
@@ -671,6 +689,7 @@ namespace lattice_structure {
 					fixingDates_.emplace_back(std::move(e));
 				}
 				this->buildRevertingTree(fixingDates_, params, deltaTime);
+				this->_firstRevertingIdx();
 			}
 
 			virtual ~MeanRevertingLattice() {}

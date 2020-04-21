@@ -14,6 +14,7 @@
 namespace lattice_algorithms {
 
 	using lattice_types::LatticeType;
+	using lattice_types::LatticeClass;
 	using lattice_types::LaunchPolicy;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
@@ -65,9 +66,13 @@ namespace lattice_algorithms {
 			template<typename LatticeObject, typename Generator>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				if (LatticeObject::latticeClass() == LatticeClass::MeanReverting) {
+
+				}
 				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
 			}
+
 			template<typename LatticeObject, typename Generator>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
 				std::map<TimeAxis, Node> const &dividendData) {
