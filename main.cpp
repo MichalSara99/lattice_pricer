@@ -32,7 +32,7 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
-	testMeanRevertingLatticeCreation();
+	//testMeanRevertingLatticeCreation();
 
 	//testIndexedBDT();
 	//testIndexedHL();
@@ -63,7 +63,7 @@ int main(int argc, char const *argv[]) {
 	//	testForwardInduction();
 
 	//  testIndexedForwardInductionDividends();
-	//	testForwardInductionDividends();
+	//  testForwardInductionDividends();
 
 	//	testIndexedBackwardInductionDividends();
 	//	testBackwardInductionDividends();
