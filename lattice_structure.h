@@ -178,6 +178,8 @@ namespace lattice_structure {
 		}
 
 		std::size_t const firstRevertingIdx()const { return this->firstRevertIdx_; }
+
+		bool isFirstReverting(std::size_t timeIdx) { return (timeIdx <= 0) ?  false :  timeIdx == firstRevertIdx_; }
 	};
 
 

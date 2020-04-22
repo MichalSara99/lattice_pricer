@@ -239,6 +239,12 @@ void createMeanRevertingTrinomialLattice1() {
 
 	auto idx = la.firstRevertingIdx();
 	std::cout << "First mean-reverting timeidx:" << idx << "\n";
+	std::cout << std::boolalpha << la.isFirstReverting(0) << "\n";
+	std::cout << std::boolalpha << la.isFirstReverting(1) << "\n";
+	std::cout << std::boolalpha << la.isFirstReverting(2) << "\n";
+	std::cout << std::boolalpha << la.isFirstReverting(3) << "\n";
+	std::cout << std::boolalpha << la.isFirstReverting(4) << "\n";
+	std::cout << std::boolalpha << la.isFirstReverting(5) << "\n";
 
 	std::cout << "\n\n";
 	std::cout << la.at(date(day_clock::local_day()), 0) << "\n";
