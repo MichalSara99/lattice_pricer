@@ -11,6 +11,9 @@ namespace lattice_utility {
 	using lattice_types::LatticeType;
 	using lattice_traits::PrintTraits;
 
+	// ==============================================================================
+	// ================================== print =====================================
+	// ==============================================================================
 
 	template<typename LatticeObject,
 		typename cIter,
@@ -43,6 +46,28 @@ namespace lattice_utility {
 		_print_impl(lattice, cbegin, cend, std::is_integral<typename LatticeObject::TimeAxis_type>());
 	}
 
+
+
+	// ==============================================================================
+	// ======================== DeltaTimeHolder =====================================
+	// ==============================================================================
+
+	template<typename DeltaTime>
+	struct DeltaTimeHolder {
+	private:
+		static auto const _deltaTime_impl(std::size_t idx, DeltaTime const &deltaTime, std::true_type) {
+			return deltaTime.at(idx);
+		}
+
+		static DeltaTime const _deltaTime_impl(std::size_t idx, DeltaTime const &deltaTime, std::false_type) {
+			return deltaTime;
+		}
+	public:
+		static auto const deltaTime(std::size_t idx, DeltaTime const &deltaTime) {
+			return _deltaTime_impl(idx, deltaTime, std::is_compound<DeltaTime>());
+		}
+
+	};
 
 };
 

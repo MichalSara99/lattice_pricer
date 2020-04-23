@@ -34,11 +34,13 @@ int main(int argc, char const *argv[]) {
 
 	//testMeanRevertingLatticeCreation();
 
-	//testIndexedBDT();
-	//testIndexedHL();
-	//testBDT();
-	//testHL();
 
+	// == lattice_calibrator_ir_t.h ====
+	// testIndexedBDT();
+	// testBDT();
+	// testIndexedHL();
+	// testHL();
+	
 	// == lattice_greeks_t.h ====
 	// testIndexedLatticesGreeks();
 	// testLatticesGreeks();
@@ -63,9 +65,9 @@ int main(int argc, char const *argv[]) {
 	//	testForwardInduction();
 
 	//  testIndexedForwardInductionDividends();
-	//  testForwardInductionDividends();
+	  testForwardInductionDividends();
 
-	//	testIndexedBackwardInductionDividends();
+	//  testIndexedBackwardInductionDividends();
 	//	testBackwardInductionDividends();
 
 	// testIndexedMerge();

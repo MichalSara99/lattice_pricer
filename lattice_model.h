@@ -410,7 +410,7 @@ namespace lattice_model {
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
-		void setTheta(std::vector<T> const &theta) { theta_(theta); }
+		void setTheta(std::vector<T> const &theta) { theta_ = theta; }
 
 		static std::string const name() {
 			return std::string{ "Black-Derman-Toy model" };
@@ -498,7 +498,7 @@ namespace lattice_model {
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
-		void setTheta(std::vector<T> const &theta) { theta_(theta); }
+		void setTheta(std::vector<T> const &theta) { theta_=theta; }
 
 		static std::string const name() {
 			return std::string{ "Ho-Lee model" };
