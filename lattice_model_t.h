@@ -1866,4 +1866,5 @@ void testAmericanLattices() {
 }
 
 
+
 #endif ///_LATTICE_MODEL_T

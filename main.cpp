@@ -32,7 +32,7 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
-	//testMeanRevertingLatticeCreation();
+	 // testMeanRevertingLatticeCreation();
 
 
 	// == lattice_calibrator_ir_t.h ====
@@ -40,7 +40,10 @@ int main(int argc, char const *argv[]) {
 	// testBDT();
 	// testIndexedHL();
 	// testHL();
-	
+	// testIndexedHW();
+	// testHW();
+
+
 	// == lattice_greeks_t.h ====
 	// testIndexedLatticesGreeks();
 	// testLatticesGreeks();
@@ -57,7 +60,7 @@ int main(int argc, char const *argv[]) {
 
 	// == lattice_structure_t.h ====
 	// testIndexedLatticeCreation();
-	// testLatticeCreation();
+	//  testLatticeCreation();
 
 
 	// == lattice_algorithms_t.h ====
@@ -65,7 +68,7 @@ int main(int argc, char const *argv[]) {
 	//	testForwardInduction();
 
 	//  testIndexedForwardInductionDividends();
-	  testForwardInductionDividends();
+	//  testForwardInductionDividends();
 
 	//  testIndexedBackwardInductionDividends();
 	//	testBackwardInductionDividends();

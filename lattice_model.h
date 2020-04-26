@@ -2,7 +2,9 @@
 #if !defined(_LATTICE_MODEL)
 #define _LATTICE_MODEL
 
+#include<cmath>
 #include"lattice_types.h"
+#include"lattice_utility.h"
 #include"lattice_miscellaneous.h"
 
 namespace lattice_model {
@@ -13,6 +15,8 @@ namespace lattice_model {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
 	using lattice_types::MinimizerMethod;
+	using lattice_types::BranchingStyle;
+	using lattice_utility::sign;
 
 	template<std::size_t FactorCount,typename T>
 	class BinomialModel{};
@@ -97,7 +101,6 @@ namespace lattice_model {
 	// ===================== Cox-Rubinstein-Ross model (binomial lattice) ==========================
 	// =============================================================================================
 
-
 	template<typename T = double>
 	class CoxRubinsteinRossModel:public BinomialModel<1,T> {
 	private:
@@ -139,6 +142,7 @@ namespace lattice_model {
 	// =======================================================================================================
 	// ===================== Modified Cox-Rubinstein-Ross model (binomial lattice) ===========================
 	// =======================================================================================================
+	
 	template<typename T=double>
 	class ModifiedCoxRubinsteinRossModel:public BinomialModel<1,T> {
 	private:
@@ -187,6 +191,7 @@ namespace lattice_model {
 	// =====================================================================================
 	// ===================== Jarrow-Rudd model (binomial lattice) ==========================
 	// =====================================================================================
+
 	template<typename T = double>
 	class JarrowRuddModel:public BinomialModel<1,T> {
 	private:
@@ -227,6 +232,7 @@ namespace lattice_model {
 	// =====================================================================================
 	// ===================== Trigeorgis model (binomial lattice) ===========================
 	// =====================================================================================
+	
 	template<typename T=double>
 	class TrigeorgisModel:public BinomialModel<1, T> {
 	private:
@@ -268,6 +274,7 @@ namespace lattice_model {
 	// ===============================================================================
 	// ===================== Tian model (binomial lattice) ===========================
 	// ===============================================================================
+	
 	template<typename T = double>
 	class TianModel:public BinomialModel<1, T> {
 	private:
@@ -314,6 +321,7 @@ namespace lattice_model {
 	// ========================================================================================
 	// ===================== Leisen-Reimer model (binomial lattice) ===========================
 	// ========================================================================================
+	
 	template<typename T =double>
 	class LeisenReimerModel :public BinomialModel<1, T> {
 	private:
@@ -380,7 +388,6 @@ namespace lattice_model {
 	// ==	d ln(r(t)) = theta(t)*dt + sigma*dw(t)												  ==
 	// =============================================================================================
 
-
 	template<typename T = double>
 	class BlackDermanToyModel :public BinomialModel<1, T> {
 	private:
@@ -388,25 +395,34 @@ namespace lattice_model {
 		std::vector<T> theta_;
 		OptionData<T> option_;
 
+		std::tuple<T, T> _branching(T theta,T sig, T sqrtdt,std::size_t leafIdx)const {
+			T const up = std::exp(sig*(leafIdx + 1)*sqrtdt);
+			T const down = std::exp(sig*leafIdx*sqrtdt);
+			return std::make_tuple(down*theta, up*theta);
+		}
+
 	public:
 		BlackDermanToyModel(OptionData<T>const &optionData)
 			:option_{ optionData }, prob_{ 0.5 } {
 		}
 
+		// Returns risk-neutral probability:
+		T nodeRiskNeutralProb()const {
+			return this->prob_;
+		}
+
 		// Forward generator
 		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
-			T sig = option_.Volatility;
-			T sqrtdt = std::sqrt(dt);
-			T up = std::exp(sig*(leafIdx + 1)*sqrtdt);
-			T down = std::exp(sig*leafIdx*sqrtdt);
-			T theta = theta_.at(timeIdx - 1);
-			return std::make_tuple(down*theta, up*theta);
+			T const sig = option_.Volatility;
+			T const theta = theta_.at(timeIdx - 1);
+			T const sqrtdt = std::sqrt(dt);
+			return _branching(theta, sig, sqrtdt, leafIdx);
 		}
 
 		// Backward generator
 		T operator()(T currValue, T upValue, T downValue, T dt) override {
-			T disc = std::exp(-1.0*currValue*dt);
+			T const disc = std::exp(-1.0*currValue*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -428,8 +444,7 @@ namespace lattice_model {
 
 		// Calibration objective function:
 		auto calibrationObjective()const {
-
-			T sig = option_.Volatility;
+			T const sig = option_.Volatility;
 
 			return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
 				std::vector<T> const &arrowDebreuStates,std::function<T(T, T)>const &dcf)->T {
@@ -448,13 +463,12 @@ namespace lattice_model {
 
 		// Calibration forward function:
 		auto calibrationForwardGenerator()const {
-			T sig = option_.Volatility;
+			T const sig = option_.Volatility;
 
 			return [=](T theta,T value,T dt, std::size_t leafIdx)->std::tuple<T, T> {
-				T sqrtdt = std::sqrt(dt);
-				T up = std::exp(sig*(leafIdx + 1)*sqrtdt);
-				T down = std::exp(sig*leafIdx*sqrtdt);
-				return std::make_tuple( down*theta, up*theta);
+				T const sqrtdt = std::sqrt(dt);
+				return _branching(theta, sig, sqrtdt, leafIdx);
+
 			};
 
 		}
@@ -467,7 +481,6 @@ namespace lattice_model {
 	// ==	dr(t) = theta(t)*dt + sigma*dw(t)													  ==
 	// =============================================================================================
 
-
 	template<typename T = double>
 	class HoLeeModel :public BinomialModel<1, T> {
 	private:
@@ -475,26 +488,39 @@ namespace lattice_model {
 		std::vector<T> theta_;
 		OptionData<T> option_;
 
+
+		std::tuple<T, T> _branching(T mean, T sigdt)const {
+			T const down = mean - sigdt;
+			T const up = mean + sigdt;
+			return std::make_tuple(down, up);
+		}
+
 	public:
 		HoLeeModel(OptionData<T>const &optionData)
 			:option_{ optionData }, prob_{ 0.5 } {
 		}
 
+
+		// Returns risk-neutral probability:
+		T nodeRiskNeutralProb()const {
+			return this->prob_;
+		}
+
+
 		// Forward generator
 		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
-			T sig = option_.Volatility;
-			T sqrtdt = std::sqrt(dt);
-			T sigdt = sig * sqrtdt;
-			T mean = value + theta_.at(timeIdx - 1)*dt;
-			T up = mean + sigdt;
-			T down = mean - sigdt;
-			return std::make_tuple(down, up);
+			T const sig = option_.Volatility;
+			T const sqrtdt = std::sqrt(dt);
+			T const sigdt = sig * sqrtdt;
+			T const mean = value + theta_.at(timeIdx - 1)*dt;
+			return _branching(mean, sigdt);
 		}
+
 
 		// Backward generator
 		T operator()(T currValue, T upValue, T downValue, T dt) override {
-			T disc = std::exp(-1.0*currValue*dt);
+			T const disc = std::exp(-1.0*currValue*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -511,7 +537,7 @@ namespace lattice_model {
 
 		// Calibration minimizer:
 		auto calibrationMinimizer()const {
-			T sig = option_.Volatility;
+			T const sig = option_.Volatility;
 
 			// analytical theta via continuous discounting:
 			return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
@@ -540,7 +566,7 @@ namespace lattice_model {
 		// Calibration objective function:
 		auto calibrationObjective()const {
 
-			T sig = option_.Volatility;
+			T const sig = option_.Volatility;
 
 			return [=](T theta, T dt, T marketDiscount,std::vector<T> const &prevRateStates,
 				std::vector<T> const &arrowDebreuStates,std::function<T(T, T)>const &dcf)->T {
@@ -565,15 +591,13 @@ namespace lattice_model {
 
 		// Calibration forward function:
 		auto calibrationForwardGenerator()const {
-			T sig = option_.Volatility;
+			T const sig = option_.Volatility;
 
 			return [=](T theta,T value, T dt, std::size_t leafIdx)->std::tuple<T, T> {
-				T sqrtdt = std::sqrt(dt);
-				T sigdt = sig * sqrtdt;
-				T mean = value + theta*dt;
-				T down = mean - sigdt;
-				T up = mean + sigdt;
-				return std::make_tuple(down, up);
+				T const sqrtdt = std::sqrt(dt);
+				T const sigdt = sig * sqrtdt;
+				T const mean = value + theta*dt;
+				return _branching(mean, sigdt);
 			};
 
 		}
@@ -641,35 +665,32 @@ namespace lattice_model {
 		std::vector<T> theta_;
 		OptionData<T> option_;
 
-		void _calculateProb(std::vector<std::tuple<T,T,T>> &prob) {
-			// TODO !!!
-			return;
+		std::tuple<T,T,T> _riskNeutralProb(std::size_t revertBranchesSize,std::size_t nodesSize,std::size_t leafIdx,T dt)const {
+			T const sig = option_.Volatility;
+			T const a = option_.ReversionSpeed;
+			T const sqrtdt = std::sqrt(3.0*dt);
+			T const dr = sig * sqrtdt;
+			T const denom = dr * dr;
+			std::size_t const decrement{ (nodesSize - 1) / 2 };
+			long const i = (leafIdx - decrement);
+			T const eps = sign(i)*std::floor(std::abs<T>(i) / revertBranchesSize);
+			T const nu = (-1.0*a*dt*i + eps)*dr;
+			T const numer = (nu * nu + sig * sig*dt);
+			return std::make_tuple(0.5*((numer / denom) - (nu / dr)),
+				(1.0 - (numer / denom)),
+				0.5*((numer / denom) + (nu / dr)));
 		}
 
-		std::tuple<T, T, T> _upwardBranching(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) {
-			T sig = option_.Volatility;
-			T a = option_.ReversionSpeed;
-			T sqrtdt = std::sqrt(3.0*dt);
-			T dr = sig * sqrtdt;
-			T mean = (1.0 - a * dt)*value + a * theta_.at(timeIdx - 1)*dt;
-			return std::make_tuple(mean/*low*/, mean + 1.0*dr/*mid*/, mean + 2.0*dr/*high*/);
-		}
-
-		std::tuple<T, T, T> _downwardBranching(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) {
-			T sig = option_.Volatility;
-			T a = option_.ReversionSpeed;
-			T sqrtdt = std::sqrt(3.0*dt);
-			T dr = sig * sqrtdt;
-			T mean = (1.0 - a * dt)*value + a * theta_.at(timeIdx - 1)*dt;
-			return std::make_tuple(mean - 2.0*dr /*low*/, mean - 1.0*dr/*mid*/, mean/*high*/);
-		}
-
-		std::tuple<T, T, T> _normalBranching(T value, T dt, std::size_t leafIdx, std::size_t timeIdx) {
-			T sig = option_.Volatility;
-			T a = option_.ReversionSpeed;
-			T sqrtdt = std::sqrt(3.0*dt);
-			T dr = sig * sqrtdt;
-			T mean = (1.0 - a * dt)*value + a * theta_.at(timeIdx - 1)*dt;
+		std::tuple<T, T, T> _branching(T mean, T dr, std::size_t leafIdx, bool isMeanReverting = false)const {
+			if ((leafIdx == 0) && (isMeanReverting == true)) {
+				// we are at the bottom of the tree -> going up with branching:
+				return std::make_tuple(mean/*low*/, mean + 1.0*dr/*mid*/, mean + 2.0*dr/*high*/);
+			}
+			if (isMeanReverting) {
+				// we are at the top of the tree -> going down with branching:
+				return std::make_tuple(mean - 2.0*dr /*low*/, mean - 1.0*dr/*mid*/, mean/*high*/);
+			}
+			// Normal branching here:
 			return std::make_tuple(mean - 1.0*dr /*low*/, mean/*mid*/, mean + 1.0*dr/*high*/);
 		}
 
@@ -678,29 +699,29 @@ namespace lattice_model {
 			:option_{ optionData } {
 		}
 
+		// Returns tuple of probabilities:
+		std::tuple<T, T, T> nodeRiskNeutralProb(std::size_t revertBranchesSize,std::size_t nodesSize, std::size_t leafIdx, T dt)const {
+			return _riskNeutralProb(revertBranchesSize, nodesSize, leafIdx, dt);
+		}
 
 		// Forward generator
 		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
-			if ((leafIdx == 0) && (isMeanReverting == true)) {
-				// we are at the bottom of the tree -> going up with branching:
-				return _upwardBranching(value, dt, leafIdx, timeIdx);
-			}
-			if (isMeanReverting) {
-				// we are at the top of the tree -> going down with branching:
-				return _downwardBranching(value, dt, leafIdx, timeIdx);
-			}
-			// Normal branching here:
-			return _normalBranching(value, dt, leafIdx, timeIdx);
+			T const sig = option_.Volatility;
+			T const a = option_.ReversionSpeed;
+			T const sqrtdt = std::sqrt(3.0*dt);
+			T const dr = sig * sqrtdt;
+			T const mean = value + theta_.at(timeIdx - 1);
+			return _branching(mean, dr, leafIdx, isMeanReverting);
 		}
 
 		// Backward generator
 		T operator()(T currValue, T upValue,T midValue, T downValue, T dt) override {
 			T disc = std::exp(-1.0*currValue*dt);
-			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
+			return (disc * (0.5*upValue + (1.0 - 0.5)*downValue));
 		}
 
-		void setTheta(std::vector<T> const &theta) { theta_(theta); }
+		void setTheta(std::vector<T> const &theta) { theta_ = theta; }
 
 		static std::string const name() {
 			return std::string{ "Hull-White model" };
@@ -711,73 +732,89 @@ namespace lattice_model {
 		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
 
 
-		// Calibration minimizer:
-		auto calibrationMinimizer()const {
-			T sig = option_.Volatility;
-
-			// analytical theta via continuous discounting:
-			return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
-				std::vector<T> const &arrowDebreuStates)->T {
-
-				const std::size_t prevNodeSize = prevRateStates.size();
-				std::vector<T> rateStates(prevNodeSize + 1);
-				T const sqrtdt = std::sqrt(dt);
-				T sum{ 0.0 };
-
-				for (std::size_t l = 0; l < prevNodeSize; ++l) {
-					rateStates[l] = prevRateStates.at(l) - sig * sqrtdt;     //down l
-					rateStates[l + 1] = prevRateStates.at(l) + sig * sqrtdt; //up l + 1  
-				}
-
-				std::size_t const statesSize = arrowDebreuStates.size();
-				for (std::size_t i = 0; i < statesSize; ++i) {
-					sum += arrowDebreuStates.at(i) * std::exp(-1.0*rateStates.at(i) * dt);
-				}
-				sum = (sum / marketDiscount);
-				return std::log(sum) / (dt*dt);
-			};
-		}
-
-
 		// Calibration objective function:
-		auto calibrationObjective()const {
+		std::function<T(T,T,T,std::vector<T> const&,std::vector<T> const&, std::function<T(T, T)>const &)>
+			calibrationObjective(BranchingStyle branchingStyle)const {
+			T const sig = option_.Volatility;
+			T const a = option_.ReversionSpeed;
 
-			T sig = option_.Volatility;
+			if (branchingStyle == BranchingStyle::Normal) {
+				// Calibration normal:
+				return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
+					std::vector<T> const &arrowDebreuStates, std::function<T(T, T)>const &dcf)->T {
 
-			return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
-				std::vector<T> const &arrowDebreuStates, std::function<T(T, T)>const &dcf)->T {
+					T const sqrtdt = std::sqrt(3.0*dt);
+					T const dr = sig * sqrtdt;
+					T mean{};
+					const std::size_t prevNodeSize = prevRateStates.size();
+					std::vector<T> rateStates(prevNodeSize + 2);
 
-				const std::size_t prevNodeSize = prevRateStates.size();
-				std::vector<T> rateStates(prevNodeSize + 1);
-				T const sqrtdt = std::sqrt(dt);
-				T sum{ 0.0 };
+					for (std::size_t l = 0; l < prevNodeSize; ++l) {
+						mean = prevRateStates.at(l) + theta;
+						rateStates[l] = mean - dr;  // down
+						rateStates[l + 1] = mean;  //mid
+						rateStates[l + 2] = mean + dr; //high
+					}
 
-				for (std::size_t l = 0; l < prevNodeSize; ++l) {
-					rateStates[l] = prevRateStates.at(l) + (theta * dt) - sig * sqrtdt;     //down l
-					rateStates[l + 1] = prevRateStates.at(l) + (theta * dt) + sig * sqrtdt; //up l + 1  
-				}
+					T sum{};
+					std::size_t const statesSize = arrowDebreuStates.size();
+					for (std::size_t i = 0; i < statesSize; ++i) {
+						sum += arrowDebreuStates.at(i) * dcf(rateStates.at(i), dt);
+					}
+					return ((sum - marketDiscount)*(sum - marketDiscount));
+				};
+			}
+			else {
 
-				std::size_t const statesSize = arrowDebreuStates.size();
-				for (std::size_t i = 0; i < statesSize; ++i) {
-					sum += arrowDebreuStates.at(i) * dcf(rateStates.at(i), dt);
-				}
-				return ((sum - marketDiscount)*(sum - marketDiscount));
-			};
+				// Calibration reverting:
+				return [=](T theta, T dt, T marketDiscount, std::vector<T> const &prevRateStates,
+					std::vector<T> const &arrowDebreuStates, std::function<T(T, T)>const &dcf)->T {
+
+					T const sqrtdt = std::sqrt(3.0*dt);
+					T const dr = sig * sqrtdt;
+					T mean{};
+					const std::size_t prevNodeSize = prevRateStates.size();
+					std::vector<T> rateStates(prevNodeSize);
+
+					// Branching upward here:
+					mean = prevRateStates.at(0) + theta;
+					rateStates[0] = mean;  // down
+					rateStates[1] = mean + dr;  //mid
+					rateStates[2] = mean + 2.0 * dr; //high
+					// normal branching here:
+					for (std::size_t l = 1; l < prevNodeSize - 1; ++l) {
+						mean = prevRateStates.at(l) + theta;
+						rateStates[l - 1] = mean - dr;  // down
+						rateStates[l] = mean;  //mid
+						rateStates[l + 1] = mean + dr; //high
+					}
+					// Branching downward here:
+					mean = prevRateStates.at(prevNodeSize - 1) + theta;
+					rateStates[prevNodeSize - 1 - 2] = mean - 2.0*dr;  // down
+					rateStates[prevNodeSize - 1 - 1] = mean - dr;  //mid
+					rateStates[prevNodeSize - 1] = mean; //high
+
+					T sum{};
+					std::size_t const statesSize = arrowDebreuStates.size();
+					for (std::size_t i = 0; i < statesSize; ++i) {
+						sum += arrowDebreuStates.at(i) * dcf(rateStates.at(i), dt);
+					}
+					return ((sum - marketDiscount)*(sum - marketDiscount));
+				};
+			}
 		}
 
 		// Calibration forward function:
 		auto calibrationForwardGenerator()const {
-			T sig = option_.Volatility;
+			T const sig = option_.Volatility;
+			T const a = option_.ReversionSpeed;
 
-			return [=](T theta, T value, T dt, std::size_t leafIdx)->std::tuple<T, T> {
-				T sqrtdt = std::sqrt(dt);
-				T sigdt = sig * sqrtdt;
-				T mean = value + theta * dt;
-				T down = mean - sigdt;
-				T up = mean + sigdt;
-				return std::make_tuple(down, up);
+			return [=](T theta, T value, T dt, std::size_t leafIdx, bool isMeanReverting = false)->std::tuple<T, T, T> {
+				T const sqrtdt = std::sqrt(3.0*dt);
+				T const dr = sig * sqrtdt;
+				T const mean = value + theta;
+				return _branching(mean, dr, leafIdx, isMeanReverting);
 			};
-
 		}
 
 	};

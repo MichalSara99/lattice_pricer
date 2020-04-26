@@ -4,6 +4,7 @@
 
 #include"lattice_types.h"
 #include"lattice_macros.h"
+#include"lattice_utility.h"
 
 namespace lattice_forward_traversals {
 

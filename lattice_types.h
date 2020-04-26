@@ -20,6 +20,8 @@ namespace lattice_types {
 
 	enum class LatticeClass { Normal, MeanReverting };
 
+	enum class BranchingStyle { Normal, Reverting };
+
 	template<typename Node,typename ...Nodes>
 	using LeafForwardGenerator = std::function<std::tuple<Nodes...>(Node,Node,std::size_t, std::size_t,bool)>;
 
