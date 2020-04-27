@@ -25,11 +25,10 @@ namespace lattice_backward_traversals {
 		typename DeltaTime>
 		struct BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime> {
 		private:
-			//	This one is for compound DeltaTime object
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			static void _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
 
-			//	This one is for compound DeltaTime object
+			//	This one is for payoffadjusted
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			static void _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
 				PayoffAdjuster &&payoffAdjuster);
@@ -56,11 +55,10 @@ namespace lattice_backward_traversals {
 		typename DeltaTime>
 		struct BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime> {
 		private:
-			//	This one is for compound DeltaTime object
+
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			static void _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
 
-			//	This one is for compound DeltaTime object
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			static void _back_traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
 				PayoffAdjuster &&payoffAdjuster);

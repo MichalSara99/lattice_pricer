@@ -955,7 +955,7 @@ void testHWSanityCheck() {
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));
 	}
 
-	float daysInYear{ 365.0 };
+	double daysInYear{ 365.0 };
 	std::vector<double> timeDeltas(fixingDates.size() - 1);
 	for (auto i = 0; i < timeDeltas.size(); ++i) {
 		timeDeltas[i] = ((fixingDates[i + 1] - fixingDates[i]).days() / daysInYear);
