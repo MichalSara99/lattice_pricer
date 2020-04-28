@@ -154,6 +154,7 @@
     <ClInclude Include="lattice_calibrator_ir_t.h" />
     <ClInclude Include="lattice_calibrator_results.h" />
     <ClInclude Include="lattice_examples.h" />
+    <ClInclude Include="lattice_examples_calibrate_price_ir.h" />
     <ClInclude Include="lattice_greeks.h" />
     <ClInclude Include="lattice_greeks_t.h" />
     <ClInclude Include="lattice_macros.h" />

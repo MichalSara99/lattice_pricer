@@ -3,11 +3,13 @@
 #define  _LATTICE_MODEL_BINOMIAL
 
 #include"lattice_model_interface.h"
-
+#include"lattice_types.h"
+#include"lattice_utility.h"
 
 namespace lattice_model {
 
-
+	using lattice_types::DiscountingStyle;
+	using lattice_utility::DiscountingFactor;
 
 	// =============================================================================================
 	// ===================== Cox-Rubinstein-Ross model (binomial lattice) ==========================
@@ -303,6 +305,11 @@ namespace lattice_model {
 	template<typename T = double>
 	class BlackDermanToyModel :public BinomialModel<1, T> {
 	private:
+		// typedef discounting factor:
+		typedef DiscountingFactor<T> DCF;
+
+		std::function<T(T, T)> dcf_;
+		DiscountingStyle ds_;
 		T prob_;
 		std::vector<T> theta_;
 		OptionData<T> option_;
@@ -314,9 +321,12 @@ namespace lattice_model {
 		}
 
 	public:
-		BlackDermanToyModel(OptionData<T>const &optionData)
-			:option_{ optionData }, prob_{ 0.5 } {
+		BlackDermanToyModel(OptionData<T>const &optionData, DiscountingStyle style = DiscountingStyle::Continuous)
+			:option_{ optionData }, prob_{ 0.5 }, ds_{style} {
+			dcf_ = DCF::function(style);
 		}
+
+		DiscountingStyle discountingStyle()const { return ds_; }
 
 		// Returns risk-neutral probability:
 		T nodeRiskNeutralProb()const {
@@ -334,7 +344,7 @@ namespace lattice_model {
 
 		// Backward generator
 		T operator()(T currValue, T upValue, T downValue, T dt) override {
-			T const disc = std::exp(-1.0*currValue*dt);
+			T const disc = dcf_(currValue, dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -396,6 +406,11 @@ namespace lattice_model {
 	template<typename T = double>
 	class HoLeeModel :public BinomialModel<1, T> {
 	private:
+		// typedef discounting factor:
+		typedef DiscountingFactor<T> DCF;
+
+		std::function<T(T, T)> dcf_;
+		DiscountingStyle ds_;
 		T prob_;
 		std::vector<T> theta_;
 		OptionData<T> option_;
@@ -408,10 +423,13 @@ namespace lattice_model {
 		}
 
 	public:
-		HoLeeModel(OptionData<T>const &optionData)
-			:option_{ optionData }, prob_{ 0.5 } {
+		HoLeeModel(OptionData<T>const &optionData, DiscountingStyle style = DiscountingStyle::Continuous)
+			:option_{ optionData }, prob_{ 0.5 }, ds_{style} {
+			dcf_ = DCF::function(style);
 		}
 
+
+		DiscountingStyle discountingStyle()const { return ds_; }
 
 		// Returns risk-neutral probability:
 		T nodeRiskNeutralProb()const {
@@ -432,7 +450,7 @@ namespace lattice_model {
 
 		// Backward generator
 		T operator()(T currValue, T upValue, T downValue, T dt) override {
-			T const disc = std::exp(-1.0*currValue*dt);
+			T const disc = dcf_(currValue, dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 

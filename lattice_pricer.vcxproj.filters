@@ -107,5 +107,8 @@
     <ClInclude Include="lattice_model_interface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_examples_calibrate_price_ir.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

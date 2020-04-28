@@ -26,28 +26,9 @@ namespace lattice_calibrator_ir {
 	using optimization_odm::Range;
 	using lattice_miscellaneous::lerp;
 	using lattice_utility::DeltaTimeHolder;
+	using lattice_utility::DiscountingFactor;
 
 
-	// ==============================================================================
-	// ========================== DiscountingFactor =================================
-	// ==============================================================================
-
-	template<typename T>
-	struct DiscountingFactor {
-
-		static std::function<T(T,T)> function(DiscountingStyle style) {
-			if (style == DiscountingStyle::Continuous) {
-				return [=](T rate, T delta)->T {
-					return std::exp(-1.0*rate*delta);
-				};
-			}
-			return [=](T rate, T delta)->T {
-				return (1.0 / (1.0 + rate * delta));
-			};
-		}
-
-
-	};
 
 
 
@@ -170,7 +151,7 @@ lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Binomial,TimeAxi
 	// get calibration forward generator:
 	auto forwardGen = generator.calibrationForwardGenerator();
 	// get correct discounting factor:
-	auto dcf = DCF::function(DiscountingStyle::Continuous);
+	auto dcf = DCF::function(generator.discountingStyle());
 	// get risk-neutral probability:
 	auto rnProb = generator.nodeRiskNeutralProb();
 
@@ -259,7 +240,7 @@ _calibrate_normal_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generato
 	// get calibration forward generator:
 	auto forwardGen = generator.calibrationForwardGenerator();
 	// get correct discounting factor:
-	auto dcf = DCF::function(DiscountingStyle::Continuous);
+	auto dcf = DCF::function(generator.discountingStyle());
 	// get size of reverting branches:
 	std::size_t const revertBranchesSize = timeIdx - 1;
 
@@ -347,7 +328,7 @@ _calibrate_reverting_impl(std::size_t timeIdx, LatticeObject &rateLattice, Gener
 	// get calibration forward generator:
 	auto forwardGen = generator.calibrationForwardGenerator();
 	// get correct discounting factor:
-	auto dcf = DCF::function(DiscountingStyle::Continuous);
+	auto dcf = DCF::function(generator.discountingStyle());
 	// get size of reverting branches:
 	std::size_t const revertBranchesSize = timeIdx - 1;
 

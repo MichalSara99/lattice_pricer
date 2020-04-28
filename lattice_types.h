@@ -28,13 +28,6 @@ namespace lattice_types {
 	template<typename Node,typename ...Nodes>
 	using LeafBackwardGenerator = std::function<Node(Nodes...)>;
 
-	// To be deleted - no longer needed
-	//template<typename ReturnType,typename ...Args>
-	//using Payoff = std::function<ReturnType(Args...)>;
-
-	//template<typename ...Args>
-	//using PayoffAdjuster = std::function<void(Args...)>;
-
 }
 
 

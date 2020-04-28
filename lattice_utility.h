@@ -10,6 +10,7 @@ namespace lattice_utility {
 
 	using lattice_types::LatticeType;
 	using lattice_traits::PrintTraits;
+	using lattice_types::DiscountingStyle;
 
 	// ==============================================================================
 	// ================================== print =====================================
@@ -46,6 +47,27 @@ namespace lattice_utility {
 		_print_impl(lattice, cbegin, cend, std::is_integral<typename LatticeObject::TimeAxis_type>());
 	}
 
+
+	// ==============================================================================
+	// ========================== DiscountingFactor =================================
+	// ==============================================================================
+
+	template<typename T>
+	struct DiscountingFactor {
+
+		static std::function<T(T, T)> function(DiscountingStyle style) {
+			if (style == DiscountingStyle::Continuous) {
+				return [=](T rate, T delta)->T {
+					return std::exp(-1.0*rate*delta);
+				};
+			}
+			return [=](T rate, T delta)->T {
+				return (1.0 / (1.0 + rate * delta));
+			};
+		}
+
+
+	};
 
 
 	// ==============================================================================

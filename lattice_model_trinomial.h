@@ -4,10 +4,14 @@
 
 
 #include"lattice_model_interface.h"
+#include"lattice_types.h"
+#include"lattice_utility.h"
 
 
 namespace lattice_model {
 
+	using lattice_types::DiscountingStyle;
+	using lattice_utility::DiscountingFactor;
 
 
 	// ================================================================================
@@ -67,6 +71,11 @@ namespace lattice_model {
 	template<typename T = double>
 	class HullWhiteModel :public TrinomialModel<1, T> {
 	private:
+		// typedef discounting factor:
+		typedef DiscountingFactor<T> DCF;
+
+		std::function<T(T, T)> dcf_;
+		DiscountingStyle ds_;
 		std::vector<T> theta_;
 		OptionData<T> option_;
 
@@ -100,9 +109,13 @@ namespace lattice_model {
 		}
 
 	public:
-		HullWhiteModel(OptionData<T>const &optionData)
-			:option_{ optionData } {
+		HullWhiteModel(OptionData<T>const &optionData, DiscountingStyle style = DiscountingStyle::Continuous)
+			:option_{ optionData }, ds_{style} 
+		{
+			dcf_ = DCF::function(style);
 		}
+
+		DiscountingStyle discountingStyle()const { return ds_; }
 
 		// Returns tuple of probabilities:
 		std::tuple<T, T, T> nodeRiskNeutralProb(std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx, T dt)const {
@@ -122,7 +135,7 @@ namespace lattice_model {
 
 		// Backward generator
 		T operator()(T currValue, T upValue, T midValue, T downValue, T dt) override {
-			T disc = std::exp(-1.0*currValue*dt);
+			T const disc = dcf_(currValue,dt);
 			return (disc * (0.5*upValue + (1.0 - 0.5)*downValue));
 		}
 
@@ -234,6 +247,11 @@ namespace lattice_model {
 	template<typename T = double>
 	class BlackKarasinskiModel :public TrinomialModel<1, T> {
 	private:
+		// typedef discounting factor:
+		typedef DiscountingFactor<T> DCF;
+
+		std::function<T(T, T)> dcf_;
+		DiscountingStyle ds_;
 		std::vector<T> theta_;
 		OptionData<T> option_;
 
@@ -267,9 +285,12 @@ namespace lattice_model {
 		}
 
 	public:
-		BlackKarasinskiModel(OptionData<T>const &optionData)
-			:option_{ optionData } {
+		BlackKarasinskiModel(OptionData<T>const &optionData, DiscountingStyle style = DiscountingStyle::Continuous)
+			:option_{ optionData }, ds_{style} {
+			dcf_ = DCF::function(style);
 		}
+
+		DiscountingStyle discountingStyle()const { return ds_; }
 
 		// Returns tuple of probabilities:
 		std::tuple<T, T, T> nodeRiskNeutralProb(std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx, T dt)const {
@@ -289,7 +310,7 @@ namespace lattice_model {
 
 		// Backward generator
 		T operator()(T currValue, T upValue, T midValue, T downValue, T dt) override {
-			T disc = std::exp(-1.0*currValue*dt);
+			T const disc = dcf_(currValue, dt);
 			return (disc * (0.5*upValue + (1.0 - 0.5)*downValue));
 		}
 
