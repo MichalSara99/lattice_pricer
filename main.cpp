@@ -41,8 +41,9 @@ int main(int argc, char const *argv[]) {
 	// testIndexedHL();
 	// testHL();
 	// testIndexedHW();
-	 testHW();
-
+	// testHW();
+	// testIndexedBK();
+	// testBK();
 
 	// == lattice_greeks_t.h ====
 	// testIndexedLatticesGreeks();
