@@ -7,6 +7,7 @@
 #include"lattice_structure.h"
 #include"lattice_forward_traversals.h"
 #include"lattice_backward_traversals.h"
+#include"lattice_types.h"
 #include"lattice_macros.h"
 #include"lattice_traits.h"
 #include"lattice_merge.h"

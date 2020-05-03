@@ -34,14 +34,11 @@ int main(int argc, char const *argv[]) {
 	std::cout << "===============================================\n";
 
 	// === lattice_examples_calibrate_price_ir.h =====
-	testIndexedBinomialCouponBondLattice();
-
-	testBinomialCouponBondLattice();
-
-
-
-	 // testMeanRevertingLatticeCreation();
-
+	// testIndexedBinomialCouponBondLattice();
+	// testBinomialCouponBondLattice();
+	// testIndexedTrinomialCouponBondLattice();
+	// testTrinomialCouponBondLattice();
+	
 
 	// == lattice_calibrator_ir_t.h ====
 	// testIndexedBDT();
@@ -89,8 +86,8 @@ int main(int argc, char const *argv[]) {
 
 
 	// == lattice_model_t.h ===
-	//	testIndexedEuropeanLattices();
-	//	testIndexedAmericanLattices();
+	// testIndexedEuropeanLattices();
+	// testIndexedAmericanLattices();
 
 	//	testEuropeanLattices();
 	//	testAmericanLattices();
