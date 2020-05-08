@@ -20,7 +20,7 @@
 using namespace boost::gregorian;
 
 
-void indexedBDTCouponBond() {
+void indexedBDTPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
@@ -45,10 +45,11 @@ void indexedBDTCouponBond() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t maxPeriods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::BlackDermanToyModel<> bdt(option);
@@ -68,19 +69,20 @@ void indexedBDTCouponBond() {
 	lattice_utility::print(calibratedTree, first, last);
 
 
-	double nominal{ 100.0 };
-	double couponRate{ 0.05 };
-
+	double nominal{ 1.0 };
+	double couponRate{ 0.0 };
+	double lastCoupon{ 0.0 };
+	std::set<size_t> couponDates;
 
 	// Creating indexed bond lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> bondTree(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> bondTree(maxPeriods);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Binomial, double, double> bond_builder;
 	bond_builder bb;
 
 	// populate coupon bond tree:
-	bb(bondTree, calibratedTree, bdt, nominal, couponRate, dt);
+	bb(bondTree, calibratedTree, bdt, nominal, couponRate, lastCoupon, couponDates, dt);
 
 	std::cout << "indexed Black-Derman-Toy coupon bond lattice:\n";
 	// Print the part of generated lattice:
@@ -88,14 +90,16 @@ void indexedBDTCouponBond() {
 	last = std::next(first, 17);
 	lattice_utility::print(bondTree, first, last);
 
-	std::cout << "Todays price of coupon bond (nominal=100, couponRate=0.05, coupon paid semiannualy):"
+	std::cout << "Replicated price of pure discount bond:"
 		<< bondTree.apex() << "\n";
+	std::cout << "Market price of the pure discount bond:"
+		<< discount_curve.at(maxPeriods) << "\n";
 
 }
 
 
 
-void indexedHLCouponBond() {
+void indexedHLPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
@@ -120,7 +124,8 @@ void indexedHLCouponBond() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
@@ -143,8 +148,10 @@ void indexedHLCouponBond() {
 	lattice_utility::print(calibratedTree, first, last);
 
 
-	double nominal{ 100.0 };
-	double couponRate{ 0.05 };
+	double nominal{ 1.0 };
+	double couponRate{ 0.0 };
+	double lastCoupon{ 0.0 };
+	std::set<size_t> couponDates;
 
  
 	// Creating indexedbond lattice:
@@ -155,7 +162,7 @@ void indexedHLCouponBond() {
 	bond_builder bb;
 
 	// populate coupon bond tree:
-	bb(bondTree, calibratedTree, hlm, nominal, couponRate, dt);
+	bb(bondTree, calibratedTree, hlm, nominal, couponRate, lastCoupon, couponDates, dt);
 
 	std::cout << "indexed Ho-Lee coupon bond lattice:\n";
 	// Print the part of generated lattice:
@@ -163,24 +170,26 @@ void indexedHLCouponBond() {
 	last = std::next(first, 17);
 	lattice_utility::print(bondTree, first, last);
 
-	std::cout << "Todays price of coupon bond (nominal=100, couponRate=0.05, coupon paid semiannualy):"
+	std::cout << "Replicated price of pure discount bond:"
 		<< bondTree.apex() << "\n";
+	std::cout << "Market price of the pure discount bond:"
+		<< discount_curve.at(periods) << "\n";
 
 }
 
-void testIndexedBinomialCouponBondLattice() {
+void testIndexedBinomialPureDiscountBondLattice() {
 	std::cout << "=======================================================\n";
-	std::cout << "========= Indexed Coupon Bond Lattice - TEST ==========\n";
+	std::cout << "=== Indexed Pure Discount Bond Lattice - TEST =========\n";
 	std::cout << "=======================================================\n";
 
-	indexedBDTCouponBond();
-	indexedHLCouponBond();
+	indexedBDTPureDiscountBond();
+	indexedHLPureDiscountBond();
 
 	std::cout << "=======================================================\n";
 }
 
 
-void BDTCouponBond() {
+void BDTPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
@@ -209,7 +218,8 @@ void BDTCouponBond() {
 	};
 
 	std::size_t year{ 180 };
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
 	}
@@ -244,8 +254,10 @@ void BDTCouponBond() {
 	lattice_utility::print(calibratedTree, first, last);
 
 
-	double nominal{ 100.0 };
-	double couponRate{ 0.05 };
+	double nominal{ 1.0 };
+	double couponRate{ 0.0 };
+	double lastCoupon{ 0.0 };
+	std::set<date> couponDates;
 
 
 	// Creating indexed bond lattice:
@@ -256,7 +268,7 @@ void BDTCouponBond() {
 	bond_builder bb;
 
 	// populate coupon bond tree:
-	bb(bondTree, calibratedTree, bdt, nominal, couponRate, timeDeltas);
+	bb(bondTree, calibratedTree, bdt, nominal, couponRate, lastCoupon, couponDates, timeDeltas);
 
 	std::cout << "Black-Derman-Toy coupon bond lattice:\n";
 	// Print the part of generated lattice:
@@ -264,14 +276,16 @@ void BDTCouponBond() {
 	last = std::next(first, 17);
 	lattice_utility::print(bondTree, first, last);
 
-	std::cout << "Todays price of coupon bond (nominal=100, couponRate=0.05, coupon paid semiannualy):"
+	std::cout << "Replicated price of pure discount bond:"
 		<< bondTree.apex() << "\n";
+	std::cout << "Market price of the pure discount bond:"
+		<< discount_curve.at(periods) << "\n";
 
 }
 
 
 
-void HLCouponBond() {
+void HLPureDiscountBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
 
@@ -299,7 +313,8 @@ void HLCouponBond() {
 	};
 
 	std::size_t year{ 180 };
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
 	}
@@ -334,8 +349,10 @@ void HLCouponBond() {
 	lattice_utility::print(calibratedTree, first, last);
 
 
-	double nominal{ 100.0 };
-	double couponRate{ 0.05 };
+	double nominal{ 1.0 };
+	double couponRate{ 0.0 };
+	double lastCoupon{ 0.0 };
+	std::set<date> couponDates;
 
 
 	// Creating indexed bond lattice:
@@ -346,7 +363,7 @@ void HLCouponBond() {
 	bond_builder bb;
 
 	// populate coupon bond tree:
-	bb(bondTree, calibratedTree, hlm, nominal, couponRate, timeDeltas);
+	bb(bondTree, calibratedTree, hlm, nominal, couponRate, lastCoupon, couponDates, timeDeltas);
 
 	std::cout << "Black-Derman-Toy coupon bond lattice:\n";
 	// Print the part of generated lattice:
@@ -354,19 +371,21 @@ void HLCouponBond() {
 	last = std::next(first, 17);
 	lattice_utility::print(bondTree, first, last);
 
-	std::cout << "Todays price of coupon bond (nominal=100, couponRate=0.05, coupon paid semiannualy):"
+	std::cout << "Replicated price of pure discount bond:"
 		<< bondTree.apex() << "\n";
+	std::cout << "Market price of the pure discount bond:"
+		<< discount_curve.at(periods) << "\n";
 
 }
 
 
-void testBinomialCouponBondLattice() {
+void testBinomialPureDicsountBondLattice() {
 	std::cout << "=======================================================\n";
-	std::cout << "============= Coupon Bond Lattice - TEST ==============\n";
+	std::cout << "======= Pure Disocunt Bond Lattice - TEST =============\n";
 	std::cout << "=======================================================\n";
 
-	BDTCouponBond();
-	HLCouponBond();
+	BDTPureDiscountBond();
+	HLPureDiscountBond();
 
 	std::cout << "=======================================================\n";
 }
@@ -403,7 +422,7 @@ void indexedHWCouponBond() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods,params,dt);
@@ -482,7 +501,7 @@ void indexedBKCouponBond() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
@@ -580,7 +599,7 @@ void HWCouponBond() {
 
 	fixingDatesSet.emplace(today);
 	fixingDates.emplace_back(today);
-	std::size_t periods{ discount_curve.size() - 1 };
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));
@@ -676,7 +695,7 @@ void BKCouponBond() {
 
 	fixingDatesSet.emplace(today);
 	fixingDates.emplace_back(today);
-	std::size_t periods{ discount_curve.size() - 1 };
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));

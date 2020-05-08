@@ -40,7 +40,8 @@ void testIndexedBDTCalibration() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> rateTree(periods);
@@ -97,7 +98,8 @@ void testIndexedBDTSanityCheck() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
@@ -193,7 +195,8 @@ void testBDTCalibration() {
 
 	// 
 	std::size_t year{ 180 };
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
 	}
@@ -270,7 +273,8 @@ void testBDTSanityCheck() {
 
 	// 
 	std::size_t year{ 180 };
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
 	}
@@ -372,7 +376,8 @@ void testIndexedHLCalibration() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> rateTree(periods);
@@ -429,7 +434,8 @@ void testIndexedHLSanityCheck() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
@@ -522,7 +528,8 @@ void testHLCalibration() {
 
 	// 
 	std::size_t year{ 180 };
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
 	}
@@ -597,7 +604,8 @@ void testHLSanityCheck() {
 
 	// 
 	std::size_t year{ 180 };
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace(today + date_duration(t*year));
 	}
@@ -703,7 +711,8 @@ void testIndexedHWCalibration() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods,params, dt);
@@ -767,7 +776,8 @@ void testIndexedHWSanityCheck() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
@@ -867,7 +877,8 @@ void testHWCalibration() {
 
 	fixingDatesSet.emplace(today);
 	fixingDates.emplace_back(today);
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));
@@ -949,7 +960,8 @@ void testHWSanityCheck() {
 
 	fixingDatesSet.emplace(today);
 	fixingDates.emplace_back(today);
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));
@@ -1055,7 +1067,8 @@ void testIndexedBKCalibration() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params, dt);
@@ -1119,7 +1132,8 @@ void testIndexedBKSanityCheck() {
 		0.24145
 	};
 
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
 	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
@@ -1220,7 +1234,8 @@ void testBKCalibration() {
 
 	fixingDatesSet.emplace(today);
 	fixingDates.emplace_back(today);
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));
@@ -1302,7 +1317,8 @@ void testBKSanityCheck() {
 
 	fixingDatesSet.emplace(today);
 	fixingDates.emplace_back(today);
-	std::size_t periods{ discount_curve.size() - 1 };
+	// the discount factor 1.0 is not used in calibration therefore
+	std::size_t periods{ discount_curve.size() - 2 };
 	for (std::size_t t = 1; t <= periods; ++t) {
 		fixingDates.emplace_back(today + date_duration(daysInhalfYear*t));
 		fixingDatesSet.emplace(today + date_duration(daysInhalfYear*t));

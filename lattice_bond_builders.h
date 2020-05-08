@@ -28,21 +28,33 @@ namespace lattice_bond_builders {
 		typename Node>
 	class BondBuilder<LatticeType::Binomial, DeltaTime, Node>{
 	private:
+		template<typename LatticeObject, typename Generator>
+		static void _buildPureDiscountBondTree(std::size_t lastIdx, LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice,
+			Generator const &generator, Node nominal, DeltaTime const &deltaTime, lattice_types::DiscountingStyle style);
+		
+		template<typename LatticeObject, typename Generator>
+		static void _buildCouponBondTree(std::size_t lastIdx, LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice, Generator const &generator,
+			Node nominal, Node couponRate, std::set<typename LatticeObject::TimeAxis_type> const &couponDates,
+			DeltaTime const &deltaTime, lattice_types::DiscountingStyle style);
+
 		template<typename LatticeObject,typename Generator>
 		static void _buildBondTree(LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice, Generator const &generator,
-			Node nominal, Node couponRate, DeltaTime const &deltaTime, DiscountingStyle style);
+			Node nominal, Node couponRate, Node lastCoupon,std::set<typename LatticeObject::TimeAxis_type> const &couponDates,
+			DeltaTime const &deltaTime, DiscountingStyle style);
 
 	public:
 		template<typename LatticeObject,typename Generator>
 		void operator()(LatticeObject &bondLattice, LatticeObject const &calibartedRateLattice, Generator const &generator,
-			Node nominal, Node couponRate,DeltaTime const &deltaTime, DiscountingStyle style = DiscountingStyle::Continuous) {
-			LASSERT(bondLattice.timeDimension() == calibartedRateLattice.timeDimension(),
-				"Lattices must have the same dimension.");
+			Node nominal, Node couponRate,Node lastCoupon, std::set<typename LatticeObject::TimeAxis_type> const &couponDates,
+			DeltaTime const &deltaTime, DiscountingStyle style = DiscountingStyle::Continuous) {
+			LASSERT(bondLattice.timeDimension() <= calibartedRateLattice.timeDimension(),
+				"bondLattice's dimension must be equal or less then calibratedRateLatice's dimension.");
 			LASSERT(bondLattice.type() == generator.latticeType(),
 				"Mismatch between lattice types");
 			LASSERT(Generator::assetClass() == AssetClass::InterestRate,
 				"The passed model must be interest-rate model");
-			_buildBondTree(bondLattice, calibartedRateLattice, generator, nominal, couponRate, deltaTime, style);
+			_buildBondTree(bondLattice, calibartedRateLattice, generator,
+				nominal, couponRate,lastCoupon,couponDates, deltaTime, style);
 		}
 
 	};
@@ -110,35 +122,66 @@ namespace lattice_bond_builders {
 }
 
 
-
-
-
 template<typename DeltaTime,
 	typename Node>
-template<typename LatticeObject, typename Generator>
-void lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Binomial,DeltaTime,Node>::
-_buildBondTree(LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice, Generator const &generator,
-	Node nominal, Node couponRate, DeltaTime const &deltaTime, lattice_types::DiscountingStyle style) {
+	template<typename LatticeObject, typename Generator>
+void lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Binomial, DeltaTime, Node>::
+_buildPureDiscountBondTree(std::size_t lastIdx,LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice,
+	Generator const &generator,Node nominal, DeltaTime const &deltaTime, lattice_types::DiscountingStyle style) {
 
 	typedef DiscountingFactor<Node> DCF;
 	typedef DeltaTimeHolder<DeltaTime> DT;
 	auto dcf = DCF::function(style);
 
-	const std::size_t lastIdx = bondLattice.timeDimension() - 1;
-	const std::size_t lastNodesSize = bondLattice.nodesAtIdx(lastIdx).size();
 	Node dt{};
-	Node coupon{};
 	Node prob = generator.nodeRiskNeutralProb();
-
-	for (auto i = 0; i < lastNodesSize; ++i) {
-		bondLattice(lastIdx, i) = nominal;
-	}
 
 	std::size_t nodesSize{ 0 };
 	for (auto n = lastIdx - 1; n > 0; --n) {
 		nodesSize = bondLattice.nodesAtIdx(n).size();
 		dt = DT::deltaTime(n, deltaTime);
-		coupon = nominal * couponRate * dt;
+
+		for (auto i = 0; i < nodesSize; ++i) {
+			bondLattice(n, i) =
+				prob * (bondLattice(n + 1, i) + bondLattice(n + 1, i + 1))*
+				dcf(calibratedRateLattice(n, i), dt);
+		}
+	}
+
+	dt = DT::deltaTime(0, deltaTime);
+	bondLattice(0, 0) = prob * (bondLattice(1, 0) + bondLattice(1, 1))*
+		dcf(calibratedRateLattice(0, 0), dt);
+}
+
+
+template<typename DeltaTime,
+	typename Node>
+	template<typename LatticeObject, typename Generator>
+void lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Binomial, DeltaTime, Node>::
+_buildCouponBondTree(std::size_t lastIdx,LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice, Generator const &generator,
+	Node nominal, Node couponRate, std::set<typename LatticeObject::TimeAxis_type> const &couponDates,
+	DeltaTime const &deltaTime, lattice_types::DiscountingStyle style) {
+
+	typedef DiscountingFactor<Node> DCF;
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	using TimeAxis = typename LatticeObject::TimeAxis_type;
+	auto dcf = DCF::function(style);
+
+	Node dt{};
+	Node coupon{};
+	TimeAxis date{};
+	Node prob = generator.nodeRiskNeutralProb();
+
+
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n > 0; --n) {
+		nodesSize = bondLattice.nodesAtIdx(n).size();
+		dt = DT::deltaTime(n, deltaTime);
+		coupon = 0.0;
+		date = bondLattice.timeAt(n);
+		if (couponDates.find(date) != couponDates.end()) {
+			coupon = nominal * couponRate * dt;
+		}
 		for (auto i = 0; i < nodesSize; ++i) {
 			bondLattice(n, i) =
 				prob * (bondLattice(n + 1, i) + bondLattice(n + 1, i + 1) + 2.0 * coupon)*
@@ -147,8 +190,42 @@ _buildBondTree(LatticeObject &bondLattice, LatticeObject const &calibratedRateLa
 	}
 
 	dt = DT::deltaTime(0, deltaTime);
+	coupon = 0.0;
+	date = bondLattice.timeAt(0);
+	if (couponDates.find(date) != couponDates.end()) {
+		coupon = nominal * couponRate * dt;
+	}
 	bondLattice(0, 0) = prob * (bondLattice(1, 0) + bondLattice(1, 1) + 2.0*coupon)*
 		dcf(calibratedRateLattice(0, 0), dt);
+}
+
+
+template<typename DeltaTime,
+	typename Node>
+template<typename LatticeObject, typename Generator>
+void lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Binomial,DeltaTime,Node>::
+_buildBondTree(LatticeObject &bondLattice, LatticeObject const &calibratedRateLattice, Generator const &generator,
+	Node nominal, Node couponRate, Node lastCoupon, std::set<typename LatticeObject::TimeAxis_type> const &couponDates,
+	DeltaTime const &deltaTime, lattice_types::DiscountingStyle style) {
+
+	// declare for further use in last payoff:
+	const std::size_t lastIdx = bondLattice.timeDimension() - 1;
+	const std::size_t lastNodesSize = bondLattice.nodesAtIdx(lastIdx).size();
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		bondLattice(lastIdx, i) = nominal + lastCoupon;
+	}
+
+	// If couponDates is an empty set -> ignore possible non-zero couponRate variable
+	// and  compute pure discount bond tree
+	if (couponDates.empty()) {
+		_buildPureDiscountBondTree(lastIdx, bondLattice, calibratedRateLattice,
+			generator, nominal, deltaTime, style);
+	}
+	else {
+		_buildCouponBondTree(lastIdx, bondLattice, calibratedRateLattice,
+			generator, nominal, couponRate, couponDates, deltaTime, style);
+	}
 }
 
 

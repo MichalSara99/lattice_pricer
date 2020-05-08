@@ -34,8 +34,8 @@ int main(int argc, char const *argv[]) {
 	std::cout << "===============================================\n";
 
 	// === lattice_examples_calibrate_price_ir.h =====
-	// testIndexedBinomialCouponBondLattice();
-	// testBinomialCouponBondLattice();
+	// testIndexedBinomialPureDiscountBondLattice();
+	// testBinomialPureDicsountBondLattice();
 	// testIndexedTrinomialCouponBondLattice();
 	// testTrinomialCouponBondLattice();
 	

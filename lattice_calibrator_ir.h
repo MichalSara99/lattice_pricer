@@ -170,12 +170,8 @@ lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Binomial,TimeAxi
 
 	LatticeObject arrowDebreuLattice(rateLattice);
 	// Take 10 % of the deltaTime:
-	const Node dt_0 = 0.01 * DT::deltaTime(0, deltaTime);
-	// Linear interpolation between today discount factor (which is 1) and next discount factor 
-	// with maturity dt_0:
-	const Node d_0 = lerp(DC::discount(0, discountCurve), DC::discount(1, discountCurve), dt_0);
-	// get the near-today short rate:
-	const Node rateApex = (-1.0*std::log(d_0) / dt_0);
+	const Node dt_0 = DT::deltaTime(0, deltaTime);
+	const Node rateApex = (-1.0*std::log(DC::discount(1, discountCurve)) / dt_0);
 	rateLattice(0, 0) = rateApex;
 	arrowDebreuLattice(0, 0) = 1.0;
 	Node dt{};
@@ -196,7 +192,7 @@ lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Binomial,TimeAxi
 
 		// one-dimensional optimization:
 		auto objective = std::bind(calibFun, std::placeholders::_1,
-			dt, DC::discount(t, discountCurve), rateLattice.nodesAtIdx(t - 1),
+			dt, DC::discount(t + 1, discountCurve), rateLattice.nodesAtIdx(t - 1),
 			arrowDebreuLattice.nodesAtIdx(t), dcf);
 		auto optimizer = gsm(objective);
 		
@@ -259,13 +255,10 @@ _calibrate_normal_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generato
 	std::size_t nodesSize{ 0 };
 
 	LatticeObject arrowDebreuLattice(rateLattice);
-	// Take 10 % of the deltaTime:
-	const Node dt_0 = 0.01 * DT::deltaTime(0, deltaTime);
-	// Linear interpolation between today discount factor (which is 1) and next discount factor 
-	// with maturity dt_0:
-	const Node d_0 = lerp(DC::discount(0, discountCurve), DC::discount(1, discountCurve), dt_0);
+	// Take the first deltaTime:
+	const Node dt_0 = DT::deltaTime(0, deltaTime);
 	// get the near-today short rate:
-	const Node rateApex = (-1.0*std::log(d_0) / dt_0);
+	const Node rateApex = (-1.0*std::log(DC::discount(1, discountCurve)) / dt_0);
 	rateLattice(0, 0) = rateApex;
 	arrowDebreuLattice(0, 0) = 1.0;
 	Node dt{};
@@ -282,7 +275,7 @@ _calibrate_normal_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generato
 
 		// one-dimensional optimization:
 		auto objective = std::bind(calibFun, std::placeholders::_1,
-			dt, DC::discount(t, discountCurve), rateLattice.nodesAtIdx(t - 1),
+			dt, DC::discount(t + 1, discountCurve), rateLattice.nodesAtIdx(t - 1),
 			arrowDebreuLattice.nodesAtIdx(t), dcf);
 		auto optimizer = gsm(objective);
 
@@ -373,7 +366,7 @@ _calibrate_reverting_impl(std::size_t timeIdx, LatticeObject &rateLattice, Gener
 
 		// one-dimensional optimization:
 		auto objective = std::bind(calibFun, std::placeholders::_1,
-			dt, DC::discount(t, discountCurve), rateLattice.nodesAtIdx(t - 1),
+			dt, DC::discount(t + 1, discountCurve), rateLattice.nodesAtIdx(t - 1),
 			arrowDebreuLattice.nodesAtIdx(t), dcf);
 		auto optimizer = gsm(objective);
 
