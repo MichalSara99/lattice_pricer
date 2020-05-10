@@ -194,8 +194,13 @@ namespace lattice_structure {
 			states.push_back(nodesAtIdx(t).size());
 		}
 		std::adjacent_difference(states.begin(), states.end(), states.begin());
-		auto zeroItr = std::find_if(states.begin(), states.end(), [](int val) {return val == Node{}; });
-		this->firstRevertIdx_ = std::distance(states.begin(), zeroItr);
+		auto zeroItr = std::find_if(states.begin(), states.end(), [](int val) {return (val == 0); });
+		if (zeroItr == states.end()) {
+			this->firstRevertIdx_ = 0;
+		}
+		else {
+			this->firstRevertIdx_ = std::distance(states.begin(), zeroItr);
+		}
 	}
 
 

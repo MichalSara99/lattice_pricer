@@ -35,10 +35,13 @@ int main(int argc, char const *argv[]) {
 
 	// === lattice_examples_calibrate_price_ir.h =====
 	// testIndexedBinomialPureDiscountBondLattice();
+	// testIndexedBinomialPureDiscountBondLatticeVariable(1);
 	// testBinomialPureDicsountBondLattice();
-	// testIndexedTrinomialCouponBondLattice();
-	// testTrinomialCouponBondLattice();
-	
+	// testBinomialPureDicsountBondLatticeVariable(1);
+	// testIndexedTrinomialPureDiscountBondLattice();
+	// testIndexedTrinomialPureDiscountBondLatticeVariable(20);
+	// testTrinomialPureDiscountBondLattice();
+	// testTrinomialPureDiscountBondLatticeVariable(6);
 
 	// == lattice_calibrator_ir_t.h ====
 	// testIndexedBDT();
