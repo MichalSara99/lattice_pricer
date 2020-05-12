@@ -42,6 +42,14 @@ int main(int argc, char const *argv[]) {
 	// testIndexedTrinomialPureDiscountBondLatticeVariable(20);
 	// testTrinomialPureDiscountBondLattice();
 	// testTrinomialPureDiscountBondLatticeVariable(6);
+	// testIndexedBinomialCouponBondLattice();
+	// testIndexedBinomialCouponBondLatticeVariable(10);
+	// testBinomialCouponBondLattice();
+	// testBinomialCouponBondLatticeVariable(11);
+	// testIndexedTrinomialCouponBondLattice();
+	// testIndexedTrinomialCouponBondLatticeVariable(10);
+	// testTrinomialCouponBondLattice();
+	 testTrinomialCouponBondLatticeVariable(11);
 
 	// == lattice_calibrator_ir_t.h ====
 	// testIndexedBDT();
