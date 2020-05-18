@@ -35,11 +35,11 @@ namespace lattice_model {
 			T const r2 = sig * std::sqrt(dt);
 			T const up = std::exp(r1 + r2);
 			T const down = std::exp(r1 - r2);
-			return std::make_tuple(up*value, down*value);
+			return std::make_tuple(down*value,up*value);
 		}
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T downValue, T dt) override {
+		T operator()(T currValue, T downValue, T upValue, T dt) override {
 			T const r = option_.RiskFreeRate;
 			T const disc = std::exp(-1.0*r*dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
@@ -77,11 +77,11 @@ namespace lattice_model {
 			T const V_n = sig * std::sqrt(dt);
 			T const up = std::exp(K_n + V_n);
 			T const down = std::exp(K_n - V_n);
-			return std::make_tuple(up*value, down*value);
+			return std::make_tuple(down*value, up*value);
 		}
 
 		// Backward generator:
-		T operator()(T currValue, T upValue, T downValue, T dt) override {
+		T operator()(T currValue, T downValue, T upValue, T dt) override {
 			T const q = option_.DividentRate;
 			T const s = option_.Underlying;
 			T const sig = option_.Volatility;
@@ -127,11 +127,11 @@ namespace lattice_model {
 			T const x2 = d - sig * std::sqrt(dt);
 			T const up = std::exp(x1);
 			T const down = std::exp(x2);
-			return std::make_tuple(up*value, down*value);
+			return std::make_tuple(down*value,up*value);
 		}
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T downValue, T dt) override {
+		T operator()(T currValue, T downValue, T upValue, T dt) override {
 			T const r = option_.RiskFreeRate;
 			T const disc = std::exp(-1.0*r *dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
@@ -165,11 +165,11 @@ namespace lattice_model {
 			T const x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
 			T const up = std::exp(x);
 			T const down = (1.0 / up);
-			return std::make_tuple(up*value, down*value);
+			return std::make_tuple(down*value,up*value);
 		}
 
 		// Backward generator:
-		T operator()(T currValue, T upValue, T downValue, T dt)override {
+		T operator()(T currValue, T downValue, T upValue, T dt)override {
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
 			T const x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
@@ -208,11 +208,11 @@ namespace lattice_model {
 			T const x = std::sqrt(v *v + 2.0*v - 3.0);
 			T const up = (0.5*std::exp((r - q)*dt)*v*(v + 1.0 + x));
 			T const down = (0.5*std::exp((r - q)*dt)*v*(v + 1.0 - x));
-			return std::make_tuple(up*value, down*value);
+			return std::make_tuple(down*value, up*value);
 		}
 
 		// Backward generator:
-		T operator()(T currValue, T upValue, T downValue, T dt)override {
+		T operator()(T currValue, T downValue, T upValue, T dt)override {
 			T const q = option_.DividentRate;
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
@@ -268,11 +268,11 @@ namespace lattice_model {
 			T const p = h2;
 			T const up = e * (h1 / h2);
 			T const down = (e - p * up) / (1.0 - p);
-			return std::make_tuple(up * value, down * value);
+			return std::make_tuple(down * value, up * value);
 		}
 
 		// Backward generator:
-		T operator()(T currValue, T upValue, T downValue, T dt)override {
+		T operator()(T currValue, T downValue, T upValue, T dt)override {
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
 			T const q = option_.DividentRate;
@@ -343,8 +343,8 @@ namespace lattice_model {
 		}
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T downValue, T dt) override {
-			T const disc = dcf_(currValue, dt);
+		T operator()(T currValue, T downValue, T upValue, T dt) override {
+			T const  disc = dcf_(currValue, dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}
 
@@ -449,7 +449,7 @@ namespace lattice_model {
 
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T downValue, T dt) override {
+		T operator()(T currValue, T downValue, T upValue, T dt) override {
 			T const disc = dcf_(currValue, dt);
 			return (disc * (prob_*upValue + (1.0 - prob_)*downValue));
 		}

@@ -35,11 +35,12 @@ namespace lattice_model {
 			T const up = std::exp(expon);
 			T const mid = 1.0;
 			T const down = 1.0 / up;
-			return std::make_tuple(up*value, mid*value, down*value);
+			return std::make_tuple(down*value, mid*value, up*value);
 		}
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T midValue, T downValue, T dt) override {
+		T operator()(T currValue, T downValue, T midValue, T upValue, T dt,
+			std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx) override {
 			T const q = option_.DividentRate;
 			T const r = option_.RiskFreeRate;
 			T const sig = option_.Volatility;
@@ -134,9 +135,11 @@ namespace lattice_model {
 		}
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T midValue, T downValue, T dt) override {
-			T const disc = dcf_(currValue,dt);
-			return (disc * (0.5*upValue + (1.0 - 0.5)*downValue));
+		T operator()(T currValue, T downValue, T midValue, T upValue, T dt,
+			std::size_t revertBranchesSize,std::size_t nodesSize,std::size_t leafIdx) override {
+			T const disc = dcf_(currValue, dt);
+			std::tuple<T, T, T> const probs = nodeRiskNeutralProb(revertBranchesSize, nodesSize, leafIdx, dt);
+			return (disc * (std::get<0>(probs)*downValue + std::get<1>(probs)*midValue + std::get<2>(probs)*upValue));
 		}
 
 		void setTheta(std::vector<T> const &theta) { theta_ = theta; }
@@ -309,9 +312,11 @@ namespace lattice_model {
 		}
 
 		// Backward generator
-		T operator()(T currValue, T upValue, T midValue, T downValue, T dt) override {
+		T operator()(T currValue, T downValue, T midValue, T upValue, T dt,
+			std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx) override {
 			T const disc = dcf_(currValue, dt);
-			return (disc * (0.5*upValue + (1.0 - 0.5)*downValue));
+			std::tuple<T, T, T> const probs = nodeRiskNeutralProb(revertBranchesSize, nodesSize, leafIdx, dt);
+			return (disc * (std::get<0>(probs)*downValue + std::get<1>(probs)*midValue + std::get<2>(probs)*upValue));
 		}
 
 		void setTheta(std::vector<T> const &theta) { theta_ = theta; }

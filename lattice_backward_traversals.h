@@ -169,16 +169,20 @@ _backTraverseNormal(std::size_t timeIdx,LatticeObject &lattice, Generator &&gene
 	typedef DeltaTimeHolder<DeltaTime> DT;
 	typename LatticeObject::Node_type dt{};
 
+	std::size_t const revertBranchesSize = timeIdx;
+
 	std::size_t nodesSize{ 0 };
 	for (auto n = timeIdx - 1; n > 0; --n) {
 		dt = DT::deltaTime(n, deltaTime);
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt);
+			lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt,
+				revertBranchesSize, nodesSize, i);
 		}
 	}
 	dt = DT::deltaTime(0, deltaTime);
-	lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), dt);
+	lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), dt,
+		revertBranchesSize, 1, 0);
 
 }
 
@@ -192,15 +196,20 @@ _backTraverseReverting(std::size_t timeIdx, LatticeObject &lattice, Generator &&
 	typename LatticeObject::Node_type dt{};
 	const std::size_t lastIdx = lattice.timeDimension() - 1;
 
+	std::size_t const revertBranchesSize = timeIdx;
+
 	std::size_t nodesSize{ 0 };
 	for (auto n = lastIdx - 1; n >= timeIdx; --n) {
 		dt = DT::deltaTime(n, deltaTime);
 		nodesSize = lattice.nodesAtIdx(n).size();
-		lattice(n, 0) = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1), lattice(n + 1, 2), dt);
+		lattice(n, 0) = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1), lattice(n + 1, 2), dt,
+			revertBranchesSize, nodesSize, 0);
 		for (auto i = 1; i < nodesSize - 1; ++i) {
-			lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i), lattice(n + 1, i + 1), dt);
+			lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i), lattice(n + 1, i + 1), dt,
+				revertBranchesSize, nodesSize, i);
 		}
-		lattice(n, nodesSize - 1) = generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3), lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt);
+		lattice(n, nodesSize - 1) = generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3), lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt,
+			revertBranchesSize, nodesSize, nodesSize - 1);
 	}
 }
 
@@ -244,21 +253,25 @@ void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::
 _backTraverseNormal(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster) {
 
 	typedef DeltaTimeHolder<DeltaTime> DT;
+	std::size_t const revertBranchesSize = timeIdx;
 	typename LatticeObject::Node_type dt{};
 	typename LatticeObject::Node_type value{};
+
 
 	std::size_t nodesSize{ 0 };
 	for (auto n = timeIdx - 1; n > 0; --n) {
 		dt = DT::deltaTime(n, deltaTime);
 		nodesSize = lattice.nodesAtIdx(n).size();
 		for (auto i = 0; i < nodesSize; ++i) {
-			value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt);
+			value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt,
+				revertBranchesSize, nodesSize, i);
 			payoffAdjuster(value, lattice(n, i));
 			lattice(n, i) = value;
 		}
 	}
 	dt = DT::deltaTime(0, deltaTime);
-	value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), dt);
+	value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), dt,
+		revertBranchesSize, 1, 0);
 	payoffAdjuster(value, lattice(0, 0));
 	lattice(0, 0) = value;
 }
@@ -274,23 +287,27 @@ _backTraverseReverting(std::size_t timeIdx, LatticeObject &lattice, Generator &&
 	typename LatticeObject::Node_type dt{};
 	typename LatticeObject::Node_type value{};
 	const std::size_t lastIdx = lattice.timeDimension() - 1;
+	std::size_t const revertBranchesSize = timeIdx;
 
 	std::size_t nodesSize{ 0 };
 	for (auto n = lastIdx - 1; n >= timeIdx; --n) {
 		dt = DT::deltaTime(n, deltaTime);
 		nodesSize = lattice.nodesAtIdx(n).size();
 
-		value = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1), lattice(n + 1, 2), dt);
+		value = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1), lattice(n + 1, 2), dt,
+			revertBranchesSize, nodesSize, 0);
 		payoffAdjuster(value, lattice(n, 0));
 		lattice(n, 0) = value;
 
 		for (auto i = 1; i < nodesSize - 1; ++i) {
-			value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt);
+			value = generator(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i), lattice(n + 1, i + 1), dt,
+				revertBranchesSize, nodesSize, i);
 			payoffAdjuster(value, lattice(n, i));
 			lattice(n, i) = value;
 		}
 
-		value = generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3), lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt);
+		value = generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3), lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt,
+			revertBranchesSize, nodesSize, nodesSize - 1);
 		payoffAdjuster(value, lattice(n, nodesSize - 1));
 		lattice(n, nodesSize - 1) = value;
 	}

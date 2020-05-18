@@ -3,6 +3,7 @@
 #include<set>
 #include<tuple>
 #include<array>
+#include<chrono>
 
 #include<boost/date_time/gregorian/gregorian.hpp>
 #include<boost/date_time/gregorian/gregorian_types.hpp>
@@ -29,11 +30,14 @@ int main(int argc, char const *argv[]) {
 	std::cout << "today + 2: " << today2 << "\n";
 	std::cout << "duration: " << (today2 - today)<< "\n";
 	
-
+	
 
 	std::cout << "===============================================\n";
 
+	// ===============================================
 	// === lattice_examples_calibrate_price_ir.h =====
+	// ===============================================
+
 	// testIndexedBinomialPureDiscountBondLattice();
 	// testIndexedBinomialPureDiscountBondLatticeVariable(1);
 	// testBinomialPureDicsountBondLattice();
@@ -49,9 +53,19 @@ int main(int argc, char const *argv[]) {
 	// testIndexedTrinomialCouponBondLattice();
 	// testIndexedTrinomialCouponBondLatticeVariable(10);
 	// testTrinomialCouponBondLattice();
-	 testTrinomialCouponBondLatticeVariable(11);
+	// testTrinomialCouponBondLatticeVariable(11);
 
-	// == lattice_calibrator_ir_t.h ====
+	// testIndexedBinomialEuropeanOptionOnCouponBondLattice();
+	// testBinomialEuropeanOptionOnCouponBondLattice();
+	// testIndexedTrinomialEuropeanOptionOnCouponBondLattice();
+	// testTrinomialEuropeanOptionOnCouponBondLattice();
+
+	// ===============================================
+
+	// ===================================
+	// ==== lattice_calibrator_ir_t.h ====
+	// ===================================
+
 	// testIndexedBDT();
 	// testBDT();
 	// testIndexedHL();
@@ -61,48 +75,74 @@ int main(int argc, char const *argv[]) {
 	// testIndexedBK();
 	// testBK();
 
-	// == lattice_greeks_t.h ====
+	// ===================================
+
+	// ===============================
+	// ===== lattice_greeks_t.h ======
+	// ===============================
+
 	// testIndexedLatticesGreeks();
 	// testLatticesGreeks();
 
-	//indexedLatticeBinomialDelta();
-	//crrIndexedLatticeGreeks();
-	//mcrrIndexedLatticeGreeks();
-	//jrIndexedLatticeGreeks();
-	//trimIndexedLatticeGreeks();
-	//tmIndexedLatticeGreeks();
-	//lrIndexedLatticeGreeks();
-	//bmIndexedLatticeGreeks();
+	// indexedLatticeBinomialDelta();
+	// crrIndexedLatticeGreeks();
+	// mcrrIndexedLatticeGreeks();
+	// jrIndexedLatticeGreeks();
+	// trimIndexedLatticeGreeks();
+	// tmIndexedLatticeGreeks();
+	// lrIndexedLatticeGreeks();
+	// bmIndexedLatticeGreeks();
+
+	// crrLatticeGreeks();
+	// mcrrLatticeGreeks();
+	// jrLatticeGreeks();
+	// trimLatticeGreeks();
+	// tmLatticeGreeks();
+	// lrLatticeGreeks();
+	// bmLatticeGreeks();
+
+	// ===============================
 
 
-	// == lattice_structure_t.h ====
+	// ===============================
+	// ==== lattice_structure_t.h ====
+	// ===============================
+
 	// testIndexedLatticeCreation();
-	//  testLatticeCreation();
+	// testLatticeCreation();
+
+	// ===============================
 
 
-	// == lattice_algorithms_t.h ====
-	//	testIndexedForwardInduction();
-	//	testForwardInduction();
+	// ===============================
+	// === lattice_algorithms_t.h ====
+	// ===============================
 
-	//  testIndexedForwardInductionDividends();
-	//  testForwardInductionDividends();
+	// testIndexedForwardInduction();
+	// testForwardInduction();
 
-	//  testIndexedBackwardInductionDividends();
-	//	testBackwardInductionDividends();
+	// testIndexedForwardInductionDividends();
+	// testForwardInductionDividends();
+
+	// testIndexedBackwardInductionDividends();
+	// testBackwardInductionDividends();
 
 	// testIndexedMerge();
 	// testMerge();
 
+	// ===============================
 
 
+	// ===============================
+	// ====== lattice_model_t.h ======
+	// ===============================
 
-	// == lattice_model_t.h ===
 	// testIndexedEuropeanLattices();
 	// testIndexedAmericanLattices();
+	// testEuropeanLattices();
+	// testAmericanLattices();
 
-	//	testEuropeanLattices();
-	//	testAmericanLattices();
-
+	// ===============================
 
 
 	std::cout << "\n";

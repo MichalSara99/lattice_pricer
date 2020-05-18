@@ -136,16 +136,16 @@ namespace lattice_bond_builders {
 	private:
 		template<typename LatticeObject,typename Generator,typename Payoff>
 		static void _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff);
+			Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
 
 		template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
 		static void _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster);
+			Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster);
 
 	public:
 		template<typename LatticeObject,typename Generator,typename Payoff>
 		void operator()(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime,Payoff &&payoff) {
+			Generator &&generator, DeltaTime const &deltaTime,Payoff &&payoff) {
 			LASSERT((bondLattice.timeDimension() > 0) &&
 				(optionLattice.timeDimension() > 0) &&
 				(calibratedRateLattice.timeDimension() > 0), "All lattices must have timeDimension higher than 0");
@@ -157,14 +157,16 @@ namespace lattice_bond_builders {
 				(bondLattice.type() == generator.latticeType()) &&
 				(calibratedRateLattice.type() == generator.latticeType()),
 				"Mismatch between lattice types");
-			LASSERT(Generator::assetClass() == AssetClass::InterestRate,
+			std::cout << typeid(Generator).name() << "\n";
+			LASSERT((generator.assetClass() == AssetClass::InterestRate),
 				"The passed model must be interest-rate model");
-			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, generator, deltaTime, std::forward<Payoff>(payoff));
+			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice,
+				std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 		}
 
 		template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
 		void operator()(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime,Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+			Generator &&generator, DeltaTime const &deltaTime,Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
 			LASSERT((bondLattice.timeDimension() > 0) &&
 				(optionLattice.timeDimension() > 0) &&
 				(calibratedRateLattice.timeDimension() > 0), "All lattices must have timeDimension higher than 0");
@@ -176,9 +178,9 @@ namespace lattice_bond_builders {
 				(bondLattice.type() == generator.latticeType()) &&
 				(calibratedRateLattice.type() == generator.latticeType()),
 				"Mismatch between lattice types");
-			LASSERT(Generator::assetClass() == AssetClass::InterestRate,
+			LASSERT((generator.assetClass() == AssetClass::InterestRate),
 				"The passed model must be interest-rate model");
-			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, generator, deltaTime,
+			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, std::forward<Generator>(generator), deltaTime,
 				std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster));
 		}
 
@@ -188,34 +190,34 @@ namespace lattice_bond_builders {
 	template<typename DeltaTime>
 	class OptionOnBondBuilder<LatticeType::Trinomial, DeltaTime> {
 	private:
-		template<typename LatticeObject, typename Generator, typename Payoff>
+		template<typename LatticeObject, typename Generator>
+		static void _buildOptionTreeNormal(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &calibratedRateLattice,
+			Generator &&generator, DeltaTime const &deltaTime);
+
+		template<typename LatticeObject, typename Generator,typename PayoffAdjuster>
 		static void _buildOptionTreeNormal(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff);
+			Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster);
 
-		template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
-		static void _buildOptionTreeNormal(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster);
+		template<typename LatticeObject, typename Generator>
+		static void _buildOptionTreeReverting(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &calibratedRateLattice,
+			Generator &&generator, DeltaTime const &deltaTime);
 
-		template<typename LatticeObject, typename Generator, typename Payoff>
+		template<typename LatticeObject, typename Generator, typename PayoffAdjuster>
 		static void _buildOptionTreeReverting(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff);
-
-		template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
-		static void _buildOptionTreeReverting(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster);
+			Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster);
 
 		template<typename LatticeObject, typename Generator, typename Payoff>
 		static void _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff);
+			Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
 
 		template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 		static void _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster);
+			Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster);
 
 	public:
 		template<typename LatticeObject, typename Generator, typename Payoff>
 		void operator()(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff) {
+			Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
 			LASSERT((bondLattice.timeDimension() > 0) &&
 				(optionLattice.timeDimension() > 0) &&
 				(calibratedRateLattice.timeDimension() > 0), "All lattices must have timeDimension higher than 0");
@@ -227,14 +229,15 @@ namespace lattice_bond_builders {
 				(bondLattice.type() == generator.latticeType()) &&
 				(calibratedRateLattice.type() == generator.latticeType()),
 				"Mismatch between lattice types");
-			LASSERT(Generator::assetClass() == AssetClass::InterestRate,
+			LASSERT(generator.assetClass() == AssetClass::InterestRate,
 				"The passed model must be interest-rate model");
-			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, generator, deltaTime, std::forward<Payoff>(payoff));
+			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, 
+				std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 		}
 
 		template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 		void operator()(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-			Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+			Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
 			LASSERT((bondLattice.timeDimension() > 0) &&
 				(optionLattice.timeDimension() > 0) &&
 				(calibratedRateLattice.timeDimension() > 0), "All lattices must have timeDimension higher than 0");
@@ -246,9 +249,9 @@ namespace lattice_bond_builders {
 				(bondLattice.type() == generator.latticeType()) &&
 				(calibratedRateLattice.type() == generator.latticeType()),
 				"Mismatch between lattice types");
-			LASSERT(Generator::assetClass() == AssetClass::InterestRate,
+			LASSERT(generator.assetClass() == AssetClass::InterestRate,
 				"The passed model must be interest-rate model");
-			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, generator, deltaTime,
+			_buildOptionTree(optionLattice, bondLattice, calibratedRateLattice, std::forward<Generator>(generator), deltaTime,
 				std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
 		}
 	};
@@ -634,7 +637,7 @@ template<typename DeltaTime>
 template<typename LatticeObject, typename Generator,typename Payoff>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Binomial,DeltaTime>::
 _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff) {
+	Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
 	
 	typedef DeltaTimeHolder<DeltaTime> DT;
 	const std::size_t lastIdx = optionLattice.timeDimension() - 1;
@@ -662,7 +665,7 @@ template<typename DeltaTime>
 template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Binomial, DeltaTime>::
 _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff,PayoffAdjuster &&payoffAdjuster) {
+	Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,PayoffAdjuster &&payoffAdjuster) {
 
 	typedef DeltaTimeHolder<DeltaTime> DT;
 	const std::size_t lastIdx = optionLattice.timeDimension() - 1;
@@ -693,51 +696,194 @@ _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice,
 
 
 template<typename DeltaTime>
-template<typename LatticeObject,typename Generator,typename Payoff>
+template<typename LatticeObject,typename Generator>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Trinomial, DeltaTime>::
-_buildOptionTreeNormal(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff) {
-	throw std::exception("not yet implemented");
+_buildOptionTreeNormal(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &calibratedRateLattice,
+	Generator &&generator, DeltaTime const &deltaTime) {
+	
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+
+	std::size_t const revertBranchesSize = timeIdx;
+	Node dt{};
+
+	std::size_t nodesSize{ 0 };
+	for (auto n = timeIdx - 1; n > 0; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = optionLattice.nodesAtIdx(n).size();
+		for (auto i = 0; i < nodesSize; ++i) {
+			optionLattice(n, i) = generator(calibratedRateLattice(n, i),
+				optionLattice(n + 1, i), optionLattice(n + 1, i + 1), optionLattice(n + 1, i + 2), dt,
+				revertBranchesSize, nodesSize, i);
+		}
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	optionLattice(0, 0) = generator(calibratedRateLattice(0, 0), 
+		optionLattice(1, 0), optionLattice(1, 1), optionLattice(1, 2), dt,
+		revertBranchesSize,1,0);
 }
 
 template<typename DeltaTime>
-template<typename LatticeObject, typename Generator, typename Payoff>
+template<typename LatticeObject, typename Generator>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Trinomial, DeltaTime>::
-_buildOptionTreeReverting(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff) {
-	throw std::exception("not yet implemented");
+_buildOptionTreeReverting(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &calibratedRateLattice,
+	Generator &&generator, DeltaTime const &deltaTime) {
+	
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typename LatticeObject::Node_type dt{};
+	const std::size_t lastIdx = optionLattice.timeDimension() - 1;
+	std::size_t const revertBranchesSize = timeIdx;
+
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n >= timeIdx; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = optionLattice.nodesAtIdx(n).size();
+
+		optionLattice(n, 0) = generator(calibratedRateLattice(n, 0),
+			optionLattice(n + 1, 0), optionLattice(n + 1, 1), optionLattice(n + 1, 2), dt,
+			revertBranchesSize, nodesSize, 0);
+		for (auto i = 1; i < nodesSize - 1; ++i) {
+			optionLattice(n, i) = generator(calibratedRateLattice(n, i),
+				optionLattice(n + 1, i - 1), optionLattice(n + 1, i), optionLattice(n + 1, i + 1), dt,
+				revertBranchesSize, nodesSize, i);
+		}
+		optionLattice(n, nodesSize - 1) = generator(calibratedRateLattice(n, nodesSize - 1),
+			optionLattice(n + 1, nodesSize - 3), optionLattice(n + 1, nodesSize - 2), optionLattice(n + 1, nodesSize - 1), dt,
+			revertBranchesSize, nodesSize, nodesSize - 1);
+	}
 }
 
 template<typename DeltaTime>
 template<typename LatticeObject, typename Generator, typename Payoff>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Trinomial, DeltaTime>::
 _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff) {
-	throw std::exception("not yet implemented");
+	Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
+
+	const std::size_t firstRevertIdx = optionLattice.firstRevertingIdx();
+	const std::size_t treeSize = optionLattice.timeDimension();
+
+	const std::size_t lastIdx = treeSize - 1;
+	const std::size_t lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		optionLattice(lastIdx, i) = payoff(bondLattice(lastIdx, i));
+	}
+
+	if (firstRevertIdx == 0) {
+		// This trinomial tree does not have reverting property:
+		_buildOptionTreeNormal(lastIdx, optionLattice, calibratedRateLattice, std::forward<Generator>(generator), deltaTime);
+	}
+	else {
+		// This trinomial tree does have reverting property:
+		_buildOptionTreeReverting(firstRevertIdx - 1, optionLattice, calibratedRateLattice, std::forward<Generator>(generator), deltaTime);
+		_buildOptionTreeNormal(firstRevertIdx - 1, optionLattice, calibratedRateLattice, std::forward<Generator>(generator), deltaTime);
+
+	}
 }
 
 template<typename DeltaTime>
-template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
+template<typename LatticeObject, typename Generator,typename PayoffAdjuster>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Trinomial, DeltaTime>::
 _buildOptionTreeNormal(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff,PayoffAdjuster &&payoffAdjuster) {
-	throw std::exception("not yet implemented");
+	Generator &&generator, DeltaTime const &deltaTime,PayoffAdjuster &&payoffAdjuster) {
+	
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+
+	std::size_t const revertBranchesSize = timeIdx;
+	Node dt{};
+	Node value{};
+
+	std::size_t nodesSize{ 0 };
+	for (auto n = timeIdx - 1; n > 0; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = optionLattice.nodesAtIdx(n).size();
+		for (auto i = 0; i < nodesSize; ++i) {
+			value = generator(calibratedRateLattice(n, i),
+				optionLattice(n + 1, i), optionLattice(n + 1, i + 1), optionLattice(n + 1, i + 2), dt,
+				revertBranchesSize, nodesSize, i);
+			payoffAdjuster(value, bondLattice(n, i));
+			optionLattice(n, i) = value;
+		}
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	value = generator(calibratedRateLattice(0, 0),
+		optionLattice(1, 0), optionLattice(1, 1), optionLattice(1, 2), dt,
+		revertBranchesSize, 1, 0);
+	payoffAdjuster(value, bondLattice(0, 0));
+	optionLattice(0, 0) = value;
 }
 
 template<typename DeltaTime>
-template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+template<typename LatticeObject, typename Generator, typename PayoffAdjuster>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Trinomial, DeltaTime>::
 _buildOptionTreeReverting(std::size_t timeIdx, LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
-	throw std::exception("not yet implemented");
+	Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster) {
+	
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	
+	const std::size_t lastIdx = optionLattice.timeDimension() - 1;
+	std::size_t const revertBranchesSize = timeIdx;
+
+	Node dt{};
+	Node value{};
+
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n >= timeIdx; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = optionLattice.nodesAtIdx(n).size();
+
+		value = generator(calibratedRateLattice(n, 0),
+			optionLattice(n + 1, 0), optionLattice(n + 1, 1), optionLattice(n + 1, 2), dt,
+			revertBranchesSize, nodesSize, 0);
+		payoffAdjuster(value, bondLattice(n, 0));
+		optionLattice(n, 0) = value;
+
+		for (auto i = 1; i < nodesSize - 1; ++i) {
+			value = generator(calibratedRateLattice(n, i),
+				optionLattice(n + 1, i - 1), optionLattice(n + 1, i), optionLattice(n + 1, i + 1), dt,
+				revertBranchesSize, nodesSize, i);
+			payoffAdjuster(value, bondLattice(n, i));
+			optionLattice(n, i) = value;
+		}
+		value = generator(calibratedRateLattice(n, nodesSize - 1),
+			optionLattice(n + 1, nodesSize - 3), optionLattice(n + 1, nodesSize - 2), optionLattice(n + 1, nodesSize - 1), dt,
+			revertBranchesSize, nodesSize, nodesSize - 1);
+		payoffAdjuster(value, bondLattice(n, nodesSize - 1));
+		optionLattice(n, nodesSize - 1) = value;
+	}
 }
 
 template<typename DeltaTime>
 template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 void lattice_bond_builders::OptionOnBondBuilder<lattice_types::LatticeType::Trinomial, DeltaTime>::
 _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice, LatticeObject const &calibratedRateLattice,
-	Generator const &generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
-	throw std::exception("not yet implemented");
+	Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+	
+	const std::size_t firstRevertIdx = optionLattice.firstRevertingIdx();
+	const std::size_t treeSize = optionLattice.timeDimension();
+
+	const std::size_t lastIdx = treeSize - 1;
+	const std::size_t lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		optionLattice(lastIdx, i) = payoff(bondLattice(lastIdx, i));
+	}
+
+	if (firstRevertIdx == 0) {
+		// This trinomial tree does not have reverting property:
+		_buildOptionTreeNormal(lastIdx, optionLattice, bondLattice, calibratedRateLattice,
+			std::forward<Generator>(generator), deltaTime, std::forward<PayoffAdjuster>(payoffAdjuster));
+	}
+	else {
+		// This trinomial tree does have reverting property:
+		_buildOptionTreeReverting(firstRevertIdx - 1, optionLattice, bondLattice, calibratedRateLattice,
+			std::forward<Generator>(generator), deltaTime, std::forward<PayoffAdjuster>(payoffAdjuster));
+		_buildOptionTreeNormal(firstRevertIdx - 1, optionLattice, bondLattice, calibratedRateLattice,
+			std::forward<Generator>(generator), deltaTime, std::forward<PayoffAdjuster>(payoffAdjuster));
+
+	}
 }
 
 

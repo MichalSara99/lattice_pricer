@@ -68,7 +68,8 @@ namespace lattice_model {
 		virtual std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) = 0;
 
 		// Backward generator:
-		virtual T operator()(T currValue, T upValue, T midValue, T downValue, T dt) = 0;
+		virtual T operator()(T currValue, T upValue, T midValue, T downValue, T dt,
+			std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx) = 0;
 
 		// Factor count:
 		enum { FactorCount = 1 };

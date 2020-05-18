@@ -51,7 +51,8 @@ public:
 	}
 
 	// Backward generator
-	T operator()(T currValue, T upValue, T midValue, T downValue, T dt) override {
+	T operator()(T currValue, T downValue, T midValue, T upValue, T dt,
+		std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx) override {
 		double p = (1.0 / 3.0);
 		return (p*upValue + p * midValue + p * downValue);
 	}
