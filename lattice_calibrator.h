@@ -6,6 +6,7 @@
 #include"lattice_macros.h"
 #include"lattice_calibrator_results.h"
 #include"lattice_calibrator_ir.h"
+#include"lattice_calibrator_equity.h"
 #include<memory>
 
 namespace lattice_calibrator {
@@ -14,6 +15,7 @@ namespace lattice_calibrator {
 	using lattice_types::LatticeType;
 	using lattice_calibrator_results::CalibratorResults;
 	using lattice_calibrator_ir::CalibratorIR;
+	using lattice_calibrator_equity::CalibratorEquity;
 
 	// ==============================================================================
 	// =============================== Calibrator ===================================
@@ -23,10 +25,13 @@ namespace lattice_calibrator {
 			AssetClass AClass,
 			typename TimeAxis,
 			typename DeltaTime,
-			typename DiscountCurve>
+			typename ...Others>
 	class Calibrator {};
 
 
+	// ==============================================================================
+	// ============= Calibrator Partial Specialization for InterestRate =============
+	// ==============================================================================
 
 	template<typename TimeAxis,
 		typename DeltaTime,
@@ -79,9 +84,55 @@ namespace lattice_calibrator {
 				calibrate(rateLattice, std::forward<Generator>(generator), deltaTime, this->discountCurve_);
 		}
 
+	};
+
+
+
+	// ==============================================================================
+	// ================= Calibrator Partial Specialization for Equity ===============
+	// ==============================================================================
+
+	template<typename TimeAxis,
+			typename DeltaTime,
+			typename RiskFreeRate,
+			typename OptionSurface>
+	class Calibrator<LatticeType::Binomial, AssetClass::Equity,
+		TimeAxis, DeltaTime, RiskFreeRate,OptionSurface> {
+
+
 
 
 	};
+
+
+	template<typename TimeAxis,
+		typename DeltaTime,
+		typename RiskFreeRate,
+		typename OptionSurface>
+	class Calibrator<LatticeType::Trinomial, AssetClass::Equity,
+		TimeAxis, DeltaTime, RiskFreeRate, OptionSurface> {
+	private:
+		OptionSurface optionSurface_;
+		RiskFreeRate rate_;
+
+	public:
+		explicit Calibrator(OptionSurface const &optionSurface,RiskFreeRate const &rate)
+			:rate_{ rate }, optionSurface_{ optionSurface } {}
+
+		template<typename LatticeObject>
+		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const
+			operator()(LatticeObject &statePriceLattice, DeltaTime const &deltaTime)const {
+			
+			return 
+
+
+		}
+
+
+
+
+	};
+
 
 
 

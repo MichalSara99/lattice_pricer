@@ -22,6 +22,11 @@ namespace lattice_calibrator_results {
 			typename LatticeObject>
 	struct CalibratorResults {};
 
+
+	// ==============================================================================
+	// ======== CalibratorResults Partial Specialization for InterestRate ===========
+	// ==============================================================================
+
 	template<typename LatticeObject>
 	struct CalibratorResults<AssetClass::InterestRate, LatticeObject> {
 		typedef typename LatticeObject::Node_type Node;
@@ -39,6 +44,20 @@ namespace lattice_calibrator_results {
 	};
 
 
+	// ==============================================================================
+	// ========== CalibratorResults Partial Specialization for Equity ===============
+	// ==============================================================================
+
+
+	template<typename LatticeObject>
+	struct CalibratorResults<AssetClass::Equity, LatticeObject> {
+
+		LatticeObject resultLattice;
+
+		explicit CalibratorResults(LatticeObject const &results)
+			:resultLattice{ results }{}
+
+	};
 
 }
 

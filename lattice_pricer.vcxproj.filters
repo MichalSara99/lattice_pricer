@@ -113,5 +113,8 @@
     <ClInclude Include="lattice_bond_builders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_calibrator_equity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
