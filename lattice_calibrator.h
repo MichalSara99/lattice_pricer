@@ -95,9 +95,9 @@ namespace lattice_calibrator {
 	template<typename TimeAxis,
 			typename DeltaTime,
 			typename RiskFreeRate,
-			typename OptionSurface>
+			typename OptionVolatilitySurface>
 	class Calibrator<LatticeType::Binomial, AssetClass::Equity,
-		TimeAxis, DeltaTime, RiskFreeRate,OptionSurface> {
+		TimeAxis, DeltaTime, RiskFreeRate, OptionVolatilitySurface> {
 
 
 
@@ -108,23 +108,25 @@ namespace lattice_calibrator {
 	template<typename TimeAxis,
 		typename DeltaTime,
 		typename RiskFreeRate,
-		typename OptionSurface>
+		typename OptionVolatilitySurface>
 	class Calibrator<LatticeType::Trinomial, AssetClass::Equity,
-		TimeAxis, DeltaTime, RiskFreeRate, OptionSurface> {
+		TimeAxis, DeltaTime, RiskFreeRate, OptionVolatilitySurface> {
 	private:
-		OptionSurface optionSurface_;
+		OptionVolatilitySurface optionVolSurface_;
 		RiskFreeRate rate_;
 
 	public:
-		explicit Calibrator(OptionSurface const &optionSurface,RiskFreeRate const &rate)
-			:rate_{ rate }, optionSurface_{ optionSurface } {}
+		explicit Calibrator(OptionVolatilitySurface const &optionVolSurface,RiskFreeRate const &rate)
+			:rate_{ rate }, optionVolSurface_{ optionVolSurface } {}
 
 		template<typename LatticeObject>
 		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const
-			operator()(LatticeObject &statePriceLattice, DeltaTime const &deltaTime)const {
+			operator()(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
+				typename LatticeObject::Node_type const &apexPrice)const {
 			
-			return 
-
+			return lattice_calibrator_equity::CalibratorEquity<LatticeType::Trinomial, TimeAxis,
+				DeltaTime, RiskFreeRate, OptionVolatilitySurface>::
+				statePriceLattice(stockPriceLattice, deltaTime, apexPrice, this->optionSurface_);
 
 		}
 
