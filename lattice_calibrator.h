@@ -117,7 +117,7 @@ namespace lattice_calibrator {
 
 	public:
 		explicit Calibrator(OptionData const &optionData,RiskFreeRate const &rate)
-			:rate_{ rate }, optionVolSurface_{ optionData } {}
+			:rate_{ rate }, optionData_{ optionData } {}
 
 		template<typename LatticeObject>
 		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const

@@ -20,20 +20,23 @@ namespace lattice_calibrator_equity {
 	// ====================== OptionPriceLocator ====================================
 	// ==============================================================================
 
-	template<typename OptionPriceContainer>
+	template<typename Container>
 	struct OptionPriceLocator {
 	public:
-		static inline std::pair<OptionPriceContainer, OptionPriceContainer>
+		template<typename OptionPriceContainer>
+		static inline std::pair<Container, Container>
 			const callPutPrices(std::size_t maturityIdx, std::size_t maturitySize,
 				OptionPriceContainer const &optionPriceContainer) {
 
 			std::size_t const containerSize = optionPriceContainer.size();
-			OptionPriceContainer calls(containerSize / maturitySize);
-			OptionPriceContainer puts(containerSize / maturitySize);
+			Container calls;
+			calls.reserve(containerSize / maturitySize);
+			Container puts;
+			puts.reserve(containerSize / maturitySize);
 
 			for (std::size_t i = maturityIdx; i < containerSize; i += maturitySize) {
-				calls[i] = optionPriceContainer.at(i).first;
-				puts[i] = optionPriceContainer.at(i).second;
+				calls.push_back(optionPriceContainer.at(i).first);
+				puts.push_back(optionPriceContainer.at(i).second);
 			}
 
 			return std::make_pair(calls, puts);
@@ -53,7 +56,7 @@ namespace lattice_calibrator_equity {
 	template<typename VolSurface>
 	struct VolSurfaceHolder {
 	private:
-		static inline typename VolSurface::value_type const _maxVolatility_impl(std::size_t maturityIdx,std::size_t maturitySize,
+		static auto const _maxVolatility_impl(std::size_t maturityIdx,std::size_t maturitySize,
 			VolSurface const &volSurface, std::true_type) {
 
 			using vol = typename VolSurface::value_type;
@@ -69,14 +72,14 @@ namespace lattice_calibrator_equity {
 			return result;
 		}
 
-		static inline VolSurface const _maxVolatility_impl(std::size_t maturityIdx,std::size_t maturitySize,
+		static auto const _maxVolatility_impl(std::size_t maturityIdx,std::size_t maturitySize,
 			VolSurface const &volSurface, std::false_type) {
 			return volSurface;
 		}
 
 
 	public:
-		static inline auto const maxVolatility(std::size_t maturityIdx,std::size_t maturitySize, VolSurface const &volSurface) {
+		static auto const maxVolatility(std::size_t maturityIdx,std::size_t maturitySize, VolSurface const &volSurface) {
 			return _maxVolatility_impl(maturityIdx, maturitySize,volSurface,std::is_compound<VolSurface>());
 		}
 
@@ -171,7 +174,7 @@ _statePriceLattice_impl(LatticeObject &stockPriceLattice, DeltaTime const &delta
 	// typedef the LinearInterpolator:
 	typedef LinearInterpolator<decltype(strikes)> LERP;
 	// typedef the OptionPriceLocator:
-	typedef OptionPriceLocator<decltype(optionSurface)> OPL;
+	typedef OptionPriceLocator<decltype(strikes)> OPL;
 	// typedef the vol surface holder:
 	typedef VolSurfaceHolder<decltype(volSurface)> VS;
 	// typedef deltaTime holder:
@@ -183,41 +186,77 @@ _statePriceLattice_impl(LatticeObject &stockPriceLattice, DeltaTime const &delta
 	// create statePriceLattice from empty stockPriceLattice:
 	LatticeObject statePricelattice(stockPriceLattice);
 	std::size_t nodesSize{ 0 };
-	std::size_t k{ 0 };
 	Node dt{};
 	Node vol{};
 	Node fact{};
 	Node lerpPrice{};
+	Node priceUp{}, priceDown{};
+	Node sum{};
 
 	// First populate stockPriceLattice:
 	stockPriceLattice(0, 0) = apexPrice;
-	for (std::size_t t = 1; t < treeSize; ++t) {
+	for (long long t = 1; t < treeSize; ++t) {
 		dt = DT::deltaTime(t - 1, deltaTime);
 		vol = VS::maxVolatility(t, maturitySize, volSurface);
 		fact = vol * std::sqrt(3.0*dt);
 		nodesSize = stockPriceLattice.nodesAtIdx(t).size();
-		for (std::size_t l = 0; l < nodesSize; ++l) {
+		for (long long l = 0; l < nodesSize; ++l) {
 			stockPriceLattice(t, l) = apexPrice * std::exp((l - t)*fact);
 		}
 	}
 
 	// prepare pair prices of calls and puts:
-	std::pair<decltype(optionSurface), decltype(optionSurface)> pairPrices;
+	std::pair<decltype(strikes), decltype(strikes)> pairPrices;
 	// populate statePriceLattice here:
 	statePricelattice(0, 0) = 1.0;
 	// initialize LinearInterpolator here:
 	LERP lerp;
 	for (std::size_t t = 1; t < treeSize; ++t) {
-		nodesSize = statePricelattice.nodesAtIdx(t).size();
 		pairPrices = OPL::callPutPrices(t, maturitySize, optionSurface);
+		// Set linear interpolation for put prices first
+		lerp.setPoints(strikes, pairPrices.second);
+		// Using put prices first as we traverse from down up
+		// clean-up cached value
+		sum = 0.0;
+		for (std::size_t l = 0; l < t; ++l) {
+			priceDown = stockPriceLattice(t, l);
+			priceUp = stockPriceLattice(t, l + 1);
+			lerpPrice = lerp.getValue(priceUp);
+			statePricelattice(t, l) = (lerpPrice  -  sum)/ (priceUp - priceDown);
 
+			if (l != (t - 1)) {
+				sum = 0.0;
+				for (std::size_t k = 0; k < l + 1; ++k) {
+					sum += (stockPriceLattice(t, l + 2) - stockPriceLattice(t, k)) * statePricelattice(t, k);
+				}
+			}
+		}
+		// Set linear interpolation for call prices
+		lerp.setPoints(strikes, pairPrices.first);
+		// Using call prices as we traverse from up down to the center of tree
+		nodesSize = statePricelattice.nodesAtIdx(t).size();
+		// clean-up cached value
+		sum = 0.0;
+		for (std::size_t l = nodesSize - 1; l >= t; --l) {
+			priceDown = stockPriceLattice(t, l - 1);
+			priceUp = stockPriceLattice(t, l);
+			lerpPrice = lerp.getValue(priceDown);
+			statePricelattice(t, l) = (lerpPrice - sum) / (priceUp - priceDown);
 
-
-
+			if (l != t) {
+				sum = 0.0;
+				for (std::size_t k = nodesSize - 1; k > l - 1; --k) {
+					sum += (stockPriceLattice(t, k) - stockPriceLattice(t, l - 2)) * statePricelattice(t, k);
+				}
+			}
+		}
 	}
 
-
-
+	return std::shared_ptr<lattice_calibrator_results::
+		CalibratorResults<lattice_types::AssetClass::Equity,
+		LatticeObject>>{new lattice_calibrator_results::
+		CalibratorResults<lattice_types::AssetClass::Equity,
+		LatticeObject>(statePricelattice)};
 }
 
 
