@@ -107,23 +107,82 @@ namespace lattice_utility {
 	}
 
 	// ==============================================================================
-	// =========================== OptionSurfacePoint ===============================
+	// ============================= LinearInterpolator =============================
 	// ==============================================================================
 
-	template<typename T>
-	struct OptionSurfacePoint {
-		T strike;
-		T call;
-		T put;
+
+	template<typename Container>
+	class LinearInterpolator{
+	private:
+		Container x_;
+		Container y_;
+
+	public:
+		typedef Container Container_type;
+		typedef typename Container::value_type Container_value_type;
+
+		LinearInterpolator()
+			:x_(),y_(){}
+		LinearInterpolator(LinearInterpolator const &other)
+			:x_(other.x_),y_(other.y_){}
+		LinearInterpolator(LinearInterpolator &&other)noexcept
+			:x_(std::move(other.x_)),y_(std::move(other.y_)){}
+		~LinearInterpolator(){}
+
+		LinearInterpolator& operator=(LinearInterpolator const &other){
+			if (this != &other) {
+				x_ = other.x_;
+				y_ = other.y_;
+			}
+			return *this;
+		}
+		LinearInterpolator& operator=(LinearInterpolator &&other)noexcept {
+			if (this != &other) {
+				x_ = std::move(other.x_);
+				y_ = std::move(other.y_);
+			}
+			return *this;
+		}
+
+		void setPoints(Container const &xpoints, Container const &ypoints,bool sortXPoints = false) {
+			x_ = xpoints;
+			y_ = ypoints;
+
+			if(sortXPoints)
+				std::sort(x_.begin(), x_.end());
+
+			for (std::size_t i = 0; i < x_.size(); ++i) {
+				for (std::size_t j = 0; j < x_.size(); ++j) {
+					if (x_[i] == xpoints[j]) {
+						y_[i] = ypoints[j];
+						break;
+					}
+				}
+			}
+		}
+
+		Container_value_type const getValue(Container_value_type const &x)const {
+			Container_value_type x0{}, y0{}, x1{}, y1{};
+			if ((x < x_[0]) || (x > x_[x_.size() - 1])) {
+				return 0.0; // outside of domain
+			}
+			for (std::size_t i = 0; i < x_.size(); ++i) {
+				if (x_[i] < x) {
+					x0 = x_[i];
+					y0 = y_[i];
+				}
+				else if (x_[i] >= x) {
+					x1 = x_[i];
+					y1 = y_[i];
+					break;
+				}
+			}
+			return ((y0*(x - x1) / (x0 - x1)) + (y1 * (x - x0) / (x1 - x0)));
+		}
+
 	};
 
 
-	// ==============================================================================
-	// =========================== OptionSurface type ===============================
-	// ==============================================================================
-
-	template<typename T>
-	using OptionSurface = std::vector<std::vector<OptionSurfacePoint<T>>>;
 
 };
 
