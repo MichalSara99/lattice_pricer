@@ -122,11 +122,11 @@ namespace lattice_calibrator {
 		template<typename LatticeObject>
 		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const
 			operator()(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
-				typename LatticeObject::Node_type const &apexPrice)const {
+				typename LatticeObject::Node_type const &apexPrice,bool areCallPricesLiquid = true)const {
 			
 			return lattice_calibrator_equity::CalibratorEquity<LatticeType::Trinomial, TimeAxis,
 				DeltaTime, RiskFreeRate, OptionData>::
-				statePriceLattice(stockPriceLattice, deltaTime, apexPrice, this->optionData_);
+				statePriceLattice(stockPriceLattice, deltaTime, apexPrice, this->optionData_, areCallPricesLiquid);
 
 		}
 
