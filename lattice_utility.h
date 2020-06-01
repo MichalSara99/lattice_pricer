@@ -91,6 +91,26 @@ namespace lattice_utility {
 
 	};
 
+	// ==============================================================================
+	// ===================== RiskFreeRateHolder =====================================
+	// ==============================================================================
+
+	template<typename RiskFreeRate>
+	struct RiskFreeRateHolder {
+	private:
+		static auto const _rate_impl(std::size_t idx, RiskFreeRate const &riskFreeRate, std::true_type) {
+			return riskFreeRate.at(idx);
+		}
+
+		static auto const _rate_impl(std::size_t idx, RiskFreeRate const &riskFreeRate, std::false_type) {
+			return riskFreeRate;
+		}
+	public:
+		static auto const rate(std::size_t idx, RiskFreeRate const &riskFreeRate) {
+			return _rate_impl(idx, riskFreeRate, std::is_compound<RiskFreeRate>());
+		}
+
+	};
 
 	// ==============================================================================
 	// =================================== sign =====================================
@@ -104,6 +124,18 @@ namespace lattice_utility {
 			return 1.0;
 		else
 			return 0.0;
+	}
+
+	// ==============================================================================
+	// ================================ probFloorCapper =============================
+	// ==============================================================================
+
+	/* If this function is used it should be logged so one can see when the probability 
+	is not within <0.0,1.0> */
+	
+	template<typename T>
+	T probFloorCapper(T x) {
+		return std::min(1.0, std::max(0.0, x));
 	}
 
 	// ==============================================================================

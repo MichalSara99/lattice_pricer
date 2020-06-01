@@ -130,6 +130,16 @@ namespace lattice_calibrator {
 
 		}
 
+		template<typename LatticeObject>
+		std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+			operator()(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
+				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
+			return lattice_calibrator::CalibratorEquity<LatticeType::Trinomial, TimeAxis,
+				DeltaTime, RiskFreeRate, OptionData>::
+				impliedProbability(statePriceLattice, stockPriceLattice, deltaTime, riskFreeRate);
+
+		}
+
 
 
 

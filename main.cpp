@@ -40,9 +40,10 @@ int main(int argc, char const *argv[]) {
 	// ======== lattice_calibrator_equity_t.h ========
 	// ===============================================
 
-	testIndexedSPLImpliedCallsLiquid();
-	testIndexedSPLImpliedPutsLiquid();
+	// testIndexedSPLImpliedCallsLiquid();
+	// testIndexedSPLImpliedPutsLiquid();
 
+	testIndexedImpliedProbabilitiesCallsLiquid();
 	// ===============================================
 
 	// ===============================================

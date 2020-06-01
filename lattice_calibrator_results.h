@@ -54,8 +54,17 @@ namespace lattice_calibrator_results {
 
 		LatticeObject resultLattice;
 
+		typedef typename LatticeObject::Node_type Node;
+
+		std::vector<std::vector<std::tuple<Node, Node, Node>>> impliedProbabilities;
+
 		explicit CalibratorResults(LatticeObject const &results)
 			:resultLattice{ results }{}
+
+		explicit CalibratorResults(LatticeObject const &results,
+			std::vector<std::vector<std::tuple<Node, Node, Node>>> const &impliedProbs)
+			:resultLattice{ results },impliedProbabilities(impliedProbs) {}
+
 
 	};
 
