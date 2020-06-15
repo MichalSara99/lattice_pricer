@@ -13,6 +13,40 @@ namespace lattice_utility {
 	using lattice_types::DiscountingStyle;
 
 	// ==============================================================================
+	// ===================================== Logger =================================
+	// ==============================================================================
+
+	class Logger {
+	protected:
+		explicit Logger() {};
+
+		void inline what(std::ostream &out, std::string text)const {
+			out << text;
+		}
+
+	public:
+		virtual ~Logger() {}
+
+		Logger(Logger const &) = delete;
+		Logger(Logger &&) = delete;
+		Logger& operator=(Logger const &) = delete;
+		Logger& operator=(Logger &&) = delete;
+
+		static inline Logger& get() {
+			static Logger logger;
+			return logger;
+		}
+
+		void inline warning(std::ostream &out, std::string text)const {
+			this->what(out, std::move(std::string{ "WARNING: " + text }));
+		}
+
+		void inline critical(std::ostream &out, std::string text)const {
+			this->what(out, std::move(std::string{ "CRITICAL: " + text }));
+		}
+	};
+
+	// ==============================================================================
 	// ================================== print =====================================
 	// ==============================================================================
 
@@ -135,6 +169,11 @@ namespace lattice_utility {
 	
 	template<typename T>
 	T probFloorCapper(T x) {
+		if (x < 0.0 || x > 1.0) {
+			std::stringstream ss{};
+			ss << "Probability value " << x << " has been modified to fit <0,1>\n";
+			Logger::get().critical(std::cout, ss.str());
+		}
 		return std::min(1.0, std::max(0.0, x));
 	}
 
@@ -195,9 +234,19 @@ namespace lattice_utility {
 
 		Container_value_type const getValue(Container_value_type const &x)const {
 			Container_value_type x0{}, y0{}, x1{}, y1{};
-			if ((x < x_[0]) || (x > x_[x_.size() - 1])) {
-				return 0.0; // outside of domain
+			if (x < x_[0]) {
+				std::stringstream ss{};
+				ss << "Lower constant extrapolation for x ( " << x << " ) occured.\n";
+				Logger::get().warning(std::cout, ss.str());
+				return y_[0];
 			}
+			if ((x > x_[x_.size() - 1])) {
+				std::stringstream ss{};
+				ss << "Upper constant extrapolation for x ( " << x << " ) occured.\n";
+				Logger::get().warning(std::cout, ss.str());
+				return y_[x_.size() - 1];
+			}
+
 			for (std::size_t i = 0; i < x_.size(); ++i) {
 				if (x_[i] < x) {
 					x0 = x_[i];
@@ -213,6 +262,8 @@ namespace lattice_utility {
 		}
 
 	};
+
+
 
 
 

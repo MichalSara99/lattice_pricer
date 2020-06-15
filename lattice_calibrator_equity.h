@@ -170,7 +170,12 @@ namespace lattice_calibrator_equity {
 
 		template<typename LatticeObject>
 		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
-			_impliedProbability_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
+			_impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
+				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate);
+
+		template<typename LatticeObject>
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+			_impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate);
 
 	
@@ -189,11 +194,13 @@ namespace lattice_calibrator_equity {
 		template<typename LatticeObject>
 		static std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const
 			impliedProbability(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
-				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
+				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate, bool areCallPricesLiquid = true) {
 			LASSERT(statePriceLattice.timeDimension() == stockPriceLattice.timeDimension(),
 				"statePriceLattice must be of the same time dimension as stockPriceLattice");
-
-			return _impliedProbability_impl(statePriceLattice, stockPriceLattice, deltaTime, riskFreeRate);
+			if(areCallPricesLiquid)
+				return _impliedProbabilityCallKernel_impl(statePriceLattice, stockPriceLattice, deltaTime, riskFreeRate);
+			else
+				return _impliedProbabilityPutKernel_impl(statePriceLattice, stockPriceLattice, deltaTime, riskFreeRate);
 		}
 
 
@@ -455,7 +462,7 @@ template<typename TimeAxis,
 template<typename LatticeObject>
 std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject>> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
-_impliedProbability_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
+_impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
 
 	// typedef deltaTime holder:
@@ -546,6 +553,104 @@ _impliedProbability_impl(LatticeObject const &statePriceLattice, LatticeObject c
 
 }
 
+
+template<typename TimeAxis,
+	typename DeltaTime,
+	typename RiskFreeRate,
+	typename OptionData>
+	template<typename LatticeObject>
+std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject>> const
+lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
+_impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
+	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
+
+	// typedef deltaTime holder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef the node type:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef riskFreeRate holder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+
+	// unpack the implied probability functions:
+	auto probTpl = ImpliedProbability<Node>::probabilityFunctions();
+	// unpack them into up_3,up_5,up_7 and mid_6:
+	auto up_3 = std::get<0>(probTpl);
+	auto up_5 = std::get<1>(probTpl);
+	auto up_7 = std::get<2>(probTpl);
+	auto mid_6 = std::get<3>(probTpl);
+
+	// get timeDimension of the lattice:
+	std::size_t const treeSize = statePriceLattice.timeDimension();
+	std::size_t nodesSize{ 0 };
+	// prepare container for probabilities:
+	std::vector<std::vector<std::tuple<Node, Node, Node>>> impliedProbs(treeSize - 1);
+	// Prepare temporary values:
+	Node up{}, mid{}, down{}, p_m{}, p_u{}, p_d{};
+	Node dt{}, rfr{}, infl{};
+
+
+	// going through time
+	for (long long t = 0; t < treeSize - 1; ++t) {
+		dt = DT::deltaTime(t, deltaTime);
+		rfr = RFR::rate(t, riskFreeRate);
+		infl = std::exp(rfr*dt);
+		nodesSize = statePriceLattice.nodesAtIdx(t).size();
+		std::vector<std::tuple<Node, Node, Node>> probs(nodesSize);
+		// first going from bottom of the branch to the node before the center of tree:
+		for (long long l = 0; l <= t; ++l) {
+			if (l == 0) {
+				down = probFloorCapper(up_3(infl, statePriceLattice(t + 1, l), statePriceLattice(t, l)));
+			}
+			else if (l == 1) {
+				p_m = std::get<1>(probs.at(l - 1));
+				down = probFloorCapper(up_5(infl, statePriceLattice(t + 1, l), p_m,
+					statePriceLattice(t, l - 1), statePriceLattice(t, l)));
+			}
+			else {
+				p_u = std::get<2>(probs.at(l - 2));
+				p_m = std::get<1>(probs.at(l - 1));
+				down = probFloorCapper(up_7(infl, statePriceLattice(t + 1, l), p_u, statePriceLattice(t, l - 2),
+					p_m, statePriceLattice(t, l - 1), statePriceLattice(t, l)));
+			}
+			mid = probFloorCapper(mid_6(infl, stockPriceLattice(t, l), stockPriceLattice(t + 1, l + 2), down, stockPriceLattice(t + 1, l),
+				stockPriceLattice(t + 1, l + 1)));
+			up = 1.0 - mid - down;
+			probs[l] = std::make_tuple(down, mid, up);
+		}
+
+		// first going from top of the branch to the center of tree:
+		for (long long l = nodesSize - 1; l > t; l--) {
+			if (l == (nodesSize - 1)) {
+				up = probFloorCapper(up_3(infl, statePriceLattice(t + 1, l + 2), statePriceLattice(t, l)));
+			}
+			else if (l == (nodesSize - 2)) {
+				p_m = std::get<1>(probs.at(l + 1));
+				up = probFloorCapper(up_5(infl, statePriceLattice(t + 1, l + 2), p_m,
+					statePriceLattice(t, l + 1), statePriceLattice(t, l)));
+			}
+			else {
+				p_d = std::get<0>(probs.at(l + 2));
+				p_m = std::get<1>(probs.at(l + 1));
+				up = probFloorCapper(up_7(infl, statePriceLattice(t + 1, l + 2), p_d, statePriceLattice(t, l + 2),
+					p_m, statePriceLattice(t, l + 1), statePriceLattice(t, l)));
+			}
+			mid = probFloorCapper(mid_6(infl, stockPriceLattice(t, l), stockPriceLattice(t + 1, l), up, stockPriceLattice(t + 1, l + 2),
+				stockPriceLattice(t + 1, l + 1)));
+			down = 1.0 - mid - up;
+			probs[l] = std::make_tuple(down, mid, up);
+
+		}
+		impliedProbs[t] = std::move(probs);
+	}
+
+
+	return std::shared_ptr<lattice_calibrator_results::
+		CalibratorResults<lattice_types::AssetClass::Equity,
+		LatticeObject>>{new lattice_calibrator_results::
+		CalibratorResults<lattice_types::AssetClass::Equity,
+		LatticeObject>(statePriceLattice, impliedProbs)};
+
+}
 
 
 #endif ///_LATTICE_CALIBRATOR_EQUITY
