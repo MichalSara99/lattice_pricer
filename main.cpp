@@ -44,6 +44,9 @@ int main(int argc, char const *argv[]) {
 	// testImpliedStatePriceLattice();
 
 	// testIndexedImpliedProbabilities();
+
+	// testIndexedSPLImpliedBinomial();
+
 	// ===============================================
 
 	// ===============================================

@@ -98,8 +98,24 @@ namespace lattice_calibrator {
 			typename OptionData>
 	class Calibrator<LatticeType::Binomial, AssetClass::Equity,
 		TimeAxis, DeltaTime, RiskFreeRate, OptionData> {
+	private:
+		OptionData optionData_;
+		RiskFreeRate rate_;
 
+	public:
+		explicit Calibrator(OptionData const &optionData,RiskFreeRate const &rate)
+			:rate_{rate},optionData_{optionData}{}
 
+		template<typename LatticeObject>
+		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject,
+			std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+			operator()(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
+				RiskFreeRate const &riskFreeRate, typename LatticeObject::Node_type const &apexPrice) {
+
+			return lattice_calibrator_equity::CalibratorEquity<LatticeType::Binomial, TimeAxis,
+				DeltaTime, RiskFreeRate, OptionData>::
+				implyTree(stockPriceLattice, deltaTime, riskFreeRate, apexPrice, this->optionData_);
+		}
 
 
 	};
@@ -120,7 +136,8 @@ namespace lattice_calibrator {
 			:rate_{ rate }, optionData_{ optionData } {}
 
 		template<typename LatticeObject>
-		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const
+		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			operator()(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,bool areCallPricesLiquid = true)const {
 			
@@ -131,7 +148,8 @@ namespace lattice_calibrator {
 		}
 
 		template<typename LatticeObject>
-		std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+		std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			operator()(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate, bool areCallPricesLiquid = true) {
 			return lattice_calibrator::CalibratorEquity<LatticeType::Trinomial, TimeAxis,

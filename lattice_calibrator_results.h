@@ -19,7 +19,8 @@ namespace lattice_calibrator_results {
 	// ==============================================================================
 
 	template<AssetClass AClass,
-			typename LatticeObject>
+			typename LatticeObject,
+			typename ...Others>
 	struct CalibratorResults {};
 
 
@@ -49,22 +50,19 @@ namespace lattice_calibrator_results {
 	// ==============================================================================
 
 
-	template<typename LatticeObject>
-	struct CalibratorResults<AssetClass::Equity, LatticeObject> {
+	template<typename LatticeObject,typename ProbabilityHolder>
+	struct CalibratorResults<AssetClass::Equity, LatticeObject, ProbabilityHolder> {
 
 		LatticeObject resultLattice;
 
-		typedef typename LatticeObject::Node_type Node;
-
-		std::vector<std::vector<std::tuple<Node, Node, Node>>> impliedProbabilities;
+		std::vector<std::vector<ProbabilityHolder>> impliedProbabilities;
 
 		explicit CalibratorResults(LatticeObject const &results)
 			:resultLattice{ results }{}
 
 		explicit CalibratorResults(LatticeObject const &results,
-			std::vector<std::vector<std::tuple<Node, Node, Node>>> const &impliedProbs)
+			std::vector<std::vector<ProbabilityHolder>> const &impliedProbs)
 			:resultLattice{ results },impliedProbabilities(impliedProbs) {}
-
 
 	};
 

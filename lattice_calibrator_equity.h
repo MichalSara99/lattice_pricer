@@ -140,7 +140,21 @@ namespace lattice_calibrator_equity {
 			typename RiskFreeRate,
 			typename OptionData>
 	struct CalibratorEquity<LatticeType::Binomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData> {
+	private:
+		template<typename LatticeObject>
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+			_implyTree_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+				typename LatticeObject::Node_type const &apexPrice, OptionData const &optionData);
 
+	public:
+		template<typename LatticeObject>
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+			implyTree(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+				typename LatticeObject::Node_type const &apexPrice, OptionData const &optionData) {
+			return _implyTree_impl(stockPriceLattice, deltaTime, riskFreeRate, apexPrice, optionData);
+		}
 
 	};
 
@@ -155,13 +169,15 @@ namespace lattice_calibrator_equity {
 		// ============= state price algos ===============
 		// for liquid call option prices
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::tuple<typename LatticeObject::Node_type,typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			_statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,
 				OptionData const &optionData);
 		// for liquid put option prices
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			_statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,
 				OptionData const &optionData);
@@ -169,19 +185,22 @@ namespace lattice_calibrator_equity {
 		// ============= implied probabilities algos ===============
 
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			_impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate);
 
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			_impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate);
 
 	
 	public:
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject>> const
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			statePriceLattice(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,
 				OptionData const &optionData,bool areCallPricesLiquid = true) {
@@ -192,7 +211,8 @@ namespace lattice_calibrator_equity {
 		}
 
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject>> const
+		static std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject,
+			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 			impliedProbability(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate, bool areCallPricesLiquid = true) {
 			LASSERT(statePriceLattice.timeDimension() == stockPriceLattice.timeDimension(),
@@ -216,7 +236,8 @@ template<typename TimeAxis,
 		typename RiskFreeRate,
 		typename OptionData>
 template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity,LatticeObject>> const
+std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity,LatticeObject,
+	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial,TimeAxis,DeltaTime,RiskFreeRate, OptionData>::
 _statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, typename LatticeObject::Node_type const &apexPrice,
 	OptionData const &optionData) {
@@ -253,6 +274,8 @@ _statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime co
 	typedef DeltaTimeHolder<DeltaTime> DT;
 	// typedef the node type:
 	typedef typename LatticeObject::Node_type Node;
+	// typedef probability triplet:
+	typedef std::tuple<Node, Node, Node> Triplet;
 
 	// create statePriceLattice from empty stockPriceLattice:
 	LatticeObject statePriceLattice(stockPriceLattice);
@@ -326,9 +349,9 @@ _statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime co
 
 	return std::shared_ptr<lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>>{new lattice_calibrator_results::
+		LatticeObject, Triplet>>{new lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>(statePriceLattice)};
+		LatticeObject, Triplet>(statePriceLattice)};
 }
 
 
@@ -337,7 +360,8 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 	template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject>> const
+std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
+	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
 _statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, typename LatticeObject::Node_type const &apexPrice,
 	OptionData const &optionData) {
@@ -374,6 +398,8 @@ _statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime con
 	typedef DeltaTimeHolder<DeltaTime> DT;
 	// typedef the node type:
 	typedef typename LatticeObject::Node_type Node;
+	// typedef probability triplet:
+	typedef std::tuple<Node,Node,Node> Triplet;
 
 	// create statePriceLattice from empty stockPriceLattice:
 	LatticeObject statePriceLattice(stockPriceLattice);
@@ -447,9 +473,9 @@ _statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime con
 
 	return std::shared_ptr<lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>>{new lattice_calibrator_results::
+		LatticeObject, Triplet>>{new lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>(statePriceLattice)};
+		LatticeObject, Triplet>(statePriceLattice)};
 }
 
 
@@ -460,7 +486,8 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject>> const
+std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
+	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
 _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
@@ -471,6 +498,8 @@ _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, Latti
 	typedef typename LatticeObject::Node_type Node;
 	// typedef riskFreeRate holder:
 	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef probability triplet
+	typedef std::tuple<Node, Node, Node> Triplet;
 	
 	// unpack the implied probability functions:
 	auto probTpl = ImpliedProbability<Node>::probabilityFunctions();
@@ -484,7 +513,7 @@ _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, Latti
 	std::size_t const treeSize = statePriceLattice.timeDimension();
 	std::size_t nodesSize{ 0 };
 	// prepare container for probabilities:
-	std::vector<std::vector<std::tuple<Node, Node, Node>>> impliedProbs(treeSize - 1);
+	std::vector<std::vector<Triplet>> impliedProbs(treeSize - 1);
 	// Prepare temporary values:
 	Node up{}, mid{}, down{}, p_m{}, p_u{}, p_d{};
 	Node dt{}, rfr{}, infl{};
@@ -496,7 +525,7 @@ _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, Latti
 		rfr = RFR::rate(t, riskFreeRate);
 		infl = std::exp(rfr*dt);
 		nodesSize = statePriceLattice.nodesAtIdx(t).size();
-		std::vector<std::tuple<Node, Node, Node>> probs(nodesSize);
+		std::vector<Triplet> probs(nodesSize);
 		// first going from bottom of the branch to the node before the center of tree:
 		for (long long l = 0; l < t; ++l) {
 			if (l == 0) {
@@ -547,9 +576,9 @@ _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, Latti
 
 	return std::shared_ptr<lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>>{new lattice_calibrator_results::
+		LatticeObject, Triplet>>{new lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>(statePriceLattice,impliedProbs)};
+		LatticeObject, Triplet>(statePriceLattice,impliedProbs)};
 
 }
 
@@ -559,7 +588,8 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 	template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject>> const
+std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
+	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
 _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
@@ -570,6 +600,8 @@ _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, Lattic
 	typedef typename LatticeObject::Node_type Node;
 	// typedef riskFreeRate holder:
 	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef probability triplet
+	typedef std::tuple<Node, Node, Node> Triplet;
 
 	// unpack the implied probability functions:
 	auto probTpl = ImpliedProbability<Node>::probabilityFunctions();
@@ -583,7 +615,7 @@ _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, Lattic
 	std::size_t const treeSize = statePriceLattice.timeDimension();
 	std::size_t nodesSize{ 0 };
 	// prepare container for probabilities:
-	std::vector<std::vector<std::tuple<Node, Node, Node>>> impliedProbs(treeSize - 1);
+	std::vector<std::vector<Triplet>> impliedProbs(treeSize - 1);
 	// Prepare temporary values:
 	Node up{}, mid{}, down{}, p_m{}, p_u{}, p_d{};
 	Node dt{}, rfr{}, infl{};
@@ -595,7 +627,7 @@ _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, Lattic
 		rfr = RFR::rate(t, riskFreeRate);
 		infl = std::exp(rfr*dt);
 		nodesSize = statePriceLattice.nodesAtIdx(t).size();
-		std::vector<std::tuple<Node, Node, Node>> probs(nodesSize);
+		std::vector<Triplet> probs(nodesSize);
 		// first going from bottom of the branch to the node before the center of tree:
 		for (long long l = 0; l <= t; ++l) {
 			if (l == 0) {
@@ -646,9 +678,182 @@ _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, Lattic
 
 	return std::shared_ptr<lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>>{new lattice_calibrator_results::
+		LatticeObject, Triplet>>{new lattice_calibrator_results::
 		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject>(statePriceLattice, impliedProbs)};
+		LatticeObject, Triplet>(statePriceLattice, impliedProbs)};
+
+}
+
+
+template<typename TimeAxis,
+	typename DeltaTime,
+	typename RiskFreeRate,
+	typename OptionData>
+template<typename LatticeObject>
+static std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
+	std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Binomial,TimeAxis,DeltaTime, RiskFreeRate,OptionData>::
+_implyTree_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+	typename LatticeObject::Node_type const &apexPrice, OptionData const &optionData) {
+
+	// unpack the strikes:
+	auto strikes = std::get<0>(optionData);
+	// unpack the option maturities:
+	auto maturities = std::get<1>(optionData);
+	// unpack the option price surface:
+	auto optionSurface = std::get<2>(optionData);
+	// unpack the implied volatility surface:
+	auto volSurface = std::get<3>(optionData);
+
+	// Since strikes, maturities, and optionSurface must be containers: 
+	std::size_t const strikeSize = strikes.size();
+	std::size_t const maturitySize = maturities.size();
+	std::size_t const optionSurfaceSize = optionSurface.size();
+	// we must check that the dimension matches:
+	LASSERT((strikeSize * maturitySize) == optionSurfaceSize,
+		"option surface must have size strikes x maturities");
+	// Get the trees time dimension:
+	std::size_t const treeSize = stockPriceLattice.timeDimension();
+	// Tree dimension must match the size of maturities:
+	LASSERT((treeSize == maturitySize),
+		"Time dimension of the stockPriceLattice must match the size of maturities");
+
+	// typedef the LinearInterpolator:
+	typedef LinearInterpolator<decltype(strikes)> LERP;
+	// typedef the OptionPriceLocator:
+	typedef OptionPriceLocator<decltype(strikes)> OPL;
+	// typedef the vol surface holder:
+	typedef VolSurfaceHolder<decltype(volSurface)> VS;
+	// typedef deltaTime holder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef RiskFreeRate holder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef the node type:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef probability holder:
+	typedef std::pair<Node, Node> Pair;
+
+	// prepare container for probabilities:
+	std::vector<std::vector<Pair>> impliedProbs(treeSize - 1);
+	// create statePriceLattice from empty stockPriceLattice:
+	LatticeObject statePriceLattice(stockPriceLattice);
+	std::size_t nodesSize{ 0 };
+	long startIdx{ 0 };
+	Node dt{};
+	Node rfr{};
+	Node infl{};
+	Node stock{};
+	Node call{}, put{};
+	Node sum{};
+	Node p{}, q{};
+
+	// First populate stockPriceLattice apex:
+	stockPriceLattice(0, 0) = apexPrice;
+	// Second populate statePriceLattice apex:
+	statePriceLattice(0, 0) = 1.0;
+	// prepare pair prices of calls and puts:
+	std::pair<decltype(strikes), decltype(strikes)> pairPrices;
+	// initialize LinearInterpolator here:
+	LERP lerp;
+	// first populate stockPriceLattice:
+	for (std::size_t t = 1; t < treeSize; ++t) {
+		dt = DT::deltaTime(t, deltaTime);
+		rfr = RFR::rate(t, riskFreeRate);
+		infl = std::exp(rfr*dt);
+		pairPrices = OPL::callPutPrices(t, maturitySize, optionSurface);
+		// Set linear interpolation for call prices first
+		lerp.setPoints(strikes, pairPrices.first,true);
+		// Using call prices first as we traverse from top to the center of tree:
+		nodesSize = stockPriceLattice.nodesAtIdx(t).size();
+		// first with even number of nodes:
+		if ((nodesSize % 2) == 0) {
+			for (std::size_t j = (nodesSize / 2); j < nodesSize; ++j) {
+				// clear the cached value:
+				sum = 0.0;
+				for (std::size_t k = j; k < t; ++k) {
+					sum += (statePriceLattice(t - 1, k)*
+						(infl*stockPriceLattice(t - 1, k) - stockPriceLattice(t - 1, j - 1)));
+				}
+				stock = stockPriceLattice(t - 1, j - 1);
+				call = lerp.getValue(stock);
+				stockPriceLattice(t, j) = ((stock*(infl*call + statePriceLattice(t - 1, j - 1)*stock - sum)) /
+					(statePriceLattice(t - 1, j - 1)*infl*stock - infl * call + sum));
+				if (j == (nodesSize / 2)) {
+					stockPriceLattice(t, j - 1) = (stock*stock / stockPriceLattice(t, j));
+				}
+			}
+		}
+		// then with odd number of nodes:
+		else {
+			startIdx = (nodesSize - 1) / 2;
+			stockPriceLattice(t, startIdx) = apexPrice;
+			for (std::size_t j = startIdx + 1; j < nodesSize; ++j) {
+				// clear the cached value:
+				sum = 0.0;
+				for (std::size_t k = j; k < t; ++k) {
+					sum += (statePriceLattice(t - 1, k)*
+						(infl*stockPriceLattice(t - 1, k) - stockPriceLattice(t - 1, j - 1)));
+				}
+				stock = stockPriceLattice(t - 1, j - 1);
+				call = lerp.getValue(stock);
+				stockPriceLattice(t, j) = ((stockPriceLattice(t, j - 1)*(infl*call - sum) -
+					statePriceLattice(t - 1, j - 1)*stock*(infl*stock - stockPriceLattice(t, j - 1))) /
+					((infl*call - sum) - statePriceLattice(t - 1, j - 1)*(infl*stock - stockPriceLattice(t, j - 1))));
+			}
+		}
+		// Using put prices next as we traverse from center of tree down:
+		if (t > 1) {
+			// Set linear interpolation for put prices first
+			lerp.setPoints(strikes, pairPrices.second,true);
+
+			if ((nodesSize % 2) != 0) {
+				startIdx = ((nodesSize - 1) / 2) - 1;
+			}
+			else {
+				startIdx = (nodesSize / 2) - 2;
+			}
+			for (long j = startIdx; j >= 0; --j) {
+				// clear the cached value:
+				sum = 0.0;
+				for (std::size_t k = 0; k < j; ++k) {
+					sum += (statePriceLattice(t - 1, k)*
+						(stockPriceLattice(t - 1, j) - infl * stockPriceLattice(t - 1, k)));
+				}
+
+				stock = stockPriceLattice(t - 1, j);
+				put = lerp.getValue(stock);
+
+				stockPriceLattice(t, j) = ((stockPriceLattice(t, j + 1)*(infl*put - sum) +
+					statePriceLattice(t - 1, j)*stock*(infl*stock - stockPriceLattice(t, j + 1))) /
+					((infl*put - sum) + statePriceLattice(t - 1, j)*(infl*stock - stockPriceLattice(t, j + 1))));
+			}
+		}
+		// next, compute probabilities:
+		nodesSize = stockPriceLattice.nodesAtIdx(t - 1).size();
+		std::vector<Pair> probs(nodesSize);
+		for (std::size_t j = 0; j < nodesSize; ++j) {
+			p = ((infl*stockPriceLattice(t - 1, j) - stockPriceLattice(t, j)) /
+				(stockPriceLattice(t, j + 1) - stockPriceLattice(t, j)));
+			q = 1.0 - p;
+			probs[j] = std::make_pair(q, p);
+		}
+		impliedProbs[t - 1] = std::move(probs);
+
+		// finally compute state price lattice:
+		statePriceLattice(t, 0) = (statePriceLattice(t - 1, 0)*impliedProbs[t - 1][0].first) / infl;
+		statePriceLattice(t, t) = (statePriceLattice(t - 1, t - 1)*impliedProbs[t - 1][t - 1].second) / infl;
+		nodesSize = stockPriceLattice.nodesAtIdx(t).size();
+		for (std::size_t j = 1; j < nodesSize - 1; ++j) {
+			statePriceLattice(t, j) = ((statePriceLattice(t - 1, j) * impliedProbs[t - 1][j].first +
+				statePriceLattice(t - 1, j - 1) * impliedProbs[t - 1][j - 1].second) / infl);
+		}
+	}
+
+	return std::shared_ptr<lattice_calibrator_results::
+		CalibratorResults<lattice_types::AssetClass::Equity,
+		LatticeObject, Pair>>{new lattice_calibrator_results::
+		CalibratorResults<lattice_types::AssetClass::Equity,
+		LatticeObject, Pair>(statePriceLattice, impliedProbs)};
 
 }
 
