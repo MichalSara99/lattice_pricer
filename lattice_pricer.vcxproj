@@ -154,6 +154,8 @@
     <ClInclude Include="lattice_algorithms_t.h" />
     <ClInclude Include="lattice_backward_traversals.h" />
     <ClInclude Include="lattice_bond_builders.h" />
+    <ClInclude Include="lattice_builder.h" />
+    <ClInclude Include="lattice_builder_t.h" />
     <ClInclude Include="lattice_calibrator.h" />
     <ClInclude Include="lattice_calibrator_equity.h" />
     <ClInclude Include="lattice_calibrator_equity_t.h" />
