@@ -18,6 +18,8 @@
 #include"lattice_examples_calibrate_price_ir.h"
 
 #include"lattice_calibrator_equity_t.h"
+#include"lattice_multidimensional_t.h"
+#include"lattice_builder_t.h"
 
 using namespace boost::gregorian;
 
@@ -158,6 +160,23 @@ int main(int argc, char const *argv[]) {
 	// testAmericanLattices();
 
 	// ===============================
+
+	// =================================
+	// ====== lattice_builder_t.h ======
+	// =================================
+
+	// testCreateIndexBasedLattice();
+	// testCreateLattice();
+
+	// =================================
+
+	// ==========================================
+	// ====== lattice_multidimensional_t.h ======
+	// ==========================================
+
+	testCreate2DIndexedLattice();
+
+	// ==========================================
 
 
 	std::cout << "\n";
