@@ -216,7 +216,7 @@ namespace lattice_multidimensional {
 			template<typename DeltaTime>
 			explicit MultidimMeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
 				for (std::size_t t = 0; t < Dimension; ++t)
-					multiTree_.emplace_back(std::move(MeanRevertingLattice<Node,TimeAxis>{ numberPeriods, params, deltaTime }));
+					multiTree_.emplace_back(std::move(MeanRevertingLattice<Node,TimeAxis>{ fixingDatesSet, params, deltaTime }));
 			}
 
 			MeanRevertingLattice<Node, TimeAxis> getFactor(std::size_t factorIdx) {

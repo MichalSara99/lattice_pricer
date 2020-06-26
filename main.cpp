@@ -174,7 +174,8 @@ int main(int argc, char const *argv[]) {
 	// ====== lattice_multidimensional_t.h ======
 	// ==========================================
 
-	testCreate2DIndexedLattice();
+	// testCreateMultidimensionalLattice();
+	// testCreateMultidimensionalMRLattice();
 
 	// ==========================================
 
