@@ -39,7 +39,7 @@ namespace lattice_miscellaneous {
 		T RiskFreeRate;
 		T DividentRate;
 		T ReversionSpeed;
-		T Correlation;
+		//T Correlation;
 	};
 
 	template<typename T>

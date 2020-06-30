@@ -3,6 +3,7 @@
 #define _LATTICE_UTILITY_T
 
 #include<iostream>
+#include<fstream>
 #include"lattice_utility.h"
 #include<boost/date_time/gregorian/gregorian.hpp>
 #include<boost/date_time/gregorian/gregorian_types.hpp>
@@ -45,6 +46,26 @@ void utilityTest2() {
 	lattice_utility::print(la, first, std::next(first, 1));
 
 
+}
+
+void utilityTest3() {
+
+	std::ofstream file("myTree.txt", std::ios::out);
+
+
+	auto today = date(day_clock::local_day());
+	auto dd = date_duration{ 1 };
+	std::set<date> fixingDates;
+
+	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date>
+		la = { today,today + date_duration(2),today,today + date_duration(1) };
+
+	lattice_utility::print(la, la.begin(), la.end());
+
+	auto first = la.begin();
+
+	lattice_utility::print(la, la.cbegin(), la.cend(), file);
+	file.close();
 }
 
 

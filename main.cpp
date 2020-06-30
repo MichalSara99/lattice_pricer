@@ -13,7 +13,7 @@
 #include"lattice_model_t.h"
 #include"lattice_examples.h"
 #include"lattice_greeks_t.h"
-
+#include"lattice_utility_t.h"
 #include"lattice_calibrator_ir_t.h"
 #include"lattice_examples_calibrate_price_ir.h"
 
@@ -174,10 +174,18 @@ int main(int argc, char const *argv[]) {
 	// ====== lattice_multidimensional_t.h ======
 	// ==========================================
 
-	// testCreateMultidimensionalLattice();
+    // testCreateMultidimensionalLattice();
 	// testCreateMultidimensionalMRLattice();
 
 	// ==========================================
+
+	// ==========================================
+	// =========== lattice_utility_t.h ==========
+	// ==========================================
+
+	// utilityTest3();
+
+	 // ==========================================
 
 
 	std::cout << "\n";

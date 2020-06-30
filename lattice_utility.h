@@ -5,6 +5,8 @@
 #include"lattice_structure.h"
 #include"lattice_traits.h"
 #include<tuple>
+#include<iostream>
+
 
 namespace lattice_utility {
 
@@ -53,23 +55,23 @@ namespace lattice_utility {
 	template<typename LatticeObject,
 		typename cIter,
 		typename Traits = PrintTraits<typename LatticeObject::Node_type>>
-	void _print_impl(LatticeObject const &lattice, cIter cbegin, cIter cend,std::true_type) {
+	void _print_impl(LatticeObject const &lattice, cIter cbegin, cIter cend,std::ostream &out, std::true_type) {
 
 		for (auto itr = cbegin; itr != cend; ++itr) {
-			std::cout << "["
+			out << "["
 				<< Traits::printLine(*itr);
-			std::cout << "]\n";
+			out << "]\n";
 		}
 	}
 
 	template<typename LatticeObject,
 		typename cIter,
 		typename Traits = PrintTraits<typename LatticeObject::Node_type>>
-	void _print_impl(LatticeObject const &lattice, cIter cbegin,cIter cend, std::false_type) {
+	void _print_impl(LatticeObject const &lattice, cIter cbegin,cIter cend, std::ostream &out, std::false_type) {
 		for (auto itr = cbegin; itr != cend; ++itr) {
-			std::cout << "(" << (*itr).first << "): ["
+			out << "(" << (*itr).first << "): ["
 				<< Traits::printLine((*itr).second);
-			std::cout << "]\n";
+			out << "]\n";
 		}
 	}
 
@@ -77,8 +79,8 @@ namespace lattice_utility {
 	template<typename LatticeObject,
 		typename cIter,
 		typename Traits = PrintTraits<typename LatticeObject::Node_type>>
-		void print(LatticeObject const &lattice, cIter cbegin,cIter cend) {
-		_print_impl(lattice, cbegin, cend, std::is_integral<typename LatticeObject::TimeAxis_type>());
+		void print(LatticeObject const &lattice, cIter cbegin,cIter cend,std::ostream &out = std::cout) {
+		_print_impl(lattice, cbegin, cend, out, std::is_integral<typename LatticeObject::TimeAxis_type>());
 	}
 
 

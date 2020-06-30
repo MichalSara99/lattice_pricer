@@ -2,6 +2,7 @@
 #if !defined(_LATTICE_MODEL_BINOMIAL)
 #define  _LATTICE_MODEL_BINOMIAL
 
+#include<tuple>
 #include"lattice_model_interface.h"
 #include"lattice_types.h"
 #include"lattice_utility.h"
@@ -51,6 +52,66 @@ namespace lattice_model {
 
 		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
 	};
+
+
+	// =============================================================================================
+	// ================ Two-factor Cox-Rubinstein-Ross model (binomial lattice) ====================
+	// =============================================================================================
+
+	template<typename T=double>
+	class CoxRubinsteinRossModel2Factor :public BinomialModel<2, T> {
+	private:
+		T rho_;
+		OptionData<T> option1_;
+		OptionData<T> option2_;
+
+	public:
+		explicit CoxRubinsteinRossModel2Factor(OptionData<T> const& optionDataFac1,
+			OptionData<T> const& optionDataFac2,T corr)
+			:option1_(optionDataFac1),
+			option2_(optionDataFac2),
+			rho_{corr} {}
+
+		explicit CoxRubinsteinRossModel2Factor(std::pair<OptionData<T>, OptionData<T>> const &optionDataPair,T corr)
+			:option1_(optionDataPair.first),
+			option2_(optionDataPair.second),
+			rho_{ corr }
+			{}
+
+		
+		// Forward generators:
+		std::pair<LeafForwardGenerator<T, T, T>,
+			LeafForwardGenerator<T, T, T>> forwardGenerator()const override {
+			CoxRubinsteinRossModel<T> factor1{ option1_ };
+			CoxRubinsteinRossModel<T> factor2{ option2_ };
+			LeafForwardGenerator<T, T, T> first = 
+				[](T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)->std::tuple<T,T> {
+				return factor1(value, dt, leafIdx, timeIdx, isMeanReverting);
+			};
+			LeafForwardGenerator<T, T, T> second = 
+				[](T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)->std::tuple<T,T> {
+				return factor2(value, dt, leafIdx, timeIdx, isMeanReverting);
+			};
+			return std::make_pair(first, second);
+		}
+
+		// Forward generator:
+		std::pair<LeafBackwardGenerator<T, T, T, T, T>,
+			LeafBackwardGenerator<T, T, T, T, T>> backwardGenerator()const override {
+
+		}
+
+
+
+		static std::string const name() {
+			return std::string{ "Cox-Rubinstein-Ross 2-factor model" };
+		}
+
+		static constexpr AssetClass assetClass() { return AssetClass::Equity; }
+
+	};
+
+
 
 
 	// =======================================================================================================
