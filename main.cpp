@@ -183,7 +183,7 @@ int main(int argc, char const *argv[]) {
 	// =========== lattice_utility_t.h ==========
 	// ==========================================
 
-	// utilityTest3();
+	 utilityTest3();
 
 	 // ==========================================
 

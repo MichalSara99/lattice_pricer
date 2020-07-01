@@ -72,18 +72,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
     <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
     <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
     <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>D:\cpp_libs\boost_1_68_0\boost_1_68_0;$(IncludePath)</IncludePath>
     <LibraryPath>D:\cpp_libs\boost_1_68_0\boost_1_68_0\libs;D:\cpp_libs\boost_1_68_0\boost_1_68_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -95,6 +103,7 @@
       <AdditionalIncludeDirectories>D:\my_c_files\optimization_methods;D:\cpp_libs\eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableModules>false</EnableModules>
       <OpenMPSupport>false</OpenMPSupport>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -107,6 +116,7 @@
       <AdditionalIncludeDirectories>D:\my_c_files\optimization_methods;D:\cpp_libs\eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableModules>false</EnableModules>
       <OpenMPSupport>false</OpenMPSupport>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,6 +131,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableModules>false</EnableModules>
       <OpenMPSupport>false</OpenMPSupport>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -139,6 +150,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableModules>false</EnableModules>
       <OpenMPSupport>false</OpenMPSupport>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

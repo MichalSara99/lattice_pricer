@@ -10,7 +10,7 @@ namespace lattice_types {
 
 	enum class LaunchPolicy { Sequential, Parallel };
 
-	enum class LatticeType { Binomial, Trinomial };
+	enum class LatticeType { Binomial, Trinomial, TwoVariableBinomial };
 
 	enum class AssetClass { InterestRate, Equity };
 

@@ -115,6 +115,8 @@ namespace lattice_structure {
 		template<typename Arg,typename DeltaTime>
 		void buildRevertingTree(Arg const &arg, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime);
 
+		std::size_t numberNodes(std::size_t timeIdx)const;
+
 	public:
 		TreeType const &tree()const { return this->tree_; }
 
@@ -372,6 +374,18 @@ namespace lattice_structure {
 		return (this->tree_[timeIdx]);
 	}
 
+	template<LatticeType Type,
+		typename Node,
+		typename TimeAxis,
+		typename NodeContainerType>
+	std::size_t GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::numberNodes(std::size_t timeIdx)const {
+		if (Type == LatticeType::TwoVariableBinomial) {
+			return ((timeIdx + 1)*(timeIdx + 1));
+		}
+		auto intRep = static_cast<std::underlying_type<LatticeType>::type>(Type);
+		return ((intRep + 1)*(timeIdx + 1) - (intRep));
+	};
+
 
 	template<LatticeType Type,
 			typename Node,
@@ -379,10 +393,6 @@ namespace lattice_structure {
 			typename NodeContainerType>
 	template<typename Arg>
 	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildTree_impl(Arg const &arg, std::true_type) {
-		auto numberNodes = [](std::size_t nodeIdx) {
-			auto intRep = static_cast<std::underlying_type<LatticeType>::type>(Type);
-			return ((intRep + 1)*(nodeIdx + 1) - (intRep));
-		};
 		for (std::size_t t = 0; t < arg.size(); ++t) {
 			tree_[arg[t]] = std::move(NodeContainerType(numberNodes(t)));
 		}
@@ -394,10 +404,6 @@ namespace lattice_structure {
 		typename NodeContainerType>
 	template<typename Arg>
 	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildTree_impl(Arg const &arg, std::false_type) {
-		auto numberNodes = [](std::size_t nodeIdx) {
-			auto intRep = static_cast<std::underlying_type<LatticeType>::type>(Type);
-			return ((intRep + 1)*(nodeIdx + 1) - (intRep));
-		};
 		tree_.reserve(arg);
 		for (std::size_t t = 0; t <= arg; ++t) {
 			tree_.emplace_back(NodeContainerType(numberNodes(t)));
@@ -546,6 +552,7 @@ namespace lattice_structure {
 		std::size_t maxIndex()const { return maxIndex_; }
 	};
 
+	
 
 	// =======================================================================================
 	// =================================== Lattice ===========================================

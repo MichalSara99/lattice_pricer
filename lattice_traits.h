@@ -6,6 +6,7 @@
 #include<array>
 #include<sstream>
 #include"lattice_miscellaneous.h"
+#include"lattice_types.h"
 
 namespace lattice_traits {
 
@@ -59,8 +60,9 @@ namespace lattice_traits {
 	
 
 	using lattice_miscellaneous::clipComma;
+	using lattice_types::LatticeType;
 
-	template<typename Node>
+	template<typename Node,LatticeType Type>
 	struct PrintTraits{
 		static const std::size_t size = 1;
 
@@ -74,9 +76,26 @@ namespace lattice_traits {
 		}
 	};
 
-
 	template<typename Node>
-	struct PrintTraits<std::tuple<Node, Node>> {
+	struct PrintTraits<Node, LatticeType::TwoVariableBinomial> {
+		static const std::size_t size = 1;
+
+		template<typename Container>
+		static std::string printLine(Container &cont) {
+			std::ostringstream ss;
+			std::size_t const side = static_cast<std::size_t>(std::sqrt(cont.size()));
+			for (std::size_t i = 0; i < cont.size(); ++i) {
+				if ((i > 0) && (i%side == 0))
+					ss << "\n ";
+				ss << cont[i] << ", ";
+			}
+			return clipComma(std::move(ss.str()));
+		}
+	};
+
+
+	template<typename Node,LatticeType Type>
+	struct PrintTraits<std::tuple<Node, Node>, Type> {
 		static const std::size_t size = 2;
 
 		template<typename Container>
@@ -91,7 +110,27 @@ namespace lattice_traits {
 	};
 
 	template<typename Node>
-	struct PrintTraits<std::tuple<Node,Node, Node>> {
+	struct PrintTraits<std::tuple<Node, Node>, LatticeType::TwoVariableBinomial> {
+		static const std::size_t size = 1;
+
+		template<typename Container>
+		static std::string printLine(Container &cont) {
+			std::ostringstream ss;
+			std::size_t const side = static_cast<std::size_t>(std::sqrt(cont.size()));
+			std::tuple<Node, Node> val{};
+			for (std::size_t i = 0; i < cont.size(); ++i) {
+				if ((i > 0) && (i%side == 0))
+					ss << "\n ";
+				val = cont[i];
+				ss << "(" << std::get<0>(val) << ","
+					<< std::get<1>(val) << "), ";
+			}
+			return clipComma(std::move(ss.str()));
+		}
+	};
+
+	template<typename Node,LatticeType Type>
+	struct PrintTraits<std::tuple<Node,Node, Node>, Type> {
 		static const std::size_t size = 3;
 
 		template<typename Container>
@@ -107,7 +146,28 @@ namespace lattice_traits {
 	};
 
 	template<typename Node>
-	struct PrintTraits<std::tuple<Node, Node, Node, Node>> {
+	struct PrintTraits<std::tuple<Node, Node, Node>, LatticeType::TwoVariableBinomial> {
+		static const std::size_t size = 1;
+
+		template<typename Container>
+		static std::string printLine(Container &cont) {
+			std::ostringstream ss;
+			std::size_t const side = static_cast<std::size_t>(std::sqrt(cont.size()));
+			std::tuple<Node, Node, Node> val{};
+			for (std::size_t i = 0; i < cont.size(); ++i) {
+				if ((i > 0) && (i%side == 0))
+					ss << "\n ";
+				val = cont[i];
+				ss << "(" << std::get<0>(val) << ","
+					<< std::get<1>(val) << ","
+					<< std::get<2>(val) << "), ";
+			}
+			return clipComma(std::move(ss.str()));
+		}
+	};
+
+	template<typename Node,LatticeType Type>
+	struct PrintTraits<std::tuple<Node, Node, Node, Node>, Type> {
 		static const std::size_t size = 4;
 
 		template<typename Container>
@@ -123,8 +183,30 @@ namespace lattice_traits {
 		}
 	};
 
-	template<typename Node,std::size_t N>
-	struct PrintTraits<std::array<Node,N>> {
+	template<typename Node>
+	struct PrintTraits<std::tuple<Node, Node, Node, Node>, LatticeType::TwoVariableBinomial> {
+		static const std::size_t size = 1;
+
+		template<typename Container>
+		static std::string printLine(Container &cont) {
+			std::ostringstream ss;
+			std::size_t const side = static_cast<std::size_t>(std::sqrt(cont.size()));
+			std::tuple<Node, Node, Node, Node> val{};
+			for (std::size_t i = 0; i < cont.size(); ++i) {
+				if ((i > 0) && (i%side == 0))
+					ss << "\n ";
+				val = cont[i];
+				ss << "(" << std::get<0>(val) << ","
+					<< std::get<1>(val) << ","
+					<< std::get<2>(val) << ","
+					<< std::get<3>(val) << "), ";
+			}
+			return clipComma(std::move(ss.str()));
+		}
+	};
+
+	template<typename Node,LatticeType Type,std::size_t N>
+	struct PrintTraits<std::array<Node,N>, Type> {
 		static const std::size_t size = N;
 
 		template<typename Container>
@@ -140,6 +222,30 @@ namespace lattice_traits {
 			return clipComma(std::move(ss.str()));
 		}
 	};
+
+	template<typename Node, std::size_t N>
+	struct PrintTraits<std::array<Node, N>, LatticeType::TwoVariableBinomial> {
+		static const std::size_t size = N;
+
+		template<typename Container>
+		static std::string printLine(Container &cont) {
+			std::ostringstream ss;
+			std::size_t const side = static_cast<std::size_t>(std::sqrt(cont.size()));
+			std::array<Node, N> val{};
+			for (std::size_t i = 0; i < cont.size(); ++i) {
+				if ((i > 0) && (i%side == 0))
+					ss << "\n ";
+				val = cont[i];
+				ss << "(";
+				for (std::size_t j = 0; j < N; ++j) {
+					ss << val[j] << ",";
+				}
+				ss << "), ";
+			}
+			return clipComma(std::move(ss.str()));
+		}
+	};
+
 
 }
 

@@ -78,6 +78,27 @@ namespace lattice_model {
 			rho_{ corr }
 			{}
 
+		// Returns risk-neutral probability:
+		std::tuple<T,T,T,T> nodeRiskNeutralProb(T dt)const {
+			T const r1 = option1_.RiskFreeRate;
+			T const r2 = option2_.RiskFreeRate;
+			T const q1 = option1_.DividentRate;
+			T const q2 = option2_.DividentRate;
+			T const sig1 = option1_.Volatility;
+			T const sig2 = option2_.Volatility;
+			T const nu1 = r1 - q1 - 0.5*sig1*sig1;
+			T const nu2 = r2 - q2 - 0.5*sig2*sig2;
+			T const dx1 = sig1 * std::sqrt(dt);
+			T const dx2 = sig2 * std::sqrt(dt);
+			T const mix = dx1*dx2;
+			T const corr = rho_ * sig1*sig2;
+
+			T const pdd = (mix + (-1.0*dx2*nu1 - dx1 * nu2 + corr)*dt) / (4.0*mix);
+			T const pdu = (mix + (-1.0*dx2*nu1 + dx1 * nu2 - corr)*dt) / (4.0*mix);
+			T const pud = (mix + (dx2*nu1 - dx1 * nu2 - corr)*dt) / (4.0*mix);
+			T const puu = (mix + (dx2*nu1 + dx1 * nu2 + corr)*dt) / (4.0*mix);
+			return std::make_tuple(pdd, pdu, pud, puu);
+		}
 		
 		// Forward generators:
 		std::pair<LeafForwardGenerator<T, T, T>,
@@ -95,13 +116,18 @@ namespace lattice_model {
 			return std::make_pair(first, second);
 		}
 
-		// Forward generator:
-		std::pair<LeafBackwardGenerator<T, T, T, T, T>,
-			LeafBackwardGenerator<T, T, T, T, T>> backwardGenerator()const override {
-
+		// Backward generator:
+		T operator()(T currValue, T upUpValue, T upDownValue, T downUpValue, T downDownValue, T dt) {
+			// taking risk-free rate for discounting from first factor data:
+			T const r = option1_.RiskFreeRate;
+			T const disc = std::exp(-1.0*r*dt);
+			std::tuple<T, T, T, T> const prob = nodeRiskNeutralProb(dt);
+			T const value = (std::get<0>(prob) *downDownValue +
+				std::get<1>(prob) *downUpValue +
+				std::get<2>(prob) * upDownValue +
+				std::get<3>(prob) * upUpValue);
+			return (disc * value);
 		}
-
-
 
 		static std::string const name() {
 			return std::string{ "Cox-Rubinstein-Ross 2-factor model" };

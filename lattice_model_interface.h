@@ -50,9 +50,6 @@ namespace lattice_model {
 		virtual std::pair<LeafForwardGenerator<T, T, T>,
 			LeafForwardGenerator<T, T, T>> forwardGenerator()const = 0;
 
-		// Forward generator 2:
-		virtual std::pair<LeafBackwardGenerator<T, T, T, T, T>,
-			LeafBackwardGenerator<T, T, T, T, T>> backwardGenerator()const = 0;
 		// Factor count:
 		enum { FactorCount = 2 };
 

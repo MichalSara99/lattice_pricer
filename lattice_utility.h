@@ -54,7 +54,7 @@ namespace lattice_utility {
 
 	template<typename LatticeObject,
 		typename cIter,
-		typename Traits = PrintTraits<typename LatticeObject::Node_type>>
+		typename Traits = PrintTraits<typename LatticeObject::Node_type, LatticeObject::type()>>
 	void _print_impl(LatticeObject const &lattice, cIter cbegin, cIter cend,std::ostream &out, std::true_type) {
 
 		for (auto itr = cbegin; itr != cend; ++itr) {
@@ -66,10 +66,13 @@ namespace lattice_utility {
 
 	template<typename LatticeObject,
 		typename cIter,
-		typename Traits = PrintTraits<typename LatticeObject::Node_type>>
+		typename Traits = PrintTraits<typename LatticeObject::Node_type, LatticeObject::type()>>
 	void _print_impl(LatticeObject const &lattice, cIter cbegin,cIter cend, std::ostream &out, std::false_type) {
+		std::string bl{ "" };
+		if (LatticeObject::type() == LatticeType::TwoVariableBinomial)
+			bl = "\n";
 		for (auto itr = cbegin; itr != cend; ++itr) {
-			out << "(" << (*itr).first << "): ["
+			out << "(" << (*itr).first << "):" << bl << "["
 				<< Traits::printLine((*itr).second);
 			out << "]\n";
 		}
@@ -78,7 +81,7 @@ namespace lattice_utility {
 
 	template<typename LatticeObject,
 		typename cIter,
-		typename Traits = PrintTraits<typename LatticeObject::Node_type>>
+		typename Traits = PrintTraits<typename LatticeObject::Node_type, LatticeObject::type()>>
 		void print(LatticeObject const &lattice, cIter cbegin,cIter cend,std::ostream &out = std::cout) {
 		_print_impl(lattice, cbegin, cend, out, std::is_integral<typename LatticeObject::TimeAxis_type>());
 	}
