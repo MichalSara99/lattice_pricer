@@ -8,12 +8,80 @@
 #include"lattice_utility.h"
 #include"lattice_algorithms.h"
 #include"lattice_model_components.h"
-
+#include"lattice_multidimensional.h"
 
 #include<iostream>
 #include<numeric>
 
+void crr2FactorIndexedLattice() {
 
+	lattice_miscellaneous::OptionData<double> option1;
+	lattice_miscellaneous::OptionData<double> option2;
+
+	option1.Strike = 65.0;
+	option1.RiskFreeRate = 0.25;
+	option1.DividentRate = 0.0;
+	option1.Volatility = 0.3;
+	option1.Underlying = 60.0;
+
+	option2.Strike = 100.0;
+	option2.RiskFreeRate = 0.25;
+	option2.DividentRate = 0.0;
+	option2.Volatility = 0.45;
+	option2.Underlying = 90.0;
+
+	auto rho{ 0.32 };
+
+	std::size_t periods{ 100 };
+	double maturity = 0.29;
+	double dt = (maturity / double(periods));
+
+
+	// Creating indexed lattice:
+	lattice_multidimensional::MultidimIndexedLattice<2,lattice_types::LatticeType::Binomial, double> il(periods);
+
+	// Create CRR model:
+	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ option1,option2,rho };
+
+	// Print the model name:
+	std::cout << decltype(crr)::name() << "\n";
+
+
+	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		std::size_t, double, double> forward_binomial_induction;
+
+	forward_binomial_induction fwd_induction;
+	fwd_induction(il, crr, dt, std::make_pair(option1.Underlying,option2.Underlying));
+
+	// Print the part of generated lattice:
+	std::cout << "First factor: \n";
+	auto factor1 = il.getFactor(0);
+	auto first = factor1.begin();
+	auto last = std::next(first, 5);
+	lattice_utility::print(factor1, first, last);
+	std::cout << "Second factor: \n";
+	auto factor2 = il.getFactor(1);
+	first = factor2.begin();
+	last = std::next(first, 5);
+	lattice_utility::print(factor2, first, last);
+
+	// Backward induction:
+
+	//// Prepare payoff:
+	//double K = option.Strike;
+	//auto call_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
+
+	//typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial,
+	//	std::size_t, double> backward_binomial_induction;
+	//backward_binomial_induction brd_induction;
+
+	//brd_induction(il, crr, dt, call_payoff);
+
+	//// Print the part of generated lattice:
+	//lattice_utility::print(il, first, last);
+	//// Print apex: value of option:
+	//std::cout << "Price of call: " << il.apex() << "\n\n";
+}
 
 void crrIndexedLattice() {
 
@@ -407,6 +475,7 @@ void testIndexedEuropeanLattices() {
 	std::cout << "========== Indexed European Lattices - TEST ===========\n";
 	std::cout << "=======================================================\n";
 
+	crr2FactorIndexedLattice();
 	crrIndexedLattice();
 	mcrrIndexedLattice();
 	jrIndexedLattice();

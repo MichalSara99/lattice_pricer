@@ -4,7 +4,9 @@
 
 #include<cassert>
 #include<ppl.h>
+#include<type_traits>
 #include"lattice_structure.h"
+#include"lattice_multidimensional.h"
 #include"lattice_forward_traversals.h"
 #include"lattice_backward_traversals.h"
 #include"lattice_types.h"
@@ -19,6 +21,7 @@ namespace lattice_algorithms {
 	using lattice_types::LaunchPolicy;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
+	using lattice_structure::GeneralLattice;
 	using lattice_forward_traversals::ForwardTraversal;
 	using lattice_backward_traversals::BackwardTraversal;
 	using lattice_traits::MergeTraits;
@@ -44,6 +47,7 @@ namespace lattice_algorithms {
 		template<typename LatticeObject,typename Generator>
 		void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,Node apex) {
 			LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+			LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 			ForwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime, Node>::
 				traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
 		}
@@ -52,11 +56,34 @@ namespace lattice_algorithms {
 		void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
 			std::map<TimeAxis,Node> const &dividendData) {
 			LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+			LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 			ForwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime, Node>::
 				traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
 		}
+	};
 
 
+	template<typename TimeAxis,
+		typename DeltaTime,
+		typename Node>
+		class ForwardInduction<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime, Node> {
+		public:
+			template<typename MultidimLatticeObject, typename Generator>
+			void operator()(MultidimLatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, std::pair<Node, Node> const &apex) {
+				LASSERT(lattice.getFactor(0).type() == generator.latticeType(), "Mismatch between lattice types");
+				LASSERT(lattice.factors() > 1, "For multidimensional lattice only");
+				ForwardTraversal<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime, Node>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
+			}
+
+			template<typename MultidimLatticeObject, typename Generator>
+			void operator()(MultidimLatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, std::pair<Node, Node> const &apex,
+				std::pair<std::map<TimeAxis, Node>, std::map<TimeAxis, Node>> const &dividendData) {
+				LASSERT(lattice.getFactor(0).type() == generator.latticeType(), "Mismatch between lattice types");
+				LASSERT(lattice.factors() > 1, "For multidimensional lattice only");
+				ForwardTraversal<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime, Node>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
+			}
 	};
 
 	template<typename TimeAxis,
@@ -67,6 +94,7 @@ namespace lattice_algorithms {
 			template<typename LatticeObject, typename Generator>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex);
 			}
@@ -75,6 +103,7 @@ namespace lattice_algorithms {
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Node apex,
 				std::map<TimeAxis, Node> const &dividendData) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				ForwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime, Node>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, apex, dividendData);
 			}
@@ -98,6 +127,7 @@ namespace lattice_algorithms {
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 			}
@@ -105,6 +135,7 @@ namespace lattice_algorithms {
 			template<typename LatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster));
 			}
@@ -118,6 +149,7 @@ namespace lattice_algorithms {
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 			}
@@ -125,6 +157,7 @@ namespace lattice_algorithms {
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
 				LASSERT(lattice.type() == generator.latticeType(),"Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
 			}

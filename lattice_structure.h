@@ -122,6 +122,8 @@ namespace lattice_structure {
 
 		static constexpr LatticeType type(){ return Type; }
 
+		std::size_t constexpr factors()const { return 1; }
+
 		constexpr std::size_t timeDimension()const { return std::distance(tree_.begin(), tree_.end()); }
 		
 

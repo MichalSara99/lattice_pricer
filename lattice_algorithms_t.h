@@ -21,7 +21,7 @@ template<typename T = double>
 class AbitraryBinomialModel :public lattice_model::BinomialModel<1, T> {
 public:
 	// Forward generator
-	std::tuple<T, T> operator()(T value, T dt,std::size_t leafIdx,std::size_t timeIdx, bool isMeanReverting = false) override {
+	std::tuple<T, T> operator()(T value, T dt,std::size_t leafIdx,std::size_t timeIdx, bool isMeanReverting)const override {
 		double u = 2.0;
 		double d = 1.0 / u;
 		return std::make_tuple(u*value, d*value);
@@ -42,7 +42,7 @@ template<typename T = double>
 class AbitraryTrinomialModel :public lattice_model::TrinomialModel<1, T> {
 public:
 	// Forward generator
-	std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+	std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)const override {
 		double u = 2.0;
 		double d = 1.0 / u;
 		double m = (u + d)*0.5;

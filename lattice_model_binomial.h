@@ -28,7 +28,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting) const override {
 			T const q = option_.DividentRate;
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
@@ -102,15 +102,15 @@ namespace lattice_model {
 		
 		// Forward generators:
 		std::pair<LeafForwardGenerator<T, T, T>,
-			LeafForwardGenerator<T, T, T>> forwardGenerator()const override {
+			LeafForwardGenerator<T, T, T>> forwardGenerator() const override {
 			CoxRubinsteinRossModel<T> factor1{ option1_ };
 			CoxRubinsteinRossModel<T> factor2{ option2_ };
 			LeafForwardGenerator<T, T, T> first = 
-				[](T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)->std::tuple<T,T> {
+				[=](T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)->std::tuple<T,T> {
 				return factor1(value, dt, leafIdx, timeIdx, isMeanReverting);
 			};
 			LeafForwardGenerator<T, T, T> second = 
-				[](T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)->std::tuple<T,T> {
+				[=](T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)->std::tuple<T,T> {
 				return factor2(value, dt, leafIdx, timeIdx, isMeanReverting);
 			};
 			return std::make_pair(first, second);
@@ -156,7 +156,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)const override {
 			T const s = option_.Underlying;
 			T const sig = option_.Volatility;
 			T const k = option_.Strike;
@@ -205,7 +205,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting) const override {
 			T const q = option_.DividentRate;
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
@@ -247,7 +247,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting) const override {
 			T const sig = option_.Volatility;
 			T const x = std::sqrt(sig*sig*dt + gamma_ * gamma_*dt*dt);
 			T const up = std::exp(x);
@@ -287,7 +287,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)const  override {
 			T const q = option_.DividentRate;
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
@@ -340,7 +340,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator:
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting) const override {
 			T const sig = option_.Volatility;
 			T const r = option_.RiskFreeRate;
 			T const q = option_.DividentRate;
@@ -421,7 +421,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting) const override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
 			T const sig = option_.Volatility;
 			T const theta = theta_.at(timeIdx - 1);
@@ -525,7 +525,7 @@ namespace lattice_model {
 
 
 		// Forward generator
-		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting ) const override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
 			T const sig = option_.Volatility;
 			T const sqrtdt = std::sqrt(dt);

@@ -29,7 +29,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) const override {
 			T const sig = option_.Volatility;
 			T const expon = sig * std::sqrt(2.0*dt);
 			T const up = std::exp(expon);
@@ -124,7 +124,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)const override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
 			T const sig = option_.Volatility;
 			T const a = option_.ReversionSpeed;
@@ -301,7 +301,7 @@ namespace lattice_model {
 		}
 
 		// Forward generator
-		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) override {
+		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)const  override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
 			T const sig = option_.Volatility;
 			T const a = option_.ReversionSpeed;

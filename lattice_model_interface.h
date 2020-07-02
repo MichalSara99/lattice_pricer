@@ -29,7 +29,7 @@ namespace lattice_model {
 	class BinomialModel<1, T> {
 	public:
 		// Forward generator:
-		virtual std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) = 0;
+		virtual std::tuple<T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)const = 0;
 
 		// Backward generator:
 		virtual T operator()(T currValue, T upValue, T downValue, T dt) = 0;
@@ -48,7 +48,7 @@ namespace lattice_model {
 	public:
 		// Forward generators:
 		virtual std::pair<LeafForwardGenerator<T, T, T>,
-			LeafForwardGenerator<T, T, T>> forwardGenerator()const = 0;
+			LeafForwardGenerator<T, T, T>> forwardGenerator() const = 0;
 
 		// Factor count:
 		enum { FactorCount = 2 };
@@ -62,7 +62,7 @@ namespace lattice_model {
 	class TrinomialModel<1, T> {
 	public:
 		// Forward generator:
-		virtual std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) = 0;
+		virtual std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting)const = 0;
 
 		// Backward generator:
 		virtual T operator()(T currValue, T upValue, T midValue, T downValue, T dt,
