@@ -144,6 +144,32 @@ namespace lattice_algorithms {
 
 	template<typename TimeAxis,
 		typename DeltaTime>
+		class BackwardInduction<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime> {
+		public:
+			template<typename LatticeObject,typename MultidimLatticeObject, typename Generator, typename Payoff>
+			void operator()(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator,
+				DeltaTime const &deltaTime, Payoff &&payoff) {
+				LASSERT(priceLattice.type() == LatticeType::TwoVariableBinomial, "Mismatch between lattice types");
+				LASSERT(generator.latticeType() == LatticeType::Binomial, "Mismatch between lattice types");
+				LASSERT(lattice.factors() == 2, "For two-dimensional lattice only");
+				BackwardTraversal<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime>::
+					traverse(priceLattice, lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
+			}
+
+			template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			void operator()(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator,
+				DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+				LASSERT(priceLattice.type() == LatticeType::TwoVariableBinomial, "Mismatch between lattice types");
+				LASSERT(generator.latticeType() == LatticeType::Binomial, "Mismatch between lattice types");
+				LASSERT(lattice.factors() == 2, "For two-dimensional lattice only");
+				BackwardTraversal<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime>::
+					traverse(priceLattice,lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
+			}
+
+	};
+
+	template<typename TimeAxis,
+		typename DeltaTime>
 		class BackwardInduction<LatticeType::Trinomial, TimeAxis, DeltaTime> {
 		public:
 			template<typename LatticeObject, typename Generator, typename Payoff>

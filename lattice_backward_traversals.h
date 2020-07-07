@@ -47,6 +47,31 @@ namespace lattice_backward_traversals {
 
 	};
 
+	// LatticeType::TwoVariableBinomial
+	template<typename TimeAxis,
+			typename DeltaTime>
+	struct BackwardTraversal<LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime> {
+	private:
+		template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff>
+		static void _backTraverse(LatticeObject &priceLattice,MultidimLatticeObject const &lattice, Generator &&generator,
+			DeltaTime const &deltaTime, Payoff &&payoff);
+
+		//	This one is for payoffadjusted
+		template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+		static void _backTraverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator,
+			DeltaTime const &deltaTime, Payoff &&payoff,PayoffAdjuster &&payoffAdjuster);
+	public:
+		template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff>
+		static void traverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
+			_backTraverse(priceLattice,lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
+		}
+
+		template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+		static void traverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+			_backTraverse(priceLattice,lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
+		}
+	};
+
 
 
 
@@ -64,7 +89,6 @@ namespace lattice_backward_traversals {
 
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			static void _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
-
 
 			template<typename LatticeObject, typename Generator,typename PayoffAdjuster>
 			static void _backTraverseNormal(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster);
@@ -89,6 +113,10 @@ namespace lattice_backward_traversals {
 			}
 
 	};
+
+
+
+
 
 
 }
@@ -154,6 +182,102 @@ _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &de
 	value = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), dt);
 	payoffAdjuster(value, lattice(0, 0));
 	lattice(0, 0) = value;
+}
+
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject,typename MultidimLatticeObject, typename Generator, typename Payoff>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime>::
+_backTraverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator, 
+	DeltaTime const &deltaTime, Payoff &&payoff) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typename LatticeObject::Node_type dt{};
+	
+	auto tree1 = lattice.getFactor(0);
+	auto tree2 = lattice.getFactor(1);
+
+	std::size_t const treeSize = priceLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = priceLattice.nodesAtIdx(lastIdx).size();
+	std::size_t factorLastNodesSize = tree1.nodesAtIdx(lastIdx).size();
+	std::size_t col{ 0 }, row{ 0 };
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		col = i % factorLastNodesSize;
+		if ((i > 0) && ((i%factorLastNodesSize) == 0)) row++;
+		priceLattice(lastIdx, i) = payoff(tree1(lastIdx, row), tree2(lastIdx, col));
+	}
+
+	std::size_t nodesSize{ 0 };
+	std::size_t factorNodesSize{ 0 };
+	for (auto n = lastIdx - 1; n > 0; --n) {
+		nodesSize = priceLattice.nodesAtIdx(n).size();
+		factorNodesSize = tree1.nodesAtIdx(n).size();
+		dt = DT::deltaTime(n, deltaTime);
+		row = 0;
+		for (auto i = 0; i < nodesSize; ++i) {
+			if ((i > 0) && ((i%factorNodesSize) == 0)) row++;
+			priceLattice(n, i) = generator(priceLattice(n, i),/*down-down*/ priceLattice(n + 1, i + row), /*down-up*/priceLattice(n + 1, i + row + 1),
+				/*up-down*/ priceLattice(n + 1, i + row +  factorLastNodesSize),/*up-up*/ priceLattice(n + 1, i + row + factorLastNodesSize + 1), dt);
+		}
+		factorLastNodesSize = factorNodesSize;
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	priceLattice(0, 0) = generator(priceLattice(0, 0), priceLattice(1, 0), priceLattice(1, 1),
+		priceLattice(1, 2), priceLattice(1, 3), dt);
+}
+
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff,typename PayoffAdjuster>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::TwoVariableBinomial, TimeAxis, DeltaTime>::
+_backTraverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator,
+	DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typename LatticeObject::Node_type dt{};
+	typename LatticeObject::Node_type value{};
+
+	auto tree1 = lattice.getFactor(0);
+	auto tree2 = lattice.getFactor(1);
+
+	std::size_t const treeSize = priceLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = priceLattice.nodesAtIdx(lastIdx).size();
+	std::size_t factorLastNodesSize = tree1.nodesAtIdx(lastIdx).size();
+	std::size_t col{ 0 }, row{ 0 };
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		col = i % factorLastNodesSize;
+		if ((i > 0) && ((i%factorLastNodesSize) == 0)) row++;
+		priceLattice(lastIdx, i) = payoff(tree1(lastIdx, row), tree2(lastIdx, col));
+	}
+
+	std::size_t nodesSize{ 0 };
+	std::size_t factorNodesSize{ 0 };
+	for (auto n = lastIdx - 1; n > 0; --n) {
+		nodesSize = priceLattice.nodesAtIdx(n).size();
+		factorNodesSize = tree1.nodesAtIdx(n).size();
+		dt = DT::deltaTime(n, deltaTime);
+		col = 0; row = 0;
+		for (auto i = 0; i < nodesSize; ++i) {
+			col = i % factorNodesSize;
+			if ((i > 0) && ((i%factorNodesSize) == 0)) row++;
+			value = generator(priceLattice(n, i),/*down-down*/ priceLattice(n + 1, i + row), /*down-up*/priceLattice(n + 1, i + row +  1),
+				/*up-down*/ priceLattice(n + 1, i + row + factorLastNodesSize),/*up-up*/ priceLattice(n + 1, i + row + factorLastNodesSize + 1), dt);
+			payoffAdjuster(value, tree1(n, row), tree2(n, col));
+			priceLattice(n, i) = value;
+		}
+		factorLastNodesSize = factorNodesSize;
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	value = generator(priceLattice(0, 0), priceLattice(1, 0), priceLattice(1, 1),
+		priceLattice(1, 2), priceLattice(1, 3), dt);
+	payoffAdjuster(value, tree1(0, 0), tree2(0, 0));
+	priceLattice(0, 0) = value;
 }
 
 

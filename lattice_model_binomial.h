@@ -117,7 +117,7 @@ namespace lattice_model {
 		}
 
 		// Backward generator:
-		T operator()(T currValue, T upUpValue, T upDownValue, T downUpValue, T downDownValue, T dt) {
+		T operator()(T currValue, T downDownValue, T downUpValue, T upDownValue, T upUpValue, T dt) {
 			// taking risk-free rate for discounting from first factor data:
 			T const r = option1_.RiskFreeRate;
 			T const disc = std::exp(-1.0*r*dt);

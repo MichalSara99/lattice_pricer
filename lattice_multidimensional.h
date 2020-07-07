@@ -74,7 +74,12 @@ namespace lattice_multidimensional {
 				multiTree_.emplace_back(std::move(IndexedLattice<Type, Node>{ numberPeriods }));
 		}
 
-		IndexedLattice<Type, Node> getFactor(std::size_t factorIdx) {
+		IndexedLattice<Type, Node> &getFactor(std::size_t factorIdx) {
+			LASSERT(factorIdx < Dimension, "factor index is out of range");
+			return multiTree_[factorIdx];
+		}
+
+		IndexedLattice<Type, Node> const& getFactor(std::size_t factorIdx)const  {
 			LASSERT(factorIdx < Dimension, "factor index is out of range");
 			return multiTree_[factorIdx];
 		}
@@ -124,7 +129,12 @@ namespace lattice_multidimensional {
 				multiTree_.emplace_back(std::move(Lattice<Type, Node, TimeAxis>{ fixingDates }));
 		}
 
-		Lattice<Type, Node, TimeAxis> getFactor(std::size_t factorIdx) {
+		Lattice<Type, Node, TimeAxis> &getFactor(std::size_t factorIdx) {
+			LASSERT(factorIdx < Dimension, "factor index is out of range");
+			return multiTree_[factorIdx];
+		}
+
+		Lattice<Type, Node, TimeAxis> const& getFactor(std::size_t factorIdx)const {
 			LASSERT(factorIdx < Dimension, "factor index is out of range");
 			return multiTree_[factorIdx];
 		}
@@ -172,7 +182,12 @@ namespace lattice_multidimensional {
 					multiTree_.emplace_back(std::move(MeanRevertingIndexedLattice<Node>{ numberPeriods,params,deltaTime }));
 			}
 
-			MeanRevertingIndexedLattice<Node> getFactor(std::size_t factorIdx) {
+			MeanRevertingIndexedLattice<Node> &getFactor(std::size_t factorIdx) {
+				LASSERT(factorIdx < Dimension, "factor index is out of range");
+				return multiTree_[factorIdx];
+			}
+
+			MeanRevertingIndexedLattice<Node> const& getFactor(std::size_t factorIdx)const {
 				LASSERT(factorIdx < Dimension, "factor index is out of range");
 				return multiTree_[factorIdx];
 			}
@@ -219,7 +234,12 @@ namespace lattice_multidimensional {
 					multiTree_.emplace_back(std::move(MeanRevertingLattice<Node,TimeAxis>{ fixingDatesSet, params, deltaTime }));
 			}
 
-			MeanRevertingLattice<Node, TimeAxis> getFactor(std::size_t factorIdx) {
+			MeanRevertingLattice<Node, TimeAxis> &getFactor(std::size_t factorIdx) {
+				LASSERT(factorIdx < Dimension, "factor index is out of range");
+				return multiTree_[factorIdx];
+			}
+
+			MeanRevertingLattice<Node, TimeAxis> const& getFactor(std::size_t factorIdx)const {
 				LASSERT(factorIdx < Dimension, "factor index is out of range");
 				return multiTree_[factorIdx];
 			}
