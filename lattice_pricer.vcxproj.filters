@@ -131,5 +131,8 @@
     <ClInclude Include="lattice_multidimensional_t.h">
       <Filter>Header Files\unit_tests</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_product.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

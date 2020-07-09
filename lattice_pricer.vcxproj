@@ -190,6 +190,7 @@
     <ClInclude Include="lattice_multidimensional.h" />
     <ClInclude Include="lattice_multidimensional_t.h" />
     <ClInclude Include="lattice_policy.h" />
+    <ClInclude Include="lattice_product.h" />
     <ClInclude Include="lattice_structure.h" />
     <ClInclude Include="lattice_structure_t.h" />
     <ClInclude Include="lattice_forward_traversals.h" />
