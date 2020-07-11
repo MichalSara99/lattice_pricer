@@ -22,7 +22,8 @@ void crrBinomialLatticeParallelPricing() {
 	std::cout << "\nPricing with std::thread: \n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_model::CoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
 	using lattice_algorithms::BackwardInduction;
@@ -30,12 +31,12 @@ void crrBinomialLatticeParallelPricing() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1,AssetClass::Equity,double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -50,7 +51,7 @@ void crrBinomialLatticeParallelPricing() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	CoxRubinsteinRossModel<> crr{ option };
+	CoxRubinsteinRossModel<> crr{ params };
 
 	// Prepare delta times:
 	double year{ 365.0 };
@@ -66,7 +67,7 @@ void crrBinomialLatticeParallelPricing() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -86,7 +87,7 @@ void crrBinomialLatticeParallelPricing() {
 	// spawn threads to do the forward induction:
 	{
 		std::thread t0([&]() {
-			fwd_induction(biLattice, crr, deltaTimes, option.Underlying);
+			fwd_induction(biLattice, crr, deltaTimes, params.Spot);
 		});
 		// wait for the threads to finish:
 		t0.join();
@@ -166,7 +167,8 @@ void crrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::CoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
@@ -175,12 +177,12 @@ void crrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1, AssetClass::Equity, double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -195,7 +197,7 @@ void crrBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	CoxRubinsteinRossModel<> crr{ option };
+	CoxRubinsteinRossModel<> crr{ params };
 
 	// name of the Model:
 	std::cout << decltype(crr)::name() << "\n";
@@ -214,7 +216,7 @@ void crrBinomialLatticeParallelPricingScoped() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -234,7 +236,7 @@ void crrBinomialLatticeParallelPricingScoped() {
 	// spawn threads to do the forward induction:
 	{
 		scoped_thread t0(std::thread([&]() {
-			fwd_induction(biLattice, crr, deltaTimes ,option.Underlying);
+			fwd_induction(biLattice, crr, deltaTimes , params.Spot);
 		}));
 	}
 
@@ -303,7 +305,8 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::ModifiedCoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
@@ -312,12 +315,12 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1, AssetClass::Equity, double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -332,7 +335,7 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	ModifiedCoxRubinsteinRossModel<> mcrr{ option,periods };
+	ModifiedCoxRubinsteinRossModel<> mcrr{ params,periods };
 
 	// Name of the model:
 	std::cout << decltype(mcrr)::name() << "\n";
@@ -351,7 +354,7 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -371,7 +374,7 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 	// spawn threads to do the forward induction:
 	{
 		scoped_thread t1(std::thread([&]() {
-			fwd_induction(biLattice, mcrr, deltaTimes, option.Underlying);
+			fwd_induction(biLattice, mcrr, deltaTimes, params.Spot);
 		}));
 	}
 
@@ -440,7 +443,8 @@ void jrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::JarrowRuddModel;
 	using lattice_algorithms::ForwardInduction;
@@ -449,12 +453,12 @@ void jrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1, AssetClass::Equity, double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -469,7 +473,7 @@ void jrBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	JarrowRuddModel<> jr{ option };
+	JarrowRuddModel<> jr{ params };
 
 	// Name of the model:
 	std::cout << decltype(jr)::name() << "\n";
@@ -488,7 +492,7 @@ void jrBinomialLatticeParallelPricingScoped() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -509,7 +513,7 @@ void jrBinomialLatticeParallelPricingScoped() {
 	// spawn threads to do the forward induction:
 	{
 		scoped_thread t1(std::thread([&]() {
-			fwd_induction(biLattice, jr, deltaTimes, option.Underlying);
+			fwd_induction(biLattice, jr, deltaTimes, params.Spot);
 		}));
 	}
 
@@ -579,7 +583,8 @@ void trimBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::TrigeorgisModel;
 	using lattice_algorithms::ForwardInduction;
@@ -588,12 +593,12 @@ void trimBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1, AssetClass::Equity, double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -608,7 +613,7 @@ void trimBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	TrigeorgisModel<> trim{ option };
+	TrigeorgisModel<> trim{ params };
 
 	// Name of the model:
 	std::cout << decltype(trim)::name() << "\n";
@@ -627,7 +632,7 @@ void trimBinomialLatticeParallelPricingScoped() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -648,7 +653,7 @@ void trimBinomialLatticeParallelPricingScoped() {
 	// spawn threads to do the forward induction:
 	{
 		scoped_thread t1(std::thread([&]() {
-			fwd_induction(biLattice, trim, deltaTimes,option.Underlying);
+			fwd_induction(biLattice, trim, deltaTimes, params.Spot);
 		}));
 	}
 
@@ -719,7 +724,8 @@ void tmBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::TianModel;
 	using lattice_algorithms::ForwardInduction;
@@ -728,12 +734,12 @@ void tmBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1, AssetClass::Equity, double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -748,7 +754,7 @@ void tmBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	TianModel<> tm{ option };
+	TianModel<> tm{ params };
 
 	// Name of the model:
 	std::cout << decltype(tm)::name() << "\n";
@@ -767,7 +773,7 @@ void tmBinomialLatticeParallelPricingScoped() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -788,7 +794,7 @@ void tmBinomialLatticeParallelPricingScoped() {
 	// spawn threads to do the forward induction:
 	{
 		scoped_thread t1(std::thread([&]() {
-			fwd_induction(biLattice, tm, deltaTimes, option.Underlying);
+			fwd_induction(biLattice, tm, deltaTimes, params.Spot);
 		}));
 	}
 
@@ -859,7 +865,8 @@ void lrBinomialLatticeParallelPricingScoped() {
 	std::cout << "\nPricing with scoped threads:\n";
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
-	using lattice_miscellaneous::OptionData;
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::LeisenReimerModel;
 	using lattice_model_components::leisen_reimer_inversion::PeizerPrattSecondInversion;
@@ -869,12 +876,12 @@ void lrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	OptionData<double> option;
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 65.0;
+	ModelParams<1, AssetClass::Equity, double> params;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 65.0;
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
@@ -893,7 +900,7 @@ void lrBinomialLatticeParallelPricingScoped() {
 	PeizerPrattSecondInversion<> ppi{ numberTimePoints };
 
 	// Create a model:
-	LeisenReimerModel<> lr{ option,periods,ppi };
+	LeisenReimerModel<> lr{ params,periods,ppi };
 
 	// Name of the model:
 	std::cout << decltype(lr)::name() << "\n";
@@ -912,7 +919,7 @@ void lrBinomialLatticeParallelPricingScoped() {
 
 
 	// Prepare payoffs:
-	double K = option.Strike;
+	double K = params.Strike;
 	auto callPayoff = [&K](double stock) {
 		return std::max(stock - K, 0.0);
 	};
@@ -933,7 +940,7 @@ void lrBinomialLatticeParallelPricingScoped() {
 	// spawn threads to do the forward induction:
 	{
 		scoped_thread t1(std::thread([&]() {
-			fwd_induction(biLattice, lr, deltaTimes,option.Underlying);
+			fwd_induction(biLattice, lr, deltaTimes, params.Spot);
 		}));
 	}
 

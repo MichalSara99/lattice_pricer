@@ -6,10 +6,12 @@
 #include"lattice_model_interface.h"
 #include"lattice_types.h"
 #include"lattice_utility.h"
+#include"lattice_model_params.h"
 
 
 namespace lattice_model {
 
+	using lattice_model_params::ModelParams;
 	using lattice_types::DiscountingStyle;
 	using lattice_utility::DiscountingFactor;
 
@@ -21,16 +23,16 @@ namespace lattice_model {
 	template<typename T = double>
 	class BoyleModel :public TrinomialModel<1, T> {
 	private:
-		OptionData<T> option_;
+		ModelParams<1, AssetClass::Equity, T> params_;
 
 	public:
-		BoyleModel(OptionData<T>const &optionData)
-			:option_{ optionData } {
+		BoyleModel(ModelParams<1, AssetClass::Equity, T> const &params)
+			:params_{ params } {
 		}
 
 		// Forward generator
 		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false) const override {
-			T const sig = option_.Volatility;
+			T const sig = params_.Volatility;
 			T const expon = sig * std::sqrt(2.0*dt);
 			T const up = std::exp(expon);
 			T const mid = 1.0;
@@ -41,9 +43,9 @@ namespace lattice_model {
 		// Backward generator
 		T operator()(T currValue, T downValue, T midValue, T upValue, T dt,
 			std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx) override {
-			T const q = option_.DividentRate;
-			T const r = option_.RiskFreeRate;
-			T const sig = option_.Volatility;
+			T const q = params_.DividendRate;
+			T const r = params_.RiskFreeRate;
+			T const sig = params_.Volatility;
 			T const mu = r - q;
 			T const e_sig = std::exp(sig * std::sqrt(0.5*dt));
 			T const e_mu = std::exp(mu * 0.5*dt);
@@ -78,11 +80,11 @@ namespace lattice_model {
 		std::function<T(T, T)> dcf_;
 		DiscountingStyle ds_;
 		std::vector<T> theta_;
-		OptionData<T> option_;
+		ModelParams<1, AssetClass::InterestRate, T> params_;
 
 		std::tuple<T, T, T> _riskNeutralProb(std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx, T dt)const {
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 			T const sqrtdt = std::sqrt(3.0*dt);
 			T const dr = sig * sqrtdt;
 			T const denom = dr * dr;
@@ -110,8 +112,8 @@ namespace lattice_model {
 		}
 
 	public:
-		HullWhiteModel(OptionData<T>const &optionData, DiscountingStyle style = DiscountingStyle::Continuous)
-			:option_{ optionData }, ds_{style} 
+		HullWhiteModel(ModelParams<1, AssetClass::InterestRate, T> const &params, DiscountingStyle style = DiscountingStyle::Continuous)
+			:params_{ params }, ds_{style}
 		{
 			dcf_ = DCF::function(style);
 		}
@@ -126,8 +128,8 @@ namespace lattice_model {
 		// Forward generator
 		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)const override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 			T const sqrtdt = std::sqrt(3.0*dt);
 			T const dr = sig * sqrtdt;
 			T const mean = value + theta_.at(timeIdx - 1);
@@ -156,8 +158,8 @@ namespace lattice_model {
 		// Calibration objective function:
 		std::function<T(T, T, T, std::vector<T> const&, std::vector<T> const&, std::function<T(T, T)>const &)>
 			calibrationObjective(BranchingStyle branchingStyle)const {
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 
 			if (branchingStyle == BranchingStyle::Normal) {
 				// Calibration normal:
@@ -227,8 +229,8 @@ namespace lattice_model {
 
 		// Calibration forward function:
 		auto calibrationForwardGenerator()const {
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 
 			return [=](T theta, T value, T dt, std::size_t leafIdx, bool isMeanReverting = false)->std::tuple<T, T, T> {
 				T const sqrtdt = std::sqrt(3.0*dt);
@@ -256,11 +258,11 @@ namespace lattice_model {
 		std::function<T(T, T)> dcf_;
 		DiscountingStyle ds_;
 		std::vector<T> theta_;
-		OptionData<T> option_;
+		ModelParams<1, AssetClass::InterestRate, T> params_;
 
 		std::tuple<T, T, T> _riskNeutralProb(std::size_t revertBranchesSize, std::size_t nodesSize, std::size_t leafIdx, T dt)const {
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 			T const sqrtdt = std::sqrt(3.0*dt);
 			T const dr = sig * sqrtdt;
 			T const denom = dr * dr;
@@ -288,8 +290,8 @@ namespace lattice_model {
 		}
 
 	public:
-		BlackKarasinskiModel(OptionData<T>const &optionData, DiscountingStyle style = DiscountingStyle::Continuous)
-			:option_{ optionData }, ds_{style} {
+		BlackKarasinskiModel(ModelParams<1, AssetClass::InterestRate, T> const &params, DiscountingStyle style = DiscountingStyle::Continuous)
+			:params_{ params }, ds_{style} {
 			dcf_ = DCF::function(style);
 		}
 
@@ -303,8 +305,8 @@ namespace lattice_model {
 		// Forward generator
 		std::tuple<T, T, T> operator()(T value, T dt, std::size_t leafIdx, std::size_t timeIdx, bool isMeanReverting = false)const  override {
 			LASSERT(!theta_.empty(), "Populate theta via setTheta() member function!");
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 			T const sqrtdt = std::sqrt(3.0*dt);
 			T const dr = sig * sqrtdt;
 			T const mean = std::log(value) + theta_.at(timeIdx - 1);
@@ -333,8 +335,8 @@ namespace lattice_model {
 		// Calibration objective function:
 		std::function<T(T, T, T, std::vector<T> const&, std::vector<T> const&, std::function<T(T, T)>const &)>
 			calibrationObjective(BranchingStyle branchingStyle)const {
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 
 			if (branchingStyle == BranchingStyle::Normal) {
 				// Calibration normal:
@@ -404,8 +406,8 @@ namespace lattice_model {
 
 		// Calibration forward function:
 		auto calibrationForwardGenerator()const {
-			T const sig = option_.Volatility;
-			T const a = option_.ReversionSpeed;
+			T const sig = params_.Volatility;
+			T const a = params_.ReversionSpeed;
 
 			return [=](T theta, T value, T dt, std::size_t leafIdx, bool isMeanReverting = false)->std::tuple<T, T, T> {
 				T const sqrtdt = std::sqrt(3.0*dt);

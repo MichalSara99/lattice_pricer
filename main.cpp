@@ -157,7 +157,7 @@ int main(int argc, char const *argv[]) {
 	// testIndexedEuropeanLattices();
 	// testIndexedAmericanLattices();
 	// testEuropeanLattices();
-	// testAmericanLattices();
+	//testAmericanLattices();
 
 	// ===============================
 

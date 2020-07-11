@@ -185,6 +185,7 @@
     <ClInclude Include="lattice_model_binomial.h" />
     <ClInclude Include="lattice_model_components.h" />
     <ClInclude Include="lattice_model_interface.h" />
+    <ClInclude Include="lattice_model_params.h" />
     <ClInclude Include="lattice_model_t.h" />
     <ClInclude Include="lattice_model_trinomial.h" />
     <ClInclude Include="lattice_multidimensional.h" />

@@ -134,5 +134,8 @@
     <ClInclude Include="lattice_product.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_model_params.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

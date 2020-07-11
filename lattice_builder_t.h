@@ -21,17 +21,19 @@ using namespace boost::gregorian;
 
 void testCreateIndexBasedOneFactor() {
 
+	using lattice_model_params::ModelParams;
+	using lattice_types::AssetClass;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1,AssetClass::Equity,double> params;
 
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 60.0;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 60.0;
 
 	std::size_t periods{ 100 };
 	double maturity = 0.29;
@@ -41,7 +43,7 @@ void testCreateIndexBasedOneFactor() {
 	auto binLattice = LatticeBuilder<1>::createIndexedBasedLattice<LatticeType::Binomial, double>(periods);
 
 	// Create CRR model:
-	lattice_model::CoxRubinsteinRossModel<> crr{ option };
+	lattice_model::CoxRubinsteinRossModel<> crr{ params };
 
 	// Print the model name:
 	std::cout << decltype(crr)::name() << "\n";
@@ -51,7 +53,7 @@ void testCreateIndexBasedOneFactor() {
 		std::size_t, double, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(binLattice, crr, dt, option.Underlying);
+	fwd_induction(binLattice, crr, dt, params.Spot);
 
 	// Print the part of generated lattice:
 	auto first = binLattice.begin();
@@ -62,17 +64,19 @@ void testCreateIndexBasedOneFactor() {
 
 void testCreateIndexBasedBinomialOneFactor() {
 
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::Equity,double> params;
 
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 60.0;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 60.0;
 
 	std::size_t periods{ 100 };
 	double maturity = 0.29;
@@ -82,7 +86,7 @@ void testCreateIndexBasedBinomialOneFactor() {
 	auto binLattice = LatticeBuilder<1>::createIndexedBasedBinomialLattice<double>(periods);
 
 	// Create CRR model:
-	lattice_model::CoxRubinsteinRossModel<> crr{ option };
+	lattice_model::CoxRubinsteinRossModel<> crr{ params };
 
 	// Print the model name:
 	std::cout << decltype(crr)::name() << "\n";
@@ -92,7 +96,7 @@ void testCreateIndexBasedBinomialOneFactor() {
 		std::size_t, double, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(binLattice, crr, dt, option.Underlying);
+	fwd_induction(binLattice, crr, dt, params.Spot);
 
 	// Print the part of generated lattice:
 	auto first = binLattice.begin();
@@ -103,17 +107,19 @@ void testCreateIndexBasedBinomialOneFactor() {
 
 void testCreateIndexBasedTrinomialOneFactor() {
 
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::Equity, double> params;
 
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.0;
-	option.Volatility = 0.3;
-	option.Underlying = 60.0;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.0;
+	params.Volatility = 0.3;
+	params.Spot = 60.0;
 
 	std::size_t periods{ 100 };
 	double maturity = 0.29;
@@ -123,7 +129,7 @@ void testCreateIndexBasedTrinomialOneFactor() {
 	auto triLattice = LatticeBuilder<1>::createIndexedBasedTrinomialLattice<double>(periods);
 
 	// Create Boyle model:
-	lattice_model::BoyleModel<> bm{ option };
+	lattice_model::BoyleModel<> bm{ params };
 
 	// Print the model name:
 	std::cout << decltype(bm)::name() << "\n";
@@ -133,7 +139,7 @@ void testCreateIndexBasedTrinomialOneFactor() {
 		std::size_t, double, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(triLattice, bm, dt, option.Underlying);
+	fwd_induction(triLattice, bm, dt, params.Spot);
 
 	// Print the part of generated lattice:
 	auto first = triLattice.begin();
@@ -146,19 +152,19 @@ void testCreateIndexBasedTrinomialOneFactor() {
 
 void testCreateIndexBasedMROneFactor() {
 
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
-	using lattice_types::LatticeType;
-	using lattice_types::AssetClass;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -181,10 +187,10 @@ void testCreateIndexBasedMROneFactor() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// create one-factor index-based lattice:
-	auto triMRLattice = LatticeBuilder<1>::createIndexedBasedMRLattice<double, double>(periods, params, dt);
+	auto triMRLattice = LatticeBuilder<1>::createIndexedBasedMRLattice<double, double>(periods, mrparams, dt);
 
 	// Create Hull-White model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -224,17 +230,19 @@ void testCreateIndexBasedLattice() {
 
 void testCreateLatticeOneFactor() {
 
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::Equity, double> params;
 
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.05;
-	option.Volatility = 0.3;
-	option.Underlying = 60.0;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.05;
+	params.Volatility = 0.3;
+	params.Spot = 60.0;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -257,7 +265,7 @@ void testCreateLatticeOneFactor() {
 	}
 
 	// Create CRR model:
-	lattice_model::CoxRubinsteinRossModel<> crr{ option };
+	lattice_model::CoxRubinsteinRossModel<> crr{ params };
 
 	// Print the model name:
 	std::cout << decltype(crr)::name() << "\n";
@@ -267,7 +275,7 @@ void testCreateLatticeOneFactor() {
 		date, std::vector<double>, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(binLattice, crr, timeDeltas, option.Underlying);
+	fwd_induction(binLattice, crr, timeDeltas, params.Spot);
 
 	// Print the part of generated lattice:
 	auto first = binLattice.begin();
@@ -278,17 +286,19 @@ void testCreateLatticeOneFactor() {
 
 void testCreateBinomialOneFactor() {
 
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::Equity, double> params;
 
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.05;
-	option.Volatility = 0.3;
-	option.Underlying = 60.0;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.05;
+	params.Volatility = 0.3;
+	params.Spot = 60.0;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -310,7 +320,7 @@ void testCreateBinomialOneFactor() {
 		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
 	}
 
-	lattice_model::CoxRubinsteinRossModel<> crr{ option };
+	lattice_model::CoxRubinsteinRossModel<> crr{ params };
 
 	// Print the model name:
 	std::cout << decltype(crr)::name() << "\n";
@@ -320,7 +330,7 @@ void testCreateBinomialOneFactor() {
 		date, std::vector<double>, double> forward_binomial_induction;
 
 	forward_binomial_induction fwd_induction;
-	fwd_induction(binLattice, crr, timeDeltas, option.Underlying);
+	fwd_induction(binLattice, crr, timeDeltas, params.Spot);
 
 	// Print the part of generated lattice:
 	auto first = binLattice.begin();
@@ -331,17 +341,19 @@ void testCreateBinomialOneFactor() {
 
 void testCreateTrinomialOneFactor() {
 
+	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::Equity, double> params;
 
-	option.Strike = 65.0;
-	option.RiskFreeRate = 0.25;
-	option.DividentRate = 0.05;
-	option.Volatility = 0.3;
-	option.Underlying = 60.0;
+	params.Strike = 65.0;
+	params.RiskFreeRate = 0.25;
+	params.DividendRate = 0.05;
+	params.Volatility = 0.3;
+	params.Spot = 60.0;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -365,7 +377,7 @@ void testCreateTrinomialOneFactor() {
 
 
 	// Create Boyle model:
-	lattice_model::BoyleModel<> bm{ option };
+	lattice_model::BoyleModel<> bm{ params };
 
 	// Print the model name:
 	std::cout << decltype(bm)::name() << "\n";
@@ -375,7 +387,7 @@ void testCreateTrinomialOneFactor() {
 		date, std::vector<double>, double> forward_trinomial_induction;
 
 	forward_trinomial_induction fwd_induction;
-	fwd_induction(triLattice, bm, timeDeltas, option.Underlying);
+	fwd_induction(triLattice, bm, timeDeltas, params.Spot);
 
 	// Print the part of generated lattice:
 	auto first = triLattice.begin();
@@ -393,14 +405,15 @@ void testCreateMROneFactor() {
 	using lattice_utility::print;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -436,10 +449,10 @@ void testCreateMROneFactor() {
 	}
 
 	// create one-factor index-based lattice:
-	auto triMRLattice = LatticeBuilder<1>::createMRLattice<double, date, std::vector<double>>(fixingDates, params, timeDeltas);
+	auto triMRLattice = LatticeBuilder<1>::createMRLattice<double, date, std::vector<double>>(fixingDates, mrparams, timeDeltas);
 
 	// Create Hull-White model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 

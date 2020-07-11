@@ -8,6 +8,7 @@
 #include"lattice_utility.h"
 #include"lattice_miscellaneous.h"
 #include"lattice_calibrator.h"
+#include"lattice_model_params.h"
 
 #include<iostream>
 #include<boost/date_time/gregorian/gregorian.hpp>
@@ -19,9 +20,10 @@ void testIndexedBDTCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1,AssetClass::InterestRate,double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -47,7 +49,7 @@ void testIndexedBDTCalibration() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> rateTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -77,9 +79,10 @@ void testIndexedBDTCalibration() {
 void testIndexedBDTSanityCheck() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -105,7 +108,7 @@ void testIndexedBDTSanityCheck() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -169,9 +172,10 @@ void testBDTCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -206,7 +210,7 @@ void testBDTCalibration() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> rateTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -247,9 +251,10 @@ void testBDTSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -284,7 +289,7 @@ void testBDTSanityCheck() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -355,9 +360,10 @@ void testIndexedHLCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -383,7 +389,7 @@ void testIndexedHLCalibration() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> rateTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -413,9 +419,10 @@ void testIndexedHLSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -441,7 +448,7 @@ void testIndexedHLSanityCheck() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -502,9 +509,10 @@ void testHLCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -538,7 +546,7 @@ void testHLCalibration() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double,date> rateTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -578,9 +586,10 @@ void testHLSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -614,7 +623,7 @@ void testHLSanityCheck() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -685,14 +694,14 @@ void testIndexedHWCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -715,10 +724,10 @@ void testIndexedHWCalibration() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods,params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods,mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -750,14 +759,15 @@ void testIndexedHWSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -780,10 +790,10 @@ void testIndexedHWSanityCheck() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -807,7 +817,7 @@ void testIndexedHWSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, mrparams, dt);
 	// setting theta for the model:
 	hwm.setTheta(theta);
 
@@ -843,14 +853,15 @@ void testHWCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -891,10 +902,10 @@ void testHWCalibration() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double,date> rateTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double,date> rateTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -926,14 +937,15 @@ void testHWSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -974,10 +986,10 @@ void testHWSanityCheck() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -1001,7 +1013,7 @@ void testHWSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, mrparams, timeDeltas);
 	// setting theta for the model:
 	hwm.setTheta(theta);
 
@@ -1041,14 +1053,15 @@ void testIndexedBKCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1071,10 +1084,10 @@ void testIndexedBKCalibration() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1106,14 +1119,15 @@ void testIndexedBKSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1136,10 +1150,10 @@ void testIndexedBKSanityCheck() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1163,7 +1177,7 @@ void testIndexedBKSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, mrparams, dt);
 	// setting theta for the model:
 	bkm.setTheta(theta);
 
@@ -1200,14 +1214,15 @@ void testBKCalibration() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -1248,10 +1263,10 @@ void testBKCalibration() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1283,14 +1298,15 @@ void testBKSanityCheck() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -1331,10 +1347,10 @@ void testBKSanityCheck() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1358,7 +1374,7 @@ void testBKSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, mrparams, timeDeltas);
 	// setting theta for the model:
 	bkm.setTheta(theta);
 

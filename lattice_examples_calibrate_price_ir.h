@@ -10,7 +10,7 @@
 #include"lattice_miscellaneous.h"
 #include"lattice_calibrator.h"
 #include"lattice_bond_builders.h"
-
+#include"lattice_model_params.h"
 
 
 #include<iostream>
@@ -28,9 +28,10 @@ void indexedBDTPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1,AssetClass::InterestRate,double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -56,7 +57,7 @@ void indexedBDTPureDiscountBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -107,9 +108,10 @@ void indexedHLPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -135,7 +137,7 @@ void indexedHLPureDiscountBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -198,9 +200,10 @@ void indexedBDTPureDiscountBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -227,7 +230,7 @@ void indexedBDTPureDiscountBond(std::size_t bondPeriods) {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -277,9 +280,10 @@ void indexedHLPureDiscountBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -306,7 +310,7 @@ void indexedHLPureDiscountBond(std::size_t bondPeriods) {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -368,9 +372,10 @@ void BDTPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -403,7 +408,7 @@ void BDTPureDiscountBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial,double,date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -463,9 +468,10 @@ void BDTPureDiscountBond() {
 void HLPureDiscountBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -498,7 +504,7 @@ void HLPureDiscountBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -569,9 +575,10 @@ void BDTPureDiscountBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -605,7 +612,7 @@ void BDTPureDiscountBond(std::size_t bondPeriods) {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -672,9 +679,10 @@ void BDTPureDiscountBond(std::size_t bondPeriods) {
 void HLPureDiscountBond(std::size_t bondPeriods) {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -708,7 +716,7 @@ void HLPureDiscountBond(std::size_t bondPeriods) {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -785,14 +793,14 @@ void indexedHWPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -814,10 +822,10 @@ void indexedHWPureDiscountBond() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods,params,dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams,dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -841,7 +849,7 @@ void indexedHWPureDiscountBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods,params,dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, mrparams,dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -868,14 +876,14 @@ void indexedHWPureDiscountBond() {
 void indexedBKPureDiscountBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -897,10 +905,10 @@ void indexedBKPureDiscountBond() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -924,7 +932,7 @@ void indexedBKPureDiscountBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -960,14 +968,14 @@ void indexedHWPureDiscountBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -990,10 +998,10 @@ void indexedHWPureDiscountBond(std::size_t bondPeriods) {
 	LASSERT(bondPeriods <= maxPeriods, "passed periods must be less or equal to maxPeriods.");
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -1017,7 +1025,7 @@ void indexedHWPureDiscountBond(std::size_t bondPeriods) {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -1044,14 +1052,14 @@ void indexedHWPureDiscountBond(std::size_t bondPeriods) {
 void indexedBKPureDiscountBond(std::size_t bondPeriods) {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1074,10 +1082,10 @@ void indexedBKPureDiscountBond(std::size_t bondPeriods) {
 	LASSERT(bondPeriods <= maxPeriods, "passed periods must be less or equal to maxPeriods.");
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1101,7 +1109,7 @@ void indexedBKPureDiscountBond(std::size_t bondPeriods) {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -1138,14 +1146,14 @@ void HWPureDiscountBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1184,10 +1192,10 @@ void HWPureDiscountBond() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -1211,7 +1219,7 @@ void HWPureDiscountBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double,date> bondTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double,date> bondTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -1238,14 +1246,14 @@ void HWPureDiscountBond() {
 void BKPureDiscountBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1284,10 +1292,10 @@ void BKPureDiscountBond() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1311,7 +1319,7 @@ void BKPureDiscountBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -1348,14 +1356,14 @@ void HWPureDiscountBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1395,10 +1403,10 @@ void HWPureDiscountBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -1429,7 +1437,7 @@ void HWPureDiscountBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -1456,14 +1464,14 @@ void HWPureDiscountBond(std::size_t bondPeriods) {
 void BKPureDiscountBond(std::size_t bondPeriods) {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1503,10 +1511,10 @@ void BKPureDiscountBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -1537,7 +1545,7 @@ void BKPureDiscountBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -1579,9 +1587,10 @@ void indexedBDTCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1,AssetClass::InterestRate,double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1607,7 +1616,7 @@ void indexedBDTCouponBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -1659,9 +1668,10 @@ void indexedHLCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1687,7 +1697,7 @@ void indexedHLCouponBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -1752,9 +1762,10 @@ void indexedBDTCouponBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1781,7 +1792,7 @@ void indexedBDTCouponBond(std::size_t bondPeriods) {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -1832,9 +1843,10 @@ void indexedHLCouponBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1861,7 +1873,7 @@ void indexedHLCouponBond(std::size_t bondPeriods) {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -1926,9 +1938,10 @@ void BDTCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -1961,7 +1974,7 @@ void BDTCouponBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -2021,9 +2034,10 @@ void BDTCouponBond() {
 void HLCouponBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -2056,7 +2070,7 @@ void HLCouponBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -2127,9 +2141,10 @@ void BDTCouponBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -2163,7 +2178,7 @@ void BDTCouponBond(std::size_t bondPeriods) {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -2231,9 +2246,10 @@ void BDTCouponBond(std::size_t bondPeriods) {
 void HLCouponBond(std::size_t bondPeriods) {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -2267,7 +2283,7 @@ void HLCouponBond(std::size_t bondPeriods) {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -2346,14 +2362,15 @@ void indexedHWCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -2375,10 +2392,10 @@ void indexedHWCouponBond() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -2405,7 +2422,7 @@ void indexedHWCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -2430,14 +2447,15 @@ void indexedHWCouponBond() {
 void indexedBKCouponBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -2459,10 +2477,10 @@ void indexedBKCouponBond() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -2489,7 +2507,7 @@ void indexedBKCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -2524,14 +2542,15 @@ void indexedHWCouponBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -2554,10 +2573,10 @@ void indexedHWCouponBond(std::size_t bondPeriods) {
 	LASSERT(bondPeriods <= maxPeriods, "passed periods must be less or equal to maxPeriods.");
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -2583,7 +2602,7 @@ void indexedHWCouponBond(std::size_t bondPeriods) {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -2608,14 +2627,15 @@ void indexedHWCouponBond(std::size_t bondPeriods) {
 void indexedBKCouponBond(std::size_t bondPeriods) {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -2638,10 +2658,10 @@ void indexedBKCouponBond(std::size_t bondPeriods) {
 	LASSERT(bondPeriods <= maxPeriods, "passed periods must be less or equal to maxPeriods.");
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(maxPeriods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -2668,7 +2688,7 @@ void indexedBKCouponBond(std::size_t bondPeriods) {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(bondPeriods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -2704,14 +2724,15 @@ void HWCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -2749,10 +2770,10 @@ void HWCouponBond() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -2779,7 +2800,7 @@ void HWCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -2804,14 +2825,15 @@ void HWCouponBond() {
 void BKCouponBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -2849,10 +2871,10 @@ void BKCouponBond() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -2879,7 +2901,7 @@ void BKCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -2914,14 +2936,15 @@ void HWCouponBond(std::size_t bondPeriods) {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -2961,10 +2984,10 @@ void HWCouponBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -2998,7 +3021,7 @@ void HWCouponBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -3023,14 +3046,15 @@ void HWCouponBond(std::size_t bondPeriods) {
 void BKCouponBond(std::size_t bondPeriods) {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
 
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -3070,10 +3094,10 @@ void BKCouponBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -3106,7 +3130,7 @@ void BKCouponBond(std::size_t bondPeriods) {
 	}
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(bondFixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -3147,10 +3171,10 @@ void indexedBDTEuropeanOptionOnCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
+	ModelParams<1,AssetClass::InterestRate,double> params;
+	params.Volatility = 0.005;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -3176,7 +3200,7 @@ void indexedBDTEuropeanOptionOnCouponBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(maxPeriods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -3225,7 +3249,7 @@ void indexedBDTEuropeanOptionOnCouponBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> optionTree(maxPeriods);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3252,10 +3276,11 @@ void indexedHLEuropeanOptionOnCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
+	
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -3281,7 +3306,7 @@ void indexedHLEuropeanOptionOnCouponBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> calibratedTree(periods);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -3330,7 +3355,7 @@ void indexedHLEuropeanOptionOnCouponBond() {
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> optionTree(periods);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3371,10 +3396,10 @@ void BDTEuropeanOptionOnCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -3407,7 +3432,7 @@ void BDTEuropeanOptionOnCouponBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackDermanToyModel<> bdt(option);
+	lattice_model::BlackDermanToyModel<> bdt(params);
 
 	std::cout << "\nModel name: " << decltype(bdt)::name() << "\n";
 
@@ -3465,7 +3490,7 @@ void BDTEuropeanOptionOnCouponBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> optionTree(fixingDates);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3491,10 +3516,11 @@ void BDTEuropeanOptionOnCouponBond() {
 void HLEuropeanOptionOnCouponBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::OptionData<double> option;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
+	ModelParams<1, AssetClass::InterestRate, double> params;
+	params.Volatility = 0.005;
+	//option.Strike = 1.02;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -3527,7 +3553,7 @@ void HLEuropeanOptionOnCouponBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> calibratedTree(fixingDates);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HoLeeModel<> hlm(option);
+	lattice_model::HoLeeModel<> hlm(params);
 
 	std::cout << "\nModel name: " << decltype(hlm)::name() << "\n";
 
@@ -3584,7 +3610,7 @@ void HLEuropeanOptionOnCouponBond() {
 	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> optionTree(fixingDates);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3623,15 +3649,15 @@ void indexedHWEuropeanOptionOnCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1,AssetClass::InterestRate,double> params;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	//option.Strike = 1.02;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -3653,10 +3679,10 @@ void indexedHWEuropeanOptionOnCouponBond() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -3683,7 +3709,7 @@ void indexedHWEuropeanOptionOnCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -3702,10 +3728,10 @@ void indexedHWEuropeanOptionOnCouponBond() {
 		<< bondTree.apex() << "\n";
 
 	// Creating indexed option on bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> optionTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> optionTree(periods, mrparams, dt);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3732,15 +3758,15 @@ void indexedHWEuropeanOptionOnCouponBond() {
 void indexedBKEuropeanOptionOnCouponBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	//option.Strike = 1.02;
+	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -3762,10 +3788,10 @@ void indexedBKEuropeanOptionOnCouponBond() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -3792,7 +3818,7 @@ void indexedBKEuropeanOptionOnCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> bondTree(periods, mrparams, dt);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, double, double> bond_builder;
@@ -3811,10 +3837,10 @@ void indexedBKEuropeanOptionOnCouponBond() {
 		<< bondTree.apex() << "\n";
 
 	// Creating indexed option on bond lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> optionTree(periods, params, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> optionTree(periods, mrparams, dt);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3851,15 +3877,15 @@ void HWEuropeanOptionOnCouponBond() {
 
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	//option.Strike = 1.02;
+	mrparams.ReversionSpeed = 0.25;
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -3897,10 +3923,10 @@ void HWEuropeanOptionOnCouponBond() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::HullWhiteModel<> hwm(option);
+	lattice_model::HullWhiteModel<> hwm(params);
 
 	std::cout << "\nModel name: " << decltype(hwm)::name() << "\n";
 
@@ -3927,7 +3953,7 @@ void HWEuropeanOptionOnCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -3946,10 +3972,10 @@ void HWEuropeanOptionOnCouponBond() {
 		<< bondTree.apex() << "\n";
 
 	// Creating indexed option on bond lattice:
-	lattice_structure::MeanRevertingLattice<double,date> optionTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double,date> optionTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
@@ -3976,15 +4002,15 @@ void HWEuropeanOptionOnCouponBond() {
 void BKEuropeanOptionOnCouponBond() {
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
+	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	lattice_miscellaneous::OptionData<double> option;
+	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+	ModelParams<1, AssetClass::InterestRate, double> params;
 
-
-	option.ReversionSpeed = 0.25;
-	option.Volatility = 0.005;
-	option.Strike = 1.02;
 	params.ReversionSpeed = 0.25;
+	params.Volatility = 0.005;
+	//option.Strike = 1.02;
+	mrparams.ReversionSpeed = 0.25;
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -4022,10 +4048,10 @@ void BKEuropeanOptionOnCouponBond() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
-	lattice_model::BlackKarasinskiModel<> bkm(option);
+	lattice_model::BlackKarasinskiModel<> bkm(params);
 
 	std::cout << "\nModel name: " << decltype(bkm)::name() << "\n";
 
@@ -4052,7 +4078,7 @@ void BKEuropeanOptionOnCouponBond() {
 
 
 	// Creating indexed bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> bondTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// typedef BondBuilder:
 	typedef lattice_bond_builders::BondBuilder<lattice_types::LatticeType::Trinomial, std::vector<double>, double> bond_builder;
@@ -4071,10 +4097,10 @@ void BKEuropeanOptionOnCouponBond() {
 		<< bondTree.apex() << "\n";
 
 	// Creating indexed option on bond lattice:
-	lattice_structure::MeanRevertingLattice<double, date> optionTree(fixingDatesSet, params, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> optionTree(fixingDatesSet, mrparams, timeDeltas);
 
 	// Create payoff fro the option	
-	double K = option.Strike;
+	double K = 1.02;
 	auto call_payoff = [&K](double bondPrice) {
 		return std::max(bondPrice - K, 0.0);
 	};
