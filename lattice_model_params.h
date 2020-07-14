@@ -27,6 +27,7 @@ namespace lattice_model_params {
 		T DividendRate;
 		T Spot;
 		T Strike;
+		T Barrier;
 	};
 
 	template<typename T>

@@ -223,7 +223,6 @@ namespace lattice_builder {
 
 
 
-
 }
 
 

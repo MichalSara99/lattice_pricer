@@ -1229,7 +1229,7 @@ void crrLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1298,7 +1298,7 @@ void mcrrLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{fixingDates};
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1369,7 +1369,7 @@ void jrLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1438,7 +1438,7 @@ void trimLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1508,7 +1508,7 @@ void tmLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1580,7 +1580,7 @@ void lrLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1656,7 +1656,7 @@ void bmLattice() {
 	}
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1746,7 +1746,7 @@ void crrLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1822,7 +1822,7 @@ void mcrrLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1897,7 +1897,7 @@ void jrLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -1972,7 +1972,7 @@ void trimLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -2047,7 +2047,7 @@ void tmLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -2121,7 +2121,7 @@ void lrLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };
@@ -2200,7 +2200,7 @@ void bmLatticeAmerican() {
 
 
 	// Creating lattice:
-	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date> la = { fixingDates };
+	lattice_structure::Lattice<lattice_types::LatticeType::Trinomial, double, date> la{ fixingDates };
 
 	// Create CRR model:
 	double daysInYear{ 365.0 };

@@ -19,6 +19,7 @@
 
 using namespace boost::gregorian;
 
+
 void testCreateIndexBasedOneFactor() {
 
 	using lattice_model_params::ModelParams;

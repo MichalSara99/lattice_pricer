@@ -137,5 +137,11 @@
     <ClInclude Include="lattice_model_params.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_product_t.h">
+      <Filter>Header Files\unit_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="lattice_product_builder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -395,6 +395,7 @@ namespace lattice_structure {
 			typename NodeContainerType>
 	template<typename Arg>
 	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildTree_impl(Arg const &arg, std::true_type) {
+		tree_.clear();
 		for (std::size_t t = 0; t < arg.size(); ++t) {
 			tree_[arg[t]] = std::move(NodeContainerType(numberNodes(t)));
 		}
@@ -406,6 +407,7 @@ namespace lattice_structure {
 		typename NodeContainerType>
 	template<typename Arg>
 	void GeneralLattice<Type, Node, TimeAxis, NodeContainerType>::buildTree_impl(Arg const &arg, std::false_type) {
+		tree_.clear();
 		tree_.reserve(arg);
 		for (std::size_t t = 0; t <= arg; ++t) {
 			tree_.emplace_back(NodeContainerType(numberNodes(t)));
@@ -511,10 +513,11 @@ namespace lattice_structure {
 		std::size_t minIndex_{ 0 };
 		std::size_t maxIndex_;
 	public:
-		IndexedLattice(std::size_t numberPeriods)
+		explicit IndexedLattice(std::size_t numberPeriods)
 			:maxIndex_{ numberPeriods } {
 			this->buildTree(numberPeriods);
 		}
+
 		virtual ~IndexedLattice(){}
 
 
@@ -569,7 +572,7 @@ namespace lattice_structure {
 		std::vector<TimeAxis> fixingDates_;
 	
 	public:
-		Lattice(std::set<TimeAxis> const &fixingDatesSet)
+		explicit Lattice(std::set<TimeAxis> const &fixingDatesSet)
 			:fixingDatesSet_{ fixingDatesSet } {
 			fixingDates_.reserve(fixingDatesSet_.size());
 			for (auto e : fixingDatesSet_) {
@@ -586,7 +589,6 @@ namespace lattice_structure {
 			}
 			this->buildTree(fixingDates_);
 		}
-
 
 		virtual ~Lattice() {}
 
@@ -637,11 +639,12 @@ namespace lattice_structure {
 			std::size_t maxIndex_;
 		public:
 			template<typename DeltaTime>
-			MeanRevertingIndexedLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
+			explicit MeanRevertingIndexedLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
 				:maxIndex_{ numberPeriods } {
 				this->buildRevertingTree(numberPeriods, params, deltaTime);
 				this->_firstRevertingIdx();
 			}
+
 			virtual ~MeanRevertingIndexedLattice() {}
 
 
@@ -698,7 +701,7 @@ namespace lattice_structure {
 
 		public:
 			template<typename DeltaTime>
-			MeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
+			explicit MeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime)
 				:fixingDatesSet_{ fixingDatesSet } {
 				fixingDates_.reserve(fixingDatesSet_.size());
 				for (auto e : fixingDatesSet_) {

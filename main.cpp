@@ -20,6 +20,7 @@
 #include"lattice_calibrator_equity_t.h"
 #include"lattice_multidimensional_t.h"
 #include"lattice_builder_t.h"
+#include"lattice_product_t.h"
 
 using namespace boost::gregorian;
 
@@ -38,6 +39,12 @@ int main(int argc, char const *argv[]) {
 
 	std::cout << "===============================================\n";
 
+	// ===============================================
+	// ============== lattice_product_t.h ============
+	// ===============================================
+	// testOptionBuilder();
+	// testBarrierOptionBuilder();
+	// testPureDiscountBondBuilder();
 	// ===============================================
 	// ======== lattice_calibrator_equity_t.h ========
 	// ===============================================
@@ -127,7 +134,6 @@ int main(int argc, char const *argv[]) {
 
 	// testIndexedLatticeCreation();
 	// testLatticeCreation();
-
 	// ===============================
 
 

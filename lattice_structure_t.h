@@ -31,6 +31,7 @@ void createBinomialIndexedLattice() {
 }
 
 
+
 void createTrinomialIndexedLattice() {
 
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(5);
@@ -49,6 +50,8 @@ void createTrinomialIndexedLattice() {
 
 }
 
+
+
 void createTwoVariableBinomialIndexedLattice() {
 
 	lattice_structure::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> il(5);
@@ -66,6 +69,7 @@ void createTwoVariableBinomialIndexedLattice() {
 	lattice_utility::print(il_copy, il_copy.begin(), il_copy.end());
 
 }
+
 
 
 void testIndexedLatticeCreation() {
@@ -104,6 +108,8 @@ void createBinomialLattice() {
 	lattice_utility::print(la_copy, la_copy.begin(), la_copy.end());
 }
 
+
+
 void createTrinomialLattice() {
 
 	auto today = date(day_clock::local_day());
@@ -124,6 +130,8 @@ void createTrinomialLattice() {
 	auto la_copy = la;
 	lattice_utility::print(la_copy, la_copy.begin(), la_copy.end());
 }
+
+
 
 void createTwoVariableBinomialLattice() {
 
@@ -146,6 +154,7 @@ void createTwoVariableBinomialLattice() {
 	auto la_copy = la;
 	lattice_utility::print(la_copy, la_copy.begin(), la_copy.end());
 }
+
 
 void testLatticeCreation() {
 	std::cout << "=======================================================\n";

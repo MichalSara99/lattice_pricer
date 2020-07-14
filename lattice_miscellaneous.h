@@ -29,7 +29,7 @@ namespace lattice_miscellaneous {
 		return std::fma(t, (y1 - y0), y0);
 	}
 
-
+	/* TO BE DELETED SOON */
 	template<typename T,
 			typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
 	struct OptionData {
@@ -41,6 +41,7 @@ namespace lattice_miscellaneous {
 		T ReversionSpeed;
 		//T Correlation;
 	};
+	/* TO BE DELETED SOON */
 
 	template<typename T>
 		struct MeanRevertingParams {
