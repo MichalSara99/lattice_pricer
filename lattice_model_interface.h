@@ -10,7 +10,6 @@
 
 namespace lattice_model {
 
-	using lattice_miscellaneous::OptionData;
 	using lattice_types::LeafForwardGenerator;
 	using lattice_types::LeafBackwardGenerator;
 	using lattice_types::LatticeType;

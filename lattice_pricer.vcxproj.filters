@@ -143,5 +143,8 @@
     <ClInclude Include="lattice_product_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_disable_warnings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

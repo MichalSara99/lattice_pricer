@@ -9,37 +9,34 @@
 #include"lattice_algorithms.h"
 #include"lattice_model_components.h"
 #include"lattice_multidimensional.h"
-#include"lattice_model_params.h"
+#include"lattice_product_builder.h"
 
 #include<iostream>
 #include<numeric>
 
 void crr2FactorIndexedLatticeCall() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::SpreadOptionBuilder;
 
-	ModelParams<2, AssetClass::Equity, double> params;
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
 
-	params.Strike = 1.0;
-	params.RiskFreeRate = 0.06;
-	params.DividendRate1 = 0.03;
-	params.Volatility1 = 0.2;
-	params.Spot1= 100.0;
+	// return model params 
+	auto params = spreadOption.modelParams();
 
-	params.DividendRate2 = 0.04;
-	params.Volatility2 = 0.3;
-	params.Spot2 = 100.0;
-	params.Correlation = 0.5;
-
-
-	std::size_t periods{ 3 };
+	// set maturity with dt:
 	double maturity = 1.0;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(spreadOption.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_multidimensional::MultidimIndexedLattice<2,lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_multidimensional::MultidimIndexedLattice<2,lattice_types::LatticeType::Binomial, double> il(spreadOption.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
@@ -68,12 +65,12 @@ void crr2FactorIndexedLatticeCall() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare payoff for spread call option:
 	double K = params.Strike;
 	auto call_payoff = [&K](double stock1, double stock2) {return std::max(stock1 - stock2 - K, 0.0); };
 
 	// Creating indexed two-variable binomial lattice:
-	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(periods);
+	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(spreadOption.periods());
 
 
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
@@ -93,30 +90,27 @@ void crr2FactorIndexedLatticeCall() {
 
 void crr2FactorIndexedLatticePut() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::SpreadOptionBuilder;
 
-	ModelParams<2, AssetClass::Equity, double> params;
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
 
-	params.Strike = 1.0;
-	params.RiskFreeRate = 0.06;
-	params.DividendRate1 = 0.03;
-	params.Volatility1 = 0.2;
-	params.Spot1 = 100.0;
+	// extract model params from spread option:
+	auto params = spreadOption.modelParams();
 
-	params.DividendRate2 = 0.04;
-	params.Volatility2 = 0.3;
-	params.Spot2 = 100.0;
-	params.Correlation = 0.5;
-
-
-	std::size_t periods{ 3 };
+	// set maturity with dt:
 	double maturity = 1.0;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(spreadOption.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_multidimensional::MultidimIndexedLattice<2, lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_multidimensional::MultidimIndexedLattice<2, lattice_types::LatticeType::Binomial, double> il(spreadOption.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
@@ -145,12 +139,12 @@ void crr2FactorIndexedLatticePut() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare payoff for spread put option:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock1, double stock2) {return std::max(K - stock1 - stock2, 0.0); };
 
 	// Creating indexed two-variable binomial lattice:
-	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(periods);
+	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(spreadOption.periods());
 
 
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
@@ -170,24 +164,23 @@ void crr2FactorIndexedLatticePut() {
 
 void crrIndexedLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
-
+	double dt = (maturity / double(option.periods()));
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel<> crr{ params };
@@ -209,7 +202,7 @@ void crrIndexedLattice() {
 
 	// Backward induction:
 	
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 
@@ -228,27 +221,26 @@ void crrIndexedLattice() {
 
 void mcrrIndexedLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
-
+	double dt = (maturity / double(option.periods()));
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
-	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,periods };
+	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,option.periods() };
 
 	// Print the model name:
 	std::cout << decltype(mcrr)::name() << "\n";
@@ -266,7 +258,8 @@ void mcrrIndexedLattice() {
 	lattice_utility::print(il, first, last);
 
 	// Backward induction:
-	// Prepare payoff:
+
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 
@@ -285,25 +278,24 @@ void mcrrIndexedLattice() {
 //
 
 void jrIndexedLattice() {
+	using lattice_product_builder::OptionBuilder;
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
-
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::JarrowRuddModel<> jr{ params };
@@ -325,7 +317,7 @@ void jrIndexedLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 	
@@ -344,24 +336,24 @@ void jrIndexedLattice() {
 //
 void trimIndexedLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::TrigeorgisModel<> trim{ params };
@@ -383,7 +375,7 @@ void trimIndexedLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 
@@ -403,24 +395,24 @@ void trimIndexedLattice() {
 //
 void tmIndexedLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::TianModel<> tm{ params };
@@ -442,7 +434,7 @@ void tmIndexedLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 	
@@ -461,33 +453,32 @@ void tmIndexedLattice() {
 
 void lrIndexedLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_model_components::leisen_reimer_inversion::PeizerPrattSecondInversion;
 
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
-
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Prepare inversion formula functor:
-	std::size_t numberTimePoints = periods + 1;
+	std::size_t numberTimePoints = option.periods() + 1;
 	PeizerPrattSecondInversion<> ppi{ numberTimePoints };
 
 	// Create CRR model:
-	lattice_model::LeisenReimerModel<> lr{ params,periods,ppi };
+	lattice_model::LeisenReimerModel<> lr{ params,option.periods(),ppi };
 
 	// Print the model name:
 	std::cout << decltype(lr)::name() << "\n";
@@ -506,7 +497,7 @@ void lrIndexedLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::Binomial,
@@ -522,24 +513,25 @@ void lrIndexedLattice() {
 }
 
 void bmIndexedLattice() {
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	using lattice_product_builder::OptionBuilder;
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	std::size_t periods{ 100 };
+	// extract model params from option:
+	auto params = option.modelParams();
+
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::BoyleModel<> bm{ params };
@@ -596,30 +588,26 @@ void testIndexedEuropeanLattices() {
 
 void crr2FactorIndexedLatticeAmericanCall() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::SpreadOptionBuilder;
 
-	ModelParams<2, AssetClass::Equity, double> params;
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
 
-	params.Strike = 1.0;
-	params.RiskFreeRate = 0.06;
-	params.DividendRate1 = 0.03;
-	params.Volatility1 = 0.2;
-	params.Spot1 = 100.0;
+	// extract model params from spread option:
+	auto params = spreadOption.modelParams();
 
-	params.DividendRate2 = 0.04;
-	params.Volatility2 = 0.3;
-	params.Spot2 = 100.0;
-	params.Correlation = 0.5;
-
-
-	std::size_t periods{ 3 };
+	// set maturity with dt:
 	double maturity = 1.0;
-	double dt = (maturity / double(periods));
-
+	double dt = (maturity / double(spreadOption.periods()));
 
 	// Creating indexed lattice:
-	lattice_multidimensional::MultidimIndexedLattice<2, lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_multidimensional::MultidimIndexedLattice<2, lattice_types::LatticeType::Binomial, double> il(spreadOption.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
@@ -648,16 +636,16 @@ void crr2FactorIndexedLatticeAmericanCall() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare spread call option payoff:
 	double K = params.Strike;
 	auto call_payoff = [&K](double stock1, double stock2) {return std::max(stock1 - stock2 - K, 0.0); };
-	// Prepare american adujster:
+	// Prepare american spread call option adujster:
 	auto american_adjuster = [&call_payoff](double& value, double stock1, double stock2) {
 		value = std::max(value, call_payoff(stock1, stock2));
 	};
 
 	// Creating indexed two-variable binomial lattice:
-	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(periods);
+	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(spreadOption.periods());
 
 
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
@@ -677,29 +665,27 @@ void crr2FactorIndexedLatticeAmericanCall() {
 
 void crr2FactorIndexedLatticeAmericanPut() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::SpreadOptionBuilder;
 
-	ModelParams<2, AssetClass::Equity, double> params;
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
 
-	params.Strike = 1.0;
-	params.RiskFreeRate = 0.06;
-	params.DividendRate1 = 0.03;
-	params.Volatility1 = 0.2;
-	params.Spot1 = 100.0;
+	// extract model params from spread option:
+	auto params = spreadOption.modelParams();
 
-	params.DividendRate2 = 0.04;
-	params.Volatility2 = 0.3;
-	params.Spot2 = 100.0;
-	params.Correlation = 0.5;
-
-	std::size_t periods{ 3 };
+	// set maturity with dt:
 	double maturity = 1.0;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(spreadOption.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_multidimensional::MultidimIndexedLattice<2, lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_multidimensional::MultidimIndexedLattice<2, lattice_types::LatticeType::Binomial, double> il(spreadOption.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
@@ -728,16 +714,16 @@ void crr2FactorIndexedLatticeAmericanPut() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare spread put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock1, double stock2) {return std::max(K - stock1 - stock2, 0.0); };
-	// Prepare american adujster:
+	// Prepare american spread put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock1, double stock2) {
 		value = std::max(value, put_payoff(stock1, stock2));
 	};
 
 	// Creating indexed two-variable binomial lattice:
-	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(periods);
+	lattice_multidimensional::IndexedLattice<lattice_types::LatticeType::TwoVariableBinomial, double> optionTree(spreadOption.periods());
 
 
 	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
@@ -757,24 +743,24 @@ void crr2FactorIndexedLatticeAmericanPut() {
 
 void crrIndexedLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel<> crr{ params };
@@ -795,10 +781,10 @@ void crrIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -819,27 +805,27 @@ void crrIndexedLatticeAmerican() {
 
 void mcrrIndexedLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
-	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,periods };
+	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,option.periods() };
 
 	std::cout << decltype(mcrr)::name() << "\n";
 
@@ -857,10 +843,10 @@ void mcrrIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -880,24 +866,24 @@ void mcrrIndexedLatticeAmerican() {
 
 void jrIndexedLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::JarrowRuddModel<> jr{ params };
@@ -918,10 +904,10 @@ void jrIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -940,24 +926,24 @@ void jrIndexedLatticeAmerican() {
 
 void trimIndexedLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::TrigeorgisModel<> trim{ params };
@@ -978,10 +964,10 @@ void trimIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -1001,24 +987,24 @@ void trimIndexedLatticeAmerican() {
 
 void tmIndexedLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::TianModel<> tm{ params };
@@ -1039,10 +1025,10 @@ void tmIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -1062,31 +1048,31 @@ void tmIndexedLatticeAmerican() {
 void lrIndexedLatticeAmerican() {
 
 	using lattice_model_components::leisen_reimer_inversion::PeizerPrattSecondInversion;
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Binomial, double> il(option.periods());
 
 	// Prepare inversion functor:
-	std::size_t numerTimePoints{ periods + 1 };
+	std::size_t numerTimePoints{ option.periods() + 1 };
 	PeizerPrattSecondInversion<> ppi{ numerTimePoints };
 
 	// Create CRR model:
-	lattice_model::LeisenReimerModel<> lr{ params,periods,ppi };
+	lattice_model::LeisenReimerModel<> lr{ params,option.periods(),ppi };
 
 	std::cout << decltype(lr)::name() << "\n";
 
@@ -1104,7 +1090,7 @@ void lrIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 	// Prepare american adujster:
@@ -1125,24 +1111,24 @@ void lrIndexedLatticeAmerican() {
 
 void bmIndexedLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
-	std::size_t periods{ 100 };
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 
 	// Creating indexed lattice:
-	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(periods);
+	lattice_structure::IndexedLattice<lattice_types::LatticeType::Trinomial, double> il(option.periods());
 
 	// Create CRR model:
 	lattice_model::BoyleModel<> bm{ params };
@@ -1164,10 +1150,10 @@ void bmIndexedLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -1206,25 +1192,196 @@ void testIndexedAmericanLattices() {
 ////
 //
 
-void crrLattice() {
+void crr2FactorLatticeCall() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::SpreadOptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// return model params 
+	auto params = spreadOption.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= spreadOption.periods(); ++t) {
+		fixingDates.emplace(today + date_duration(90*t));
+	}
+
+	// Creating indexed lattice:
+	lattice_multidimensional::MultidimLattice<2, lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
+
+
+	double daysInYear{ 365.0 };
+	auto fd = la.getFactor(1).fixingDates();
+	std::vector<double> timeDeltas(fd.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
+	}
+
+	// Create CRR model:
+	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
+
+	// Print the model name:
+	std::cout << decltype(crr)::name() << "\n";
+
+
+	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>, double> forward_binomial_induction;
+
+	forward_binomial_induction fwd_induction;
+	fwd_induction(la, crr, timeDeltas, std::make_pair(params.Spot1, params.Spot2));
+
+	// Print the part of generated lattice:
+	std::cout << "First factor: \n";
+	auto factor1 = la.getFactor(0);
+	auto first = factor1.begin();
+	auto last = factor1.end();
+	lattice_utility::print(factor1, first, last);
+	std::cout << "Second factor: \n";
+	auto factor2 = la.getFactor(1);
+	first = factor2.begin();
+	last = factor2.end();
+	lattice_utility::print(factor2, first, last);
+
+	// Backward induction:
+
+	// Prepare payoff for spread call option:
+	double K = params.Strike;
+	auto call_payoff = [&K](double stock1, double stock2) {return std::max(stock1 - stock2 - K, 0.0); };
+
+	// Creating indexed two-variable binomial lattice:
+	lattice_multidimensional::Lattice<lattice_types::LatticeType::TwoVariableBinomial, double, date> optionTree{ fixingDates };
+
+
+	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>> backward_2binomial_induction;
+	backward_2binomial_induction brd_induction;
+
+	brd_induction(optionTree, la, crr, timeDeltas, call_payoff);
+
+	// Print the part of generated lattice:
+	std::cout << "Option price lattice:\n";
+	first = optionTree.begin();
+	last = optionTree.end();
+	lattice_utility::print(optionTree, first, last);
+	// Print apex: value of option:
+	std::cout << "Price of call: " << optionTree.apex() << "\n\n";
+}
+
+void crr2FactorLatticePut() {
+
+	using lattice_product_builder::SpreadOptionBuilder;
+
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
+
+	// extract model params from spread option:
+	auto params = spreadOption.modelParams();
+
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDates;
+	fixingDates.emplace(today);
+
+	for (std::size_t t = 1; t <= spreadOption.periods(); ++t) {
+		fixingDates.emplace(today + date_duration(90*t));
+	}
+
+
+	// Creating indexed lattice:
+	lattice_multidimensional::MultidimLattice<2, lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
+
+	double daysInYear{ 365.0 };
+	auto fd = la.getFactor(1).fixingDates();
+	std::vector<double> timeDeltas(fd.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
+	}
+
+	// Create CRR model:
+	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
+
+	// Print the model name:
+	std::cout << decltype(crr)::name() << "\n";
+
+
+	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>, double> forward_binomial_induction;
+
+	forward_binomial_induction fwd_induction;
+	fwd_induction(la, crr, timeDeltas, std::make_pair(params.Spot1, params.Spot2));
+
+	// Print the part of generated lattice:
+	std::cout << "First factor: \n";
+	auto factor1 = la.getFactor(0);
+	auto first = factor1.begin();
+	auto last = factor1.end();
+	lattice_utility::print(factor1, first, last);
+	std::cout << "Second factor: \n";
+	auto factor2 = la.getFactor(1);
+	first = factor2.begin();
+	last = factor2.end();
+	lattice_utility::print(factor2, first, last);
+
+	// Backward induction:
+
+	// Prepare payoff for spread put option:
+	double K = params.Strike;
+	auto put_payoff = [&K](double stock1, double stock2) {return std::max(K - stock1 - stock2, 0.0); };
+
+	// Creating indexed two-variable binomial lattice:
+	lattice_multidimensional::Lattice<lattice_types::LatticeType::TwoVariableBinomial, double, date> optionTree{ fixingDates };
+
+
+	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>> backward_2binomial_induction;
+	backward_2binomial_induction brd_induction;
+
+	brd_induction(optionTree, la, crr, timeDeltas, put_payoff);
+
+	// Print the part of generated lattice:
+	std::cout << "Option price lattice:\n";
+	first = optionTree.begin();
+	last = optionTree.end();
+	lattice_utility::print(optionTree, first, last);
+	// Print apex: value of option:
+	std::cout << "Price of put: " << optionTree.apex() << "\n\n";
+}
+
+
+void crrLattice() {
+
+	using lattice_product_builder::OptionBuilder;
+
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
+
+	// extract model params from option:
+	auto params = option.modelParams();
+
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDates;
+	fixingDates.emplace(today);
+
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1258,7 +1415,7 @@ void crrLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 
@@ -1277,23 +1434,23 @@ void crrLattice() {
 
 void mcrrLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1308,7 +1465,7 @@ void mcrrLattice() {
 		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
 	}
 
-	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,periods };
+	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,option.periods() };
 
 	// Name of the model:
 	std::cout << decltype(mcrr)::name() << "\n";
@@ -1327,7 +1484,7 @@ void mcrrLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 
@@ -1348,23 +1505,23 @@ void mcrrLattice() {
 
 void jrLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1398,7 +1555,7 @@ void jrLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 	
@@ -1417,23 +1574,23 @@ void jrLattice() {
 
 void trimLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1487,23 +1644,23 @@ void trimLattice() {
 
 void tmLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1537,7 +1694,7 @@ void tmLattice() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
 
@@ -1559,23 +1716,23 @@ void tmLattice() {
 void lrLattice() {
 
 	using ::lattice_model_components::leisen_reimer_inversion::PeizerPrattSecondInversion;
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1591,11 +1748,11 @@ void lrLattice() {
 	}
 
 	// Prepare inversion formula:
-	std::size_t numberTimePoints{ periods + 1 };
+	std::size_t numberTimePoints{ option.periods() + 1 };
 	PeizerPrattSecondInversion<> ppi{ numberTimePoints };
 
 
-	lattice_model::LeisenReimerModel<> lr{ params,periods,ppi };
+	lattice_model::LeisenReimerModel<> lr{ params,option.periods(),ppi };
 
 	// Name of the model:
 	std::cout << decltype(lr)::name() << "\n";
@@ -1635,23 +1792,23 @@ void lrLattice() {
 
 void bmLattice() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1711,6 +1868,8 @@ void testEuropeanLattices() {
 	std::cout << "=============== European Lattices - TEST ==============\n";
 	std::cout << "=======================================================\n";
 
+	crr2FactorLatticeCall();
+	crr2FactorLatticePut();
 	crrLattice();
 	mcrrLattice();
 	jrLattice();
@@ -1722,25 +1881,205 @@ void testEuropeanLattices() {
 	std::cout << "=======================================================\n";
 }
 
+void crr2FactorLatticeAmericanCall() {
 
-void crrLatticeAmerican() {
+	using lattice_product_builder::SpreadOptionBuilder;
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
 
-	ModelParams<1, AssetClass::Equity, double> params;
-
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// return model params 
+	auto params = spreadOption.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
 
-	for (std::size_t t = 1; t < 101; ++t) {
+	for (std::size_t t = 1; t <= spreadOption.periods(); ++t) {
+		fixingDates.emplace(today + date_duration(90 * t));
+	}
+
+	// Creating indexed lattice:
+	lattice_multidimensional::MultidimLattice<2, lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
+
+
+	double daysInYear{ 365.0 };
+	auto fd = la.getFactor(1).fixingDates();
+	std::vector<double> timeDeltas(fd.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
+	}
+
+	// Create CRR model:
+	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
+
+	// Print the model name:
+	std::cout << decltype(crr)::name() << "\n";
+
+
+	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>, double> forward_binomial_induction;
+
+	forward_binomial_induction fwd_induction;
+	fwd_induction(la, crr, timeDeltas, std::make_pair(params.Spot1, params.Spot2));
+
+	// Print the part of generated lattice:
+	std::cout << "First factor: \n";
+	auto factor1 = la.getFactor(0);
+	auto first = factor1.begin();
+	auto last = factor1.end();
+	lattice_utility::print(factor1, first, last);
+	std::cout << "Second factor: \n";
+	auto factor2 = la.getFactor(1);
+	first = factor2.begin();
+	last = factor2.end();
+	lattice_utility::print(factor2, first, last);
+
+	// Backward induction:
+
+	// Prepare payoff for spread call option:
+	double K = params.Strike;
+	auto call_payoff = [&K](double stock1, double stock2) {return std::max(stock1 - stock2 - K, 0.0); };
+
+	// Prepare american call spread option adujster:
+	auto american_adjuster = [&call_payoff](double& value, double stock1, double stock2) {
+		value = std::max(value, call_payoff(stock1, stock2));
+	};
+
+	// Creating indexed two-variable binomial lattice:
+	lattice_multidimensional::Lattice<lattice_types::LatticeType::TwoVariableBinomial, double, date> optionTree{ fixingDates };
+
+
+	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>> backward_2binomial_induction;
+	backward_2binomial_induction brd_induction;
+
+	brd_induction(optionTree, la, crr, timeDeltas, call_payoff, american_adjuster);
+
+	// Print the part of generated lattice:
+	std::cout << "Option price lattice:\n";
+	first = optionTree.begin();
+	last = optionTree.end();
+	lattice_utility::print(optionTree, first, last);
+	// Print apex: value of option:
+	std::cout << "Price of call: " << optionTree.apex() << "\n\n";
+}
+
+void crr2FactorLatticeAmericanPut() {
+
+	using lattice_product_builder::SpreadOptionBuilder;
+
+	// build spread option product:
+	auto spreadOption = SpreadOptionBuilder<double>()
+		.withStrike(1.0).withRate(0.06)
+		.withSpot1(100.0).withSpot2(100.0)
+		.withDividend1(0.03).withDividend2(0.04)
+		.withVolatility1(0.2).withVolatility2(0.3)
+		.withCorrelation(0.5).withPeriods(3)
+		.build();
+
+	// extract model params from spread option:
+	auto params = spreadOption.modelParams();
+
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDates;
+	fixingDates.emplace(today);
+
+	for (std::size_t t = 1; t <= spreadOption.periods(); ++t) {
+		fixingDates.emplace(today + date_duration(90 * t));
+	}
+
+
+	// Creating indexed lattice:
+	lattice_multidimensional::MultidimLattice<2, lattice_types::LatticeType::Binomial, double, date> la{ fixingDates };
+
+	double daysInYear{ 365.0 };
+	auto fd = la.getFactor(1).fixingDates();
+	std::vector<double> timeDeltas(fd.size() - 1);
+	for (auto i = 0; i < timeDeltas.size(); ++i) {
+		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
+	}
+
+	// Create CRR model:
+	lattice_model::CoxRubinsteinRossModel2Factor<> crr{ params };
+
+	// Print the model name:
+	std::cout << decltype(crr)::name() << "\n";
+
+
+	typedef lattice_algorithms::ForwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>, double> forward_binomial_induction;
+
+	forward_binomial_induction fwd_induction;
+	fwd_induction(la, crr, timeDeltas, std::make_pair(params.Spot1, params.Spot2));
+
+	// Print the part of generated lattice:
+	std::cout << "First factor: \n";
+	auto factor1 = la.getFactor(0);
+	auto first = factor1.begin();
+	auto last = factor1.end();
+	lattice_utility::print(factor1, first, last);
+	std::cout << "Second factor: \n";
+	auto factor2 = la.getFactor(1);
+	first = factor2.begin();
+	last = factor2.end();
+	lattice_utility::print(factor2, first, last);
+
+	// Backward induction:
+
+	// Prepare payoff for spread put option:
+	double K = params.Strike;
+	auto put_payoff = [&K](double stock1, double stock2) {return std::max(K - stock1 - stock2, 0.0); };
+
+	// Prepare american put spread option adujster:
+	auto american_adjuster = [&put_payoff](double& value, double stock1, double stock2) {
+		value = std::max(value, put_payoff(stock1, stock2));
+	};
+
+	// Creating indexed two-variable binomial lattice:
+	lattice_multidimensional::Lattice<lattice_types::LatticeType::TwoVariableBinomial, double, date> optionTree{ fixingDates };
+
+
+	typedef lattice_algorithms::BackwardInduction<lattice_types::LatticeType::TwoVariableBinomial,
+		date, std::vector<double>> backward_2binomial_induction;
+	backward_2binomial_induction brd_induction;
+
+	brd_induction(optionTree, la, crr, timeDeltas, put_payoff, american_adjuster);
+
+	// Print the part of generated lattice:
+	std::cout << "Option price lattice:\n";
+	first = optionTree.begin();
+	last = optionTree.end();
+	lattice_utility::print(optionTree, first, last);
+	// Print apex: value of option:
+	std::cout << "Price of put: " << optionTree.apex() << "\n\n";
+}
+
+void crrLatticeAmerican() {
+
+	using lattice_product_builder::OptionBuilder;
+
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
+
+	// extract model params from option:
+	auto params = option.modelParams();
+
+	auto today = date(day_clock::local_day());
+	std::set<date> fixingDates;
+	fixingDates.emplace(today);
+
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1776,10 +2115,10 @@ void crrLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -1800,23 +2139,23 @@ void crrLatticeAmerican() {
 
 void mcrrLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1832,7 +2171,7 @@ void mcrrLatticeAmerican() {
 		timeDeltas[i] = ((fd[i + 1] - fd[i]).days() / daysInYear);
 	}
 
-	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,periods };
+	lattice_model::ModifiedCoxRubinsteinRossModel<> mcrr{ params,option.periods() };
 
 	// Name of the model:
 	std::cout << decltype(mcrr)::name() << "\n";
@@ -1851,10 +2190,10 @@ void mcrrLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -1875,23 +2214,23 @@ void mcrrLatticeAmerican() {
 
 void jrLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -1926,10 +2265,10 @@ void jrLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -1950,23 +2289,23 @@ void jrLatticeAmerican() {
 
 void trimLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -2025,23 +2364,23 @@ void trimLatticeAmerican() {
 
 void tmLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -2076,10 +2415,10 @@ void tmLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -2099,23 +2438,23 @@ void tmLatticeAmerican() {
 
 void lrLatticeAmerican() {
 	using ::lattice_model_components::leisen_reimer_inversion::PeizerPrattSecondInversion;
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -2132,10 +2471,10 @@ void lrLatticeAmerican() {
 	}
 
 	// Prepare inversion formula:
-	std::size_t numberTimePoints{ periods + 1 };
+	std::size_t numberTimePoints{ option.periods() + 1 };
 	PeizerPrattSecondInversion<> ppi{ numberTimePoints };
 
-	lattice_model::LeisenReimerModel<> lr{ params,periods,ppi };
+	lattice_model::LeisenReimerModel<> lr{ params,option.periods(),ppi };
 
 	// Name of the model:
 	std::cout << decltype(lr)::name() << "\n";
@@ -2154,10 +2493,10 @@ void lrLatticeAmerican() {
 
 	// Backward induction:
 
-	// Prepare payoff:
+	// Prepare put option payoff:
 	double K = params.Strike;
 	auto put_payoff = [&K](double stock) {return std::max(K - stock, 0.0); };
-	// Prepare american adujster:
+	// Prepare american put option adujster:
 	auto american_adjuster = [&put_payoff](double& value, double stock) {
 		value = std::max(value, put_payoff(stock));
 	};
@@ -2178,23 +2517,23 @@ void lrLatticeAmerican() {
 
 void bmLatticeAmerican() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
+	using lattice_product_builder::OptionBuilder;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// extract model params from option:
+	auto params = option.modelParams();
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods{ 100 };
 
-	for (std::size_t t = 1; t <= periods; ++t) {
+	for (std::size_t t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -2255,6 +2594,8 @@ void testAmericanLattices() {
 	std::cout << "=============== American Lattices - TEST ==============\n";
 	std::cout << "=======================================================\n";
 
+	crr2FactorLatticeAmericanCall();
+	crr2FactorLatticeAmericanPut();
 	crrLatticeAmerican();
 	mcrrLatticeAmerican();
 	jrLatticeAmerican();

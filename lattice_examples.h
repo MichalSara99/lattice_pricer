@@ -23,7 +23,7 @@ void crrBinomialLatticeParallelPricing() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_model::CoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
 	using lattice_algorithms::BackwardInduction;
@@ -31,19 +31,21 @@ void crrBinomialLatticeParallelPricing() {
 
 
 	// Create option data holder:
-	ModelParams<1,AssetClass::Equity,double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -168,7 +170,7 @@ void crrBinomialLatticeParallelPricingScoped() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::CoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
@@ -177,19 +179,21 @@ void crrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	ModelParams<1, AssetClass::Equity, double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -306,7 +310,7 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::ModifiedCoxRubinsteinRossModel;
 	using lattice_algorithms::ForwardInduction;
@@ -315,19 +319,21 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	ModelParams<1, AssetClass::Equity, double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -335,7 +341,7 @@ void mcrrBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Create a model:
-	ModifiedCoxRubinsteinRossModel<> mcrr{ params,periods };
+	ModifiedCoxRubinsteinRossModel<> mcrr{ params,option.periods()};
 
 	// Name of the model:
 	std::cout << decltype(mcrr)::name() << "\n";
@@ -444,7 +450,7 @@ void jrBinomialLatticeParallelPricingScoped() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::JarrowRuddModel;
 	using lattice_algorithms::ForwardInduction;
@@ -453,19 +459,21 @@ void jrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	ModelParams<1, AssetClass::Equity, double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -584,7 +592,7 @@ void trimBinomialLatticeParallelPricingScoped() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::TrigeorgisModel;
 	using lattice_algorithms::ForwardInduction;
@@ -593,19 +601,21 @@ void trimBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	ModelParams<1, AssetClass::Equity, double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -725,7 +735,7 @@ void tmBinomialLatticeParallelPricingScoped() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::TianModel;
 	using lattice_algorithms::ForwardInduction;
@@ -734,19 +744,21 @@ void tmBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	ModelParams<1, AssetClass::Equity, double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -866,7 +878,7 @@ void lrBinomialLatticeParallelPricingScoped() {
 	using lattice_structure::Lattice;
 	using lattice_types::LatticeType;
 	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
+	using lattice_product_builder::OptionBuilder;
 	using lattice_miscellaneous::scoped_thread;
 	using lattice_model::LeisenReimerModel;
 	using lattice_model_components::leisen_reimer_inversion::PeizerPrattSecondInversion;
@@ -876,19 +888,21 @@ void lrBinomialLatticeParallelPricingScoped() {
 
 
 	// Create option data holder:
-	ModelParams<1, AssetClass::Equity, double> params;
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 65.0;
+	auto option = OptionBuilder<double>()
+		.withStrike(65.0).withRate(0.25)
+		.withDividend(0.0).withVolatility(0.3)
+		.withSpot(65.0).withPeriods(364)
+		.build();
+
+	// extract mode params
+	auto params = option.modelParams();
 
 	// Generate fixing dates:
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
 	fixingDates.emplace(today);
-	std::size_t periods = 364;
-	for (auto t = 1; t <= periods; ++t) {
+
+	for (auto t = 1; t <= option.periods(); ++t) {
 		fixingDates.emplace(today + date_duration(t));
 	}
 
@@ -896,11 +910,11 @@ void lrBinomialLatticeParallelPricingScoped() {
 	Lattice<LatticeType::Binomial, double, date> biLattice{ fixingDates };
 
 	// Prepare Inversion functor:
-	std::size_t numberTimePoints{ periods + 1 };
+	std::size_t numberTimePoints{ option.periods() + 1 };
 	PeizerPrattSecondInversion<> ppi{ numberTimePoints };
 
 	// Create a model:
-	LeisenReimerModel<> lr{ params,periods,ppi };
+	LeisenReimerModel<> lr{ params,option.periods(),ppi };
 
 	// Name of the model:
 	std::cout << decltype(lr)::name() << "\n";

@@ -105,12 +105,12 @@ void testCreate2DMeanrevertingIndexedLattice() {
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	params.ReversionSpeed = 0.25;
+
+	double reversionSpeed = 0.25;
 	std::size_t periods = 10;
 	double dt{ 0.5 };
 
-	MultidimMeanRevertingIndexedLattice<2, double> index2DMRtree(periods, params, dt);
+	MultidimMeanRevertingIndexedLattice<2, double> index2DMRtree(periods, reversionSpeed, dt);
 
 	std::cout << "Number of factors: " << index2DMRtree.factors() << "\n";
 	index2DMRtree(0, 0, 0) = 3.1415;
@@ -139,8 +139,7 @@ void testCreate3DMeanRevertingLattice() {
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::MeanRevertingParams<double> params;
-	params.ReversionSpeed = 0.25;
+	double reversionSpeed = 0.25;
 
 	auto today = date(day_clock::local_day());
 	std::set<date> fixingDates;
@@ -152,7 +151,7 @@ void testCreate3DMeanRevertingLattice() {
 	}
 
 	double dt{ 0.5 };
-	MultidimMeanRevertingLattice<3, double, date> tree3DMR(fixingDates, params, dt);
+	MultidimMeanRevertingLattice<3, double, date> tree3DMR(fixingDates, reversionSpeed, dt);
 
 	std::cout << "Number of factors: " << tree3DMR.factors() << "\n";
 	tree3DMR(0, 0, 0) = 3.1415;

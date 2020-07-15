@@ -173,13 +173,10 @@ void testLatticeCreation() {
 
 void createMeanRevertingTrinomialIndexedLattice() {
 
-	using lattice_miscellaneous::MeanRevertingParams;
-
-	MeanRevertingParams<double> revertingParams;
-	revertingParams.ReversionSpeed = 0.25;
+	double reversionSpeed = 0.25;
 	double dt{ 0.5 };
 
-	lattice_structure::MeanRevertingIndexedLattice<double> il(15, revertingParams, 0.5);
+	lattice_structure::MeanRevertingIndexedLattice<double> il(15, reversionSpeed, dt);
 	std::cout << "type of tree: " << typeid(lattice_structure::MeanRevertingIndexedLattice<double>::TreeType).name() << "\n";
 
 	lattice_utility::print(il, il.begin(), il.end());
@@ -198,10 +195,8 @@ void createMeanRevertingTrinomialIndexedLattice() {
 
 
 void createMeanRevertingTrinomialLattice() {
-	using lattice_miscellaneous::MeanRevertingParams;
 
-	MeanRevertingParams<float> revertingParams;
-	revertingParams.ReversionSpeed = 0.25;
+	float reversionSpeed = 0.25;
 
 	std::size_t daysInhalfYear{ 125 };
 	auto today = date(day_clock::local_day());
@@ -222,7 +217,7 @@ void createMeanRevertingTrinomialLattice() {
 	}
 
 	lattice_structure::MeanRevertingLattice<float, date>
-		la(fixingDatesSet, revertingParams, timeDeltas);
+		la(fixingDatesSet, reversionSpeed, timeDeltas);
 
 	lattice_utility::print(la, la.begin(), la.end());
 
@@ -238,10 +233,8 @@ void createMeanRevertingTrinomialLattice() {
 
 
 void createMeanRevertingTrinomialLattice1() {
-	using lattice_miscellaneous::MeanRevertingParams;
 
-	MeanRevertingParams<float> revertingParams;
-	revertingParams.ReversionSpeed = 0.25;
+	float reversionSpeed = 0.25;
 
 	std::size_t daysInYear{ 365 };
 	auto today = date(day_clock::local_day());
@@ -282,7 +275,7 @@ void createMeanRevertingTrinomialLattice1() {
 	}
 
 	lattice_structure::MeanRevertingLattice<float, date>
-		la(fixingDatesSet, revertingParams, timeDeltas);
+		la(fixingDatesSet, reversionSpeed, timeDeltas);
 
 	lattice_utility::print(la, la.begin(), la.end());
 

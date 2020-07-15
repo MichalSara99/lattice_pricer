@@ -696,12 +696,9 @@ void testIndexedHWCalibration() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -724,7 +721,7 @@ void testIndexedHWCalibration() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods,mrparams, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params.ReversionSpeed, dt);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::HullWhiteModel<> hwm(params);
@@ -761,13 +758,9 @@ void testIndexedHWSanityCheck() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -790,7 +783,7 @@ void testIndexedHWSanityCheck() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params.ReversionSpeed, dt);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::HullWhiteModel<> hwm(params);
@@ -817,7 +810,7 @@ void testIndexedHWSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, mrparams, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params.ReversionSpeed, dt);
 	// setting theta for the model:
 	hwm.setTheta(theta);
 
@@ -855,13 +848,9 @@ void testHWCalibration() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -902,7 +891,7 @@ void testHWCalibration() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double,date> rateTree(fixingDatesSet, mrparams, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double,date> rateTree(fixingDatesSet, params.ReversionSpeed, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::HullWhiteModel<> hwm(params);
@@ -939,13 +928,10 @@ void testHWSanityCheck() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -986,7 +972,7 @@ void testHWSanityCheck() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params.ReversionSpeed, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::HullWhiteModel<> hwm(params);
@@ -1013,7 +999,7 @@ void testHWSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, mrparams, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, params.ReversionSpeed, timeDeltas);
 	// setting theta for the model:
 	hwm.setTheta(theta);
 
@@ -1055,13 +1041,9 @@ void testIndexedBKCalibration() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1084,7 +1066,7 @@ void testIndexedBKCalibration() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, mrparams, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params.ReversionSpeed, dt);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::BlackKarasinskiModel<> bkm(params);
@@ -1121,13 +1103,10 @@ void testIndexedBKSanityCheck() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -1150,7 +1129,7 @@ void testIndexedBKSanityCheck() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, mrparams, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> calibratedTree(periods, params.ReversionSpeed, dt);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::BlackKarasinskiModel<> bkm(params);
@@ -1177,7 +1156,7 @@ void testIndexedBKSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, mrparams, dt);
+	lattice_structure::MeanRevertingIndexedLattice<double> rateTree(periods, params.ReversionSpeed, dt);
 	// setting theta for the model:
 	bkm.setTheta(theta);
 
@@ -1216,13 +1195,10 @@ void testBKCalibration() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
+
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 
 	std::vector<double>  discount_curve = {
@@ -1263,7 +1239,7 @@ void testBKCalibration() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, mrparams, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, params.ReversionSpeed, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::BlackKarasinskiModel<> bkm(params);
@@ -1300,14 +1276,9 @@ void testBKSanityCheck() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
-
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -1347,7 +1318,7 @@ void testBKSanityCheck() {
 	}
 
 	// Creating indexed lattice:
-	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, mrparams, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> calibratedTree(fixingDatesSet, params.ReversionSpeed, timeDeltas);
 
 	// Create Blac-Derman-Toy model:
 	lattice_model::BlackKarasinskiModel<> bkm(params);
@@ -1374,7 +1345,7 @@ void testBKSanityCheck() {
 
 	std::cout << "Forward induction after calibration:\n";
 	// construct tree from calibrated theta:
-	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, mrparams, timeDeltas);
+	lattice_structure::MeanRevertingLattice<double, date> rateTree(fixingDatesSet, params.ReversionSpeed, timeDeltas);
 	// setting theta for the model:
 	bkm.setTheta(theta);
 

@@ -444,8 +444,6 @@ namespace lattice_model {
 			return std::string{ "Black-Derman-Toy model" };
 		}
 
-		OptionData<T> const &optionData()const { return option_; }
-
 		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
 
 		// Calibration minimizer:
@@ -550,7 +548,6 @@ namespace lattice_model {
 			return std::string{ "Ho-Lee model" };
 		}
 
-		OptionData<T> const &optionData()const { return option_; }
 
 		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
 

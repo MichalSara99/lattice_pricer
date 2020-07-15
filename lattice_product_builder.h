@@ -7,10 +7,12 @@
 namespace lattice_product_builder {
 
 	using lattice_product::Option;
+	using lattice_product::SpreadOption;
 	using lattice_product::BarrierOption;
 	using lattice_product::PureDiscountBond;
 	using lattice_product::CouponBond;
 	using lattice_product::OptionOnPureDiscountBond;
+	using lattice_product::OptionOnCouponBond;
 
 
 	// ===========================================================================
@@ -34,11 +36,40 @@ namespace lattice_product_builder {
 		self withSpot(T value) { option_.setSpot(value); return *this;}
 		self withRate(T value) { option_.setRate(value); return *this;}
 		self withDividend(T value) { option_.setDividend(value); return *this;}
-		self withMaturity(T value) { option_.setMaturity(value); return *this;}
+		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this;}
 		self withVolatility(T value) { option_.setVolatility(value); return *this;}
 
 	};
 
+	// ===========================================================================
+	// ======================= SpreadOptionBuilder ===============================
+	// ===========================================================================
+
+	template<typename T>
+	class SpreadOptionBuilder {
+	private:
+		typedef SpreadOptionBuilder<T> &self;
+		SpreadOption<T> option_;
+
+	public:
+
+		~SpreadOptionBuilder() {}
+
+		SpreadOption<T> build() { return std::move(option_); }
+
+		self withName(std::string const &name) { option_.setName(name); return *this; }
+		self withStrike(T value) { option_.setStrike(value); return *this; }
+		self withSpot1(T value) { option_.setSpot1(value); return *this; }
+		self withSpot2(T value) { option_.setSpot2(value); return *this; }
+		self withRate(T value) { option_.setRate(value); return *this; }
+		self withDividend1(T value) { option_.setDividend1(value); return *this; }
+		self withDividend2(T value) { option_.setDividend2(value); return *this; }
+		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this; }
+		self withVolatility1(T value) { option_.setVolatility1(value); return *this; }
+		self withVolatility2(T value) { option_.setVolatility2(value); return *this; }
+		self withCorrelation(T value) { option_.setCorrelation(value); return *this; }
+
+	};
 
 	// ===========================================================================
 	// ======================== BarrierOptionBuilder =============================
@@ -61,7 +92,7 @@ namespace lattice_product_builder {
 		self withSpot(T value) { option_.setSpot(value); return *this;}
 		self withRate(T value) { option_.setRate(value); return *this;}
 		self withDividend(T value) { option_.setDividend(value); return *this;}
-		self withMaturity(T value) { option_.setMaturity(value); return *this;}
+		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this;}
 		self withVolatility(T value) { option_.setVolatility(value); return *this;}
 
 	};
@@ -83,6 +114,8 @@ namespace lattice_product_builder {
 
 		self withName(std::string const &name) { bond_.setName(name); return *this;}
 		self withNominal(T value) { bond_.setNominal(value); return *this;}
+		self withPeriods(std::size_t periods) { bond_.setPeriods(periods); return *this; }
+
 
 	};
 
@@ -102,6 +135,7 @@ namespace lattice_product_builder {
 		CouponBond<T, TimeAxis> build() { return std::move(bond_); }
 
 		self withName(std::string const &name) { bond_.setName(name); return *this;}
+		self withPeriods(std::size_t periods) { bond_.setPeriods(periods); return *this; }
 		self withNominal(T value) { bond_.setNominal(value); return *this;}
 		self withLastCoupon(T value) { bond_.setLastCoupon(value); return *this;}
 		self withCouponPair(TimeAxis time, T value) { bond_.addCoupon(time, value); return *this;}
@@ -127,6 +161,31 @@ namespace lattice_product_builder {
 		self withName(std::string const &name) { option_.setName(name); return *this;}
 		self withNominal(T value) { option_.setNominal(value); return *this;}
 		self withStrike(T value) { option_.setStrike(value); return *this;}
+		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this; }
+
+	};
+
+	// ===========================================================================
+	// ========================= OptionOnCouponBondBuilder =======================
+	// ===========================================================================
+
+	template<typename T, typename TimeAxis>
+	class OptionOnCouponBondBuilder {
+	private:
+		typedef OptionOnCouponBondBuilder<T, TimeAxis> &self;
+		OptionOnCouponBond<T, TimeAxis> option_;
+
+	public:
+		~OptionOnCouponBondBuilder() {}
+
+		OptionOnCouponBond<T, TimeAxis> build() { return std::move(option_); }
+
+		self withName(std::string const &name) { option_.setName(name); return *this; }
+		self withStrike(T value) { option_.setStrike(value); return *this; }
+		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this; }
+		self withNominal(T value) { option_.setNominal(value); return *this; }
+		self withLastCoupon(T value) { option_.setLastCoupon(value); return *this; }
+		self withCouponPair(TimeAxis time, T value) { option_.addCoupon(time, value); return *this; }
 
 	};
 

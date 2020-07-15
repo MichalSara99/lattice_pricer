@@ -150,7 +150,6 @@ namespace lattice_model {
 			return std::string{ "Hull-White model" };
 		}
 
-		OptionData<T> const &optionData()const { return option_; }
 
 		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
 
@@ -326,8 +325,6 @@ namespace lattice_model {
 		static std::string const name() {
 			return std::string{ "Black-Karasinski model" };
 		}
-
-		OptionData<T> const &optionData()const { return option_; }
 
 		static constexpr AssetClass assetClass() { return AssetClass::InterestRate; }
 

@@ -5,7 +5,6 @@
 #include"lattice_types.h"
 #include"lattice_macros.h"
 #include"lattice_structure.h"
-#include"lattice_miscellaneous.h"
 #include<type_traits>
 #include<array>
 
@@ -16,7 +15,6 @@ namespace lattice_multidimensional {
 	using lattice_structure::MeanRevertingLattice;
 	using lattice_structure::Lattice;
 	using lattice_structure::MeanRevertingIndexedLattice;
-	using lattice_miscellaneous::MeanRevertingParams;
 
 	// ==============================================================================
 	// ============================= MultidimGeneralLattice =========================
@@ -177,9 +175,9 @@ namespace lattice_multidimensional {
 
 		public:
 			template<typename DeltaTime>
-			explicit MultidimMeanRevertingIndexedLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
+			explicit MultidimMeanRevertingIndexedLattice(std::size_t numberPeriods,Node reversionSpeed, DeltaTime const &deltaTime) {
 				for (std::size_t t = 0; t < Dimension; ++t)
-					multiTree_.emplace_back(std::move(MeanRevertingIndexedLattice<Node>{ numberPeriods,params,deltaTime }));
+					multiTree_.emplace_back(std::move(MeanRevertingIndexedLattice<Node>{ numberPeriods, reversionSpeed,deltaTime }));
 			}
 
 			MeanRevertingIndexedLattice<Node> &getFactor(std::size_t factorIdx) {
@@ -229,9 +227,9 @@ namespace lattice_multidimensional {
 
 		public:
 			template<typename DeltaTime>
-			explicit MultidimMeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
+			explicit MultidimMeanRevertingLattice(std::set<TimeAxis> const &fixingDatesSet,Node reversionSpeed, DeltaTime const &deltaTime) {
 				for (std::size_t t = 0; t < Dimension; ++t)
-					multiTree_.emplace_back(std::move(MeanRevertingLattice<Node,TimeAxis>{ fixingDatesSet, params, deltaTime }));
+					multiTree_.emplace_back(std::move(MeanRevertingLattice<Node,TimeAxis>{ fixingDatesSet, reversionSpeed, deltaTime }));
 			}
 
 			MeanRevertingLattice<Node, TimeAxis> &getFactor(std::size_t factorIdx) {

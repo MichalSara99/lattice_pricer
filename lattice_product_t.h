@@ -15,7 +15,7 @@ void testOptionBuilder() {
 	auto option = OptionBuilder<double>()
 		.withName("plain option")
 		.withDividend(12)
-		.withMaturity(1.0)
+		.withPeriods(10)
 		.withSpot(60.0)
 		.build();
 
@@ -24,7 +24,7 @@ void testOptionBuilder() {
 	std::cout << "option builder:\n";
 	std::cout << "option div: " << option.dividend() << "\n";
 	std::cout << "option name: " << option.name() << "\n";
-	std::cout << "option maturity: " << option.maturity() << "\n";
+	std::cout << "option periods: " << option.periods() << "\n";
 }
 
 void testBarrierOptionBuilder() {
@@ -34,7 +34,7 @@ void testBarrierOptionBuilder() {
 	auto option = BarrierOptionBuilder<double>()
 		.withName("plain barrier option")
 		.withDividend(12)
-		.withMaturity(1.0)
+		.withPeriods(10)
 		.build();
 
 	auto params = option.modelParams();
@@ -42,7 +42,7 @@ void testBarrierOptionBuilder() {
 	std::cout << "option builder:\n";
 	std::cout << "option div: " << option.dividend() << "\n";
 	std::cout << "option name: " << option.name() << "\n";
-	std::cout << "option maturity: " << option.maturity() << "\n";
+	std::cout << "option periods: " << option.periods() << "\n";
 
 }
 
@@ -54,11 +54,13 @@ void testPureDiscountBondBuilder() {
 	auto option = PureDiscountBondBuilder<double>()
 		.withName("pure discount option")
 		.withNominal(100)
+		.withPeriods(10)
 		.build();
 
 	std::cout << "option builder:\n";
 	std::cout << "option nominal: " << option.nominal() << "\n";
 	std::cout << "option name: " << option.name() << "\n";
+	std::cout << "option periods: " << option.periods() << "\n";
 }
 
 

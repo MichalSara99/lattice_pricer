@@ -10,6 +10,7 @@
 #include"lattice_algorithms.h"
 #include"lattice_model.h"
 #include"lattice_calibrator.h"
+#include"lattice_product_builder.h"
 
 
 #include<boost/date_time/gregorian/gregorian.hpp>
@@ -22,26 +23,27 @@ using namespace boost::gregorian;
 
 void testCreateIndexBasedOneFactor() {
 
-	using lattice_model_params::ModelParams;
-	using lattice_types::AssetClass;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	ModelParams<1,AssetClass::Equity,double> params;
+	using lattice_product_builder::OptionBuilder;
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	std::size_t periods{ 100 };
+	// extract model params from option:
+	auto params = option.modelParams();
+
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 	// create one-factor index-based lattice:
-	auto binLattice = LatticeBuilder<1>::createIndexedBasedLattice<LatticeType::Binomial, double>(periods);
+	auto binLattice = LatticeBuilder<1>::createIndexedBasedLattice<LatticeType::Binomial, double>(option.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel<> crr{ params };
@@ -65,26 +67,27 @@ void testCreateIndexBasedOneFactor() {
 
 void testCreateIndexBasedBinomialOneFactor() {
 
-	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	ModelParams<1, AssetClass::Equity,double> params;
+	using lattice_product_builder::OptionBuilder;
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	std::size_t periods{ 100 };
+	// extract model params from option:
+	auto params = option.modelParams();
+
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 	// create one-factor index-based lattice:
-	auto binLattice = LatticeBuilder<1>::createIndexedBasedBinomialLattice<double>(periods);
+	auto binLattice = LatticeBuilder<1>::createIndexedBasedBinomialLattice<double>(option.periods());
 
 	// Create CRR model:
 	lattice_model::CoxRubinsteinRossModel<> crr{ params };
@@ -108,26 +111,27 @@ void testCreateIndexBasedBinomialOneFactor() {
 
 void testCreateIndexBasedTrinomialOneFactor() {
 
-	using lattice_types::AssetClass;
-	using lattice_model_params::ModelParams;
 	using lattice_builder::LatticeBuilder;
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	ModelParams<1, AssetClass::Equity, double> params;
+	using lattice_product_builder::OptionBuilder;
 
-	params.Strike = 65.0;
-	params.RiskFreeRate = 0.25;
-	params.DividendRate = 0.0;
-	params.Volatility = 0.3;
-	params.Spot = 60.0;
+	// build option product:
+	auto option = OptionBuilder<double>()
+		.withDividend(0.0).withRate(0.25)
+		.withSpot(60.0).withStrike(65.0)
+		.withPeriods(100).withVolatility(0.3)
+		.build();
 
-	std::size_t periods{ 100 };
+	// extract model params from option:
+	auto params = option.modelParams();
+
 	double maturity = 0.29;
-	double dt = (maturity / double(periods));
+	double dt = (maturity / double(option.periods()));
 
 	// create one-factor index-based lattice:
-	auto triLattice = LatticeBuilder<1>::createIndexedBasedTrinomialLattice<double>(periods);
+	auto triLattice = LatticeBuilder<1>::createIndexedBasedTrinomialLattice<double>(option.periods());
 
 	// Create Boyle model:
 	lattice_model::BoyleModel<> bm{ params };
@@ -159,13 +163,9 @@ void testCreateIndexBasedMROneFactor() {
 	using lattice_types::LatticeType;
 	using lattice_utility::print;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 	double dt{ 0.5 };
 	std::vector<double>  discount_curve = {
@@ -188,7 +188,7 @@ void testCreateIndexBasedMROneFactor() {
 	std::size_t periods{ discount_curve.size() - 2 };
 
 	// create one-factor index-based lattice:
-	auto triMRLattice = LatticeBuilder<1>::createIndexedBasedMRLattice<double, double>(periods, mrparams, dt);
+	auto triMRLattice = LatticeBuilder<1>::createIndexedBasedMRLattice<double, double>(periods, params.ReversionSpeed, dt);
 
 	// Create Hull-White model:
 	lattice_model::HullWhiteModel<> hwm(params);
@@ -208,11 +208,6 @@ void testCreateIndexBasedMROneFactor() {
 	lattice_utility::print(triMRLattice, first, triMRLattice.end());
 
 }
-
-
-
-
-
 
 
 void testCreateIndexBasedLattice() {
@@ -408,13 +403,9 @@ void testCreateMROneFactor() {
 	using lattice_types::AssetClass;
 	using lattice_model_params::ModelParams;
 
-	lattice_miscellaneous::MeanRevertingParams<double> mrparams;
 	ModelParams<1,AssetClass::InterestRate,double> params;
-
-
 	params.ReversionSpeed = 0.25;
 	params.Volatility = 0.005;
-	mrparams.ReversionSpeed = 0.25;
 
 	std::vector<double>  discount_curve = {
 		1.00000,0.97584,0.95223,0.92914,0.90712,
@@ -450,7 +441,7 @@ void testCreateMROneFactor() {
 	}
 
 	// create one-factor index-based lattice:
-	auto triMRLattice = LatticeBuilder<1>::createMRLattice<double, date, std::vector<double>>(fixingDates, mrparams, timeDeltas);
+	auto triMRLattice = LatticeBuilder<1>::createMRLattice<double, date, std::vector<double>>(fixingDates, params.ReversionSpeed, timeDeltas);
 
 	// Create Hull-White model:
 	lattice_model::HullWhiteModel<> hwm(params);

@@ -13,7 +13,6 @@ namespace lattice_builder {
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::MeanRevertingIndexedLattice;
 	using lattice_structure::MeanRevertingLattice;
-	using lattice_miscellaneous::MeanRevertingParams;
 	using lattice_structure::Lattice;
 	using lattice_multidimensional::MultidimIndexedLattice;
 	using lattice_multidimensional::MultidimLattice;
@@ -36,8 +35,8 @@ namespace lattice_builder {
 
 		template<typename Node, typename DeltaTime>
 		static MultidimMeanRevertingIndexedLattice<FactorCount,Node>
-			createIndexedBasedMRLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
-			return MultidimMeanRevertingIndexedLattice<FactorCount, Node>(numberPeriods, params, deltaTime);
+			createIndexedBasedMRLattice(std::size_t numberPeriods, Node reversionSpeed, DeltaTime const &deltaTime) {
+			return MultidimMeanRevertingIndexedLattice<FactorCount, Node>(numberPeriods, reversionSpeed, deltaTime);
 		}
 
 		template<typename Node>
@@ -60,8 +59,8 @@ namespace lattice_builder {
 
 		template<typename Node, typename TimeAxis, typename DeltaTime>
 		static MultidimMeanRevertingLattice<FactorCount,Node, TimeAxis>
-			createMRLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
-			return MultidimMeanRevertingLattice<FactorCount, Node, TimeAxis>(fixingDatesSet, params, deltaTime);
+			createMRLattice(std::set<TimeAxis> const &fixingDatesSet, Node reversionSpeed, DeltaTime const &deltaTime) {
+			return MultidimMeanRevertingLattice<FactorCount, Node, TimeAxis>(fixingDatesSet, reversionSpeed, deltaTime);
 		}
 
 		template<typename Node, typename TimeAxis>
@@ -91,9 +90,9 @@ namespace lattice_builder {
 			typename T = TimeAxis,
 			typename Alloc = std::allocator<T>>
 		static MultidimMeanRevertingLattice<FactorCount,Node, TimeAxis>
-			createMRLattice(Container<T, Alloc> const &fixingDatesContainer, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
+			createMRLattice(Container<T, Alloc> const &fixingDatesContainer, Node reversionSpeed, DeltaTime const &deltaTime) {
 			std::set<TimeAxis> fixings(fixingDatesContainer.cbegin(), fixingDatesContainer.cend());
-			return MultidimMeanRevertingLattice<FactorCount, Node, TimeAxis>(std::move(fixings), params, deltaTime);
+			return MultidimMeanRevertingLattice<FactorCount, Node, TimeAxis>(std::move(fixings), reversionSpeed, deltaTime);
 		}
 
 		template<typename Node, typename TimeAxis,
@@ -135,8 +134,8 @@ namespace lattice_builder {
 
 		template<typename Node,typename DeltaTime>
 		static MeanRevertingIndexedLattice<Node>
-			createIndexedBasedMRLattice(std::size_t numberPeriods, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
-			return MeanRevertingIndexedLattice<Node>(numberPeriods, params, deltaTime);
+			createIndexedBasedMRLattice(std::size_t numberPeriods, Node reversionSpeed, DeltaTime const &deltaTime) {
+			return MeanRevertingIndexedLattice<Node>(numberPeriods, reversionSpeed, deltaTime);
 		}
 
 		template<typename Node>
@@ -159,8 +158,8 @@ namespace lattice_builder {
 
 		template<typename Node,typename TimeAxis,typename DeltaTime>
 		static MeanRevertingLattice<Node,TimeAxis>
-			createMRLattice(std::set<TimeAxis> const &fixingDatesSet, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
-			return MeanRevertingLattice<Node, TimeAxis>(fixingDatesSet, params, deltaTime);
+			createMRLattice(std::set<TimeAxis> const &fixingDatesSet,Node reversionSpeed, DeltaTime const &deltaTime) {
+			return MeanRevertingLattice<Node, TimeAxis>(fixingDatesSet, reversionSpeed, deltaTime);
 		}
 
 
@@ -191,9 +190,9 @@ namespace lattice_builder {
 			typename T = TimeAxis,
 			typename Alloc = std::allocator<T>>
 			static MeanRevertingLattice<Node, TimeAxis>
-			createMRLattice(Container<T,Alloc> const &fixingDatesContainer, MeanRevertingParams<Node> const &params, DeltaTime const &deltaTime) {
+			createMRLattice(Container<T,Alloc> const &fixingDatesContainer,Node reversionSpeed, DeltaTime const &deltaTime) {
 			std::set<TimeAxis> fixings(fixingDatesContainer.cbegin(), fixingDatesContainer.cend());
-			return MeanRevertingLattice<Node, TimeAxis>(std::move(fixings), params, deltaTime);
+			return MeanRevertingLattice<Node, TimeAxis>(std::move(fixings), reversionSpeed, deltaTime);
 		}
 
 		template<typename Node, typename TimeAxis,

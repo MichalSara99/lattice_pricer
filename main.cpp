@@ -163,7 +163,7 @@ int main(int argc, char const *argv[]) {
 	// testIndexedEuropeanLattices();
 	// testIndexedAmericanLattices();
 	// testEuropeanLattices();
-	//testAmericanLattices();
+	// testAmericanLattices();
 
 	// ===============================
 
@@ -180,8 +180,8 @@ int main(int argc, char const *argv[]) {
 	// ====== lattice_multidimensional_t.h ======
 	// ==========================================
 
-    // testCreateMultidimensionalLattice();
-	// testCreateMultidimensionalMRLattice();
+     testCreateMultidimensionalLattice();
+	 testCreateMultidimensionalMRLattice();
 
 	// ==========================================
 
