@@ -5,6 +5,7 @@
 #include<set>
 #include<limits>
 #include<memory>
+#include<map>
 
 #include"lattice_types.h"
 #include"lattice_model_params.h"
@@ -189,7 +190,7 @@ namespace lattice_product {
 	class CouponBond :public PureDiscountBond<T> {
 	private:
 		T lastCoupon_;
-		std::set<std::pair<TimeAxis, T>> coupons_;
+		std::map<TimeAxis, T> coupons_;
 
 	public:
 
@@ -199,13 +200,13 @@ namespace lattice_product {
 		inline void setLastCoupon(T value) { lastCoupon_ = value; }
 		inline T lastCoupon()const { return lastCoupon_; }
 
-		inline void addCoupon(TimeAxis time, T value) { coupons_.emplace(std::make_pair(time, value)); }
+		inline void addCoupon(TimeAxis time, T value) { coupons_.emplace(time, value); }
 		inline T coupon(TimeAxis time) { 
 			auto it = coupons_.find(time);
 			return ((it != coupons_.end()) ? (*it)->first : std::numeric_limits<T>::signaling_NaN());
 		}
 
-		inline std::set<std::pair<TimeAxis, T>> const &coupons()const { return coupons_; }
+		inline std::map<TimeAxis, T> const &coupons()const { return coupons_; }
 
 	};
 
