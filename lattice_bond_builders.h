@@ -474,7 +474,7 @@ _buildCouponBondTree(std::size_t lastIdx, LatticeObject &bondLattice, LatticeObj
 	dt = DT::deltaTime(0, deltaTime);
 	coupon = 0.0;
 	date = bondLattice.timeAt(0);
-	if ((itr = couponDates.find(date)) != couponDates.end()) {
+	if ((itr = couponData.find(date)) != couponData.end()) {
 		coupon = nominal * (itr->second) * dt;
 	}
 	bondLattice(0, 0) = prob * (bondLattice(1, 0) + bondLattice(1, 1) + 2.0*coupon)*
@@ -665,7 +665,7 @@ _buildNormalCouponBondTree(std::size_t timeIdx, LatticeObject &bondLattice, Latt
 		dt = DT::deltaTime(n, deltaTime);
 		coupon = 0.0;
 		date = bondLattice.timeAt(n);
-		if ((itr = couponData.find(date)) != couponData.end()) {
+		if ((itr = couponData.find(date)) != couponData.cend()) {
 			coupon = nominal * (itr->second) * dt;
 		}
 		for (auto l = 0; l < nodesSize; ++l) {
@@ -681,7 +681,7 @@ _buildNormalCouponBondTree(std::size_t timeIdx, LatticeObject &bondLattice, Latt
 	dt = DT::deltaTime(0, deltaTime);
 	coupon = 0.0;
 	date = bondLattice.timeAt(0);
-	if ((itr = couponData.find(date)) != couponData.end()) {
+	if ((itr = couponData.find(date)) != couponData.cend()) {
 		coupon = nominal * (itr->second) * dt;
 	}
 	prob = generator.nodeRiskNeutralProb(revertBranchesSize, 1, 0, dt);
@@ -854,7 +854,7 @@ _buildRevertingCouponBondTree(std::size_t timeIdx, LatticeObject &bondLattice, L
 	Node coupon{};
 	TimeAxis date{};
 	std::tuple<Node, Node, Node> prob;
-	map_citor itr = couponData.begin();
+	map_citor itr = couponData.cbegin();
 
 
 	std::size_t nodesSize{ 0 };
@@ -863,7 +863,7 @@ _buildRevertingCouponBondTree(std::size_t timeIdx, LatticeObject &bondLattice, L
 		dt = DT::deltaTime(n, deltaTime);
 		coupon = 0.0;
 		date = bondLattice.timeAt(n);
-		if ((itr = couponData.find(date)) != couponData.end()) {
+		if ((itr = couponData.find(date)) != couponData.cend()) {
 			coupon = nominal * (itr->second) * dt;
 		}
 		prob = generator.nodeRiskNeutralProb(revertBranchesSize, nodesSize, 0, dt);
@@ -918,7 +918,7 @@ _buildReverting(std::size_t timeIdx, LatticeObject &bondLattice, LatticeObject c
 	DeltaTime const &deltaTime, lattice_types::DiscountingStyle style) {
 
 	// If couponDates is an empty map -> build pure dicount lattice
-	if (couponDates.empty()) {
+	if (couponData.empty()) {
 		_buildRevertingPureDiscountBondTree(timeIdx, bondLattice, calibratedRateLattice,
 			generator, nominal, deltaTime, style);
 	}
@@ -1041,7 +1041,7 @@ _buildOptionTree(LatticeObject &optionLattice, LatticeObject const &bondLattice,
 
 	std::size_t nodesSize{ 0 };
 	for (auto n = lastIdx - 1; n > 0; --n) {
-		nodesSize = lattice.nodesAtIdx(n).size();
+		nodesSize = optionLattice.nodesAtIdx(n).size();
 		dt = DT::deltaTime(n, deltaTime);
 		for (auto i = 0; i < nodesSize; ++i) {
 			value = generator(calibratedRateLattice(n, i), optionLattice(n + 1, i), optionLattice(n + 1, i + 1), dt);

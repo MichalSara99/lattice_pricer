@@ -207,7 +207,7 @@ namespace lattice_product {
 		}
 
 		inline std::map<TimeAxis, T> const &coupons()const { return coupons_; }
-
+		inline void setCouponData(std::map<TimeAxis, T> const &data) { coupons_ = data; }
 	};
 
 	// ===========================================================================
@@ -216,9 +216,10 @@ namespace lattice_product {
 
 
 	template<typename T>
-	class OptionOnPureDiscountBond :public PureDiscountBond<T> {
+	class OptionOnPureDiscountBond :public Product<T> {
 	private:
 		T strike_;
+		std::size_t periods_;
 
 	public:
 		explicit OptionOnPureDiscountBond() {}
@@ -227,6 +228,9 @@ namespace lattice_product {
 		inline void setStrike(T value) { strike_ = value; }
 		inline T strike()const { return strike_; }
 
+		inline void setPeriods(std::size_t periods) { periods_ = periods; }
+		inline std::size_t periods()const { return periods_; }
+
 	};
 
 
@@ -234,11 +238,11 @@ namespace lattice_product {
 	// =========================== OptionOnCouponBond ============================
 	// ===========================================================================
 	
-	template<typename T, typename TimeAxis>
-	class OptionOnCouponBond :public CouponBond<T,TimeAxis> {
+	template<typename T>
+	class OptionOnCouponBond :public OptionOnPureDiscountBond<T> {
 	private:
-		T lastCoupon_;
-		std::set<std::pair<TimeAxis, T>> coupons_;
+		T strike_;
+		std::size_t periods_;
 
 	public:
 
@@ -248,16 +252,8 @@ namespace lattice_product {
 		inline void setStrike(T value) { strike_ = value; }
 		inline T strike()const { return strike_; }
 
-		inline void setLastCoupon(T value) { lastCoupon_ = value; }
-		inline T lastCoupon()const { return lastCoupon_; }
-
-		inline void addCoupon(TimeAxis time, T value) { coupons_.emplace(std::make_pair(time, value)); }
-		inline T coupon(TimeAxis time) {
-			auto it = coupons_.find(time);
-			return ((it != coupons_.end()) ? (*it)->first : std::numeric_limits<T>::signaling_NaN());
-		}
-
-		inline std::set<std::pair<TimeAxis, T>> const &coupons()const { return coupons_; }
+		inline void setPeriods(std::size_t periods) { periods_ = periods; }
+		inline std::size_t periods()const { return periods_; }
 
 	};
 

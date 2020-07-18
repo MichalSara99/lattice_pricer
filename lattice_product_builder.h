@@ -139,7 +139,7 @@ namespace lattice_product_builder {
 		self withNominal(T value) { bond_.setNominal(value); return *this;}
 		self withLastCoupon(T value) { bond_.setLastCoupon(value); return *this;}
 		self withCouponPair(TimeAxis time, T value) { bond_.addCoupon(time, value); return *this;}
-
+		self withCouponData(std::map<TimeAxis, T> const &data) { bond_.setCouponData(data); return *this; }
 	};
 
 
@@ -159,7 +159,6 @@ namespace lattice_product_builder {
 		OptionOnPureDiscountBond<T> build() { return std::move(option_); }
 
 		self withName(std::string const &name) { option_.setName(name); return *this;}
-		self withNominal(T value) { option_.setNominal(value); return *this;}
 		self withStrike(T value) { option_.setStrike(value); return *this;}
 		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this; }
 
@@ -169,23 +168,20 @@ namespace lattice_product_builder {
 	// ========================= OptionOnCouponBondBuilder =======================
 	// ===========================================================================
 
-	template<typename T, typename TimeAxis>
+	template<typename T>
 	class OptionOnCouponBondBuilder {
 	private:
-		typedef OptionOnCouponBondBuilder<T, TimeAxis> &self;
-		OptionOnCouponBond<T, TimeAxis> option_;
+		typedef OptionOnCouponBondBuilder<T> &self;
+		OptionOnCouponBond<T> option_;
 
 	public:
 		~OptionOnCouponBondBuilder() {}
 
-		OptionOnCouponBond<T, TimeAxis> build() { return std::move(option_); }
+		OptionOnCouponBond<T> build() { return std::move(option_); }
 
 		self withName(std::string const &name) { option_.setName(name); return *this; }
 		self withStrike(T value) { option_.setStrike(value); return *this; }
 		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this; }
-		self withNominal(T value) { option_.setNominal(value); return *this; }
-		self withLastCoupon(T value) { option_.setLastCoupon(value); return *this; }
-		self withCouponPair(TimeAxis time, T value) { option_.addCoupon(time, value); return *this; }
 
 	};
 

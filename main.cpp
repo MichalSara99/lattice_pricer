@@ -80,6 +80,7 @@ int main(int argc, char const *argv[]) {
 	// testTrinomialCouponBondLatticeVariable(11);
 
 	// testIndexedBinomialEuropeanOptionOnCouponBondLattice();
+	// testIndexedBinomialAmericanOptionOnCouponBondLattice();
 	// testBinomialEuropeanOptionOnCouponBondLattice();
 	// testIndexedTrinomialEuropeanOptionOnCouponBondLattice();
 	// testTrinomialEuropeanOptionOnCouponBondLattice();
@@ -180,8 +181,8 @@ int main(int argc, char const *argv[]) {
 	// ====== lattice_multidimensional_t.h ======
 	// ==========================================
 
-     testCreateMultidimensionalLattice();
-	 testCreateMultidimensionalMRLattice();
+    // testCreateMultidimensionalLattice();
+	// testCreateMultidimensionalMRLattice();
 
 	// ==========================================
 
