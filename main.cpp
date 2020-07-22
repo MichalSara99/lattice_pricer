@@ -79,11 +79,16 @@ int main(int argc, char const *argv[]) {
 	// testTrinomialCouponBondLattice();
 	// testTrinomialCouponBondLatticeVariable(11);
 
+
+
 	// testIndexedBinomialEuropeanOptionOnCouponBondLattice();
 	// testIndexedBinomialAmericanOptionOnCouponBondLattice();
 	// testBinomialEuropeanOptionOnCouponBondLattice();
-	// testIndexedTrinomialEuropeanOptionOnCouponBondLattice();
+	// testBinomialAmericanOptionOnCouponBondLattice();
+	// testIndexedTrinomialAmericanOptionOnCouponBondLattice();
+    // testIndexedTrinomialEuropeanOptionOnCouponBondLattice();
 	// testTrinomialEuropeanOptionOnCouponBondLattice();
+	// testTrinomialAmericanOptionOnCouponBondLattice();
 
 	// ===============================================
 
