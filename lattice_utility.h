@@ -4,6 +4,7 @@
 
 #include"lattice_structure.h"
 #include"lattice_traits.h"
+#include"lattice_types.h"
 #include<tuple>
 #include<iostream>
 
@@ -13,6 +14,7 @@ namespace lattice_utility {
 	using lattice_types::LatticeType;
 	using lattice_traits::PrintTraits;
 	using lattice_types::DiscountingStyle;
+	using lattice_types::BarrierType;
 
 	// ==============================================================================
 	// ===================================== Logger =================================
@@ -47,6 +49,40 @@ namespace lattice_utility {
 			this->what(out, std::move(std::string{ "CRITICAL: " + text }));
 		}
 	};
+
+	// ==============================================================================
+	// ================================ BarrierComparer =============================
+	// ==============================================================================
+
+	template<typename T>
+	struct BarrierComparer {
+		static std::function<bool(T, T)> const comparer(BarrierType BType) {
+			switch (BType)
+			{
+			case lattice_types::BarrierType::DownAndOut:
+				return [](T stock, T barrier)->bool {
+					return (stock > barrier);
+				};
+				break;
+			case lattice_types::BarrierType::DownAndIn:
+				return [](T stock, T barrier) ->bool{
+					return (stock < barrier);
+				};
+				break;
+			case lattice_types::BarrierType::UpAndOut:
+				return [](T stock, T barrier)->bool{
+					return (stock < barrier);
+				};
+				break;
+			case lattice_types::BarrierType::UpAndIn:
+				return [](T stock, T barrier)->bool {
+					return (stock > barrier);
+				};
+				break;
+			}
+		}
+	};
+
 
 	// ==============================================================================
 	// ================================== print =====================================

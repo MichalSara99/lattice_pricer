@@ -6,10 +6,13 @@
 #include"lattice_macros.h"
 #include"lattice_utility.h"
 
+
 namespace lattice_backward_traversals {
 
 	using lattice_types::LatticeType;
+	using lattice_types::BarrierType;
 	using lattice_utility::DeltaTimeHolder;
+	using lattice_utility::BarrierComparer;
 
 	// ==============================================================================
 	// ==================== Backward Traversal Algorithms ===========================
@@ -28,11 +31,18 @@ namespace lattice_backward_traversals {
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			static void _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
 
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			static void _backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				BarrierType barrierType,typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
+
 			//	This one is for payoffadjusted
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			static void _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
 				PayoffAdjuster &&payoffAdjuster);
 
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			static void _backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
 
 		public:
 			template<typename LatticeObject, typename Generator, typename Payoff>
@@ -40,9 +50,23 @@ namespace lattice_backward_traversals {
 				_backTraverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff));
 			}
 
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			static void traverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+				_backTraverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), barrierType,
+					barrier, rebate);
+			}
+
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			static void traverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster) {
 				_backTraverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			static void traverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+				_backTraverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),
+					std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrier, rebate);
 			}
 
 	};
@@ -60,6 +84,7 @@ namespace lattice_backward_traversals {
 		template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 		static void _backTraverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator,
 			DeltaTime const &deltaTime, Payoff &&payoff,PayoffAdjuster &&payoffAdjuster);
+
 	public:
 		template<typename LatticeObject, typename MultidimLatticeObject, typename Generator, typename Payoff>
 		static void traverse(LatticeObject &priceLattice, MultidimLatticeObject const &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff) {
@@ -90,6 +115,18 @@ namespace lattice_backward_traversals {
 			template<typename LatticeObject, typename Generator, typename Payoff>
 			static void _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff);
 
+			template<typename LatticeObject, typename Generator>
+			static void _backTraverseNormalBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
+
+			template<typename LatticeObject, typename Generator>
+			static void _backTraverseRevertingBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
+
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			static void _backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
+
 			template<typename LatticeObject, typename Generator,typename PayoffAdjuster>
 			static void _backTraverseNormal(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster);
 
@@ -99,6 +136,18 @@ namespace lattice_backward_traversals {
 			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
 			static void _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
 				PayoffAdjuster &&payoffAdjuster);
+
+			template<typename LatticeObject, typename Generator, typename PayoffAdjuster>
+			static void _backTraverseNormalBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
+
+			template<typename LatticeObject, typename Generator, typename PayoffAdjuster>
+			static void _backTraverseRevertingBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
+
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			static void _backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate);
 
 
 		public:
@@ -112,12 +161,21 @@ namespace lattice_backward_traversals {
 				_backTraverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
 			}
 
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			static void traverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+				_backTraverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),
+					barrierType, barrier, rebate);
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			static void traverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+				_backTraverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster),
+					barrierType, barrier, rebate);
+			}
+
 	};
-
-
-
-
-
 
 }
 
@@ -150,6 +208,51 @@ _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &de
 	lattice(0, 0) = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), dt);
 }
 
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator, typename Payoff>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Binomial, TimeAxis, DeltaTime>::
+_backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+	BarrierType barrierType,typename LatticeObject::Node_type const &barrier,
+	typename LatticeObject::Node_type const &rebate) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	auto cmp = BC::comparer(barrierType);
+	const std::size_t lastIdx = lattice.timeDimension() - 1;
+	const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+	Node dt{};
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		if (cmp(lattice(lastIdx, i), barrier)) {
+			lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+		}
+		else {
+			lattice(lastIdx, i) = Node{};
+		}
+	}
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n > 0; --n) {
+		nodesSize = lattice.nodesAtIdx(n).size();
+		dt = DT::deltaTime(n, deltaTime);
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(lattice(n, i), barrier)) {
+				lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), dt);
+			}
+			else {
+				lattice(n, i) = rebate;
+			}
+		}
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	if (cmp(lattice(0, 0),barrier)) {
+		lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
+	}
+	else {
+		lattice(0, 0) = rebate;
+	}
+}
 
 
 template<typename TimeAxis,
@@ -182,6 +285,56 @@ _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &de
 	value = generator(lattice(0, 0),lattice(1, 0), lattice(1, 1), dt);
 	payoffAdjuster(value, lattice(0, 0));
 	lattice(0, 0) = value;
+}
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Binomial, TimeAxis, DeltaTime>::
+_backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,
+	BarrierType barrierType, typename LatticeObject::Node_type const &barrier,typename LatticeObject::Node_type const &rebate) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	const std::size_t lastIdx = lattice.timeDimension() - 1;
+	const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+	Node dt{};
+	Node value{};
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		if (cmp(lattice(lastIdx, i), barrier)) {
+			lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+		}
+		else {
+			lattice(lastIdx, i) = Node{};
+		}
+	}
+
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n > 0; --n) {
+		nodesSize = lattice.nodesAtIdx(n).size();
+		dt = DT::deltaTime(n, deltaTime);
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(lattice(n, i), barrier)) {
+				value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), dt);
+				payoffAdjuster(value, lattice(n, i));
+				lattice(n, i) = value;
+			}
+			else {
+				lattice(n, i) = rebate;
+			}
+		}
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	if (cmp(lattice(0, 0),barrier)) {
+		value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
+		payoffAdjuster(value, lattice(0, 0));
+		lattice(0, 0) = value;
+	}
+	else {
+		lattice(0, 0) = rebate;
+	}
 }
 
 
@@ -367,7 +520,127 @@ _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &de
 	}
 }
 
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
+_backTraverseNormalBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,
+	BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
 
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	std::size_t const revertBranchesSize = timeIdx;
+	auto cmp = BC::comparer(barrierType);
+
+	Node dt{};
+	std::size_t nodesSize{ 0 };
+	for (auto n = timeIdx - 1; n > 0; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = lattice.nodesAtIdx(n).size();
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(lattice(n, i),barrier)) {
+				lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt,
+					revertBranchesSize, nodesSize, i);
+			}
+			else {
+				lattice(n, i) = rebate;
+			}
+		}
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	if (cmp(lattice(0, 0),barrier)) {
+		lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), dt,
+			revertBranchesSize, 1, 0);
+	}
+	else {
+		lattice(0, 0) = rebate;
+	}
+}
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
+_backTraverseRevertingBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,
+	BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	auto cmp = BC::comparer(barrierType);
+	const std::size_t lastIdx = lattice.timeDimension() - 1;
+	std::size_t const revertBranchesSize = timeIdx;
+	
+	Node dt{};
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n >= timeIdx; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = lattice.nodesAtIdx(n).size();
+		if (cmp(lattice(n, 0),barrier)) {
+			lattice(n, 0) = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1), lattice(n + 1, 2), dt,
+				revertBranchesSize, nodesSize, 0);
+		}
+		else {
+			lattice(n, 0) = rebate;
+		}
+		for (auto i = 1; i < nodesSize - 1; ++i) {
+			if (cmp(lattice(n, i),barrier)) {
+				lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i), lattice(n + 1, i + 1), dt,
+					revertBranchesSize, nodesSize, i);
+			}
+			else {
+				lattice(n, i) = rebate;
+			}
+		}
+		if (cmp(lattice(n, nodesSize - 1),barrier)) {
+			lattice(n, nodesSize - 1) = generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3), lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt,
+				revertBranchesSize, nodesSize, nodesSize - 1);
+		}
+		else {
+			lattice(n, nodesSize - 1) = rebate;
+		}
+	}
+}
+
+
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator, typename Payoff>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
+_backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+	BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	auto cmp = BC::comparer(barrierType);
+	const std::size_t firstRevertIdx = lattice.firstRevertingIdx();
+	const std::size_t treeSize = lattice.timeDimension();
+
+	const std::size_t lastIdx = treeSize - 1;
+	const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		if (cmp(lattice(lastIdx, i),barrier)) {
+			lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+		}
+		else {
+			lattice(lastIdx, i) = Node{};
+		}
+	}
+
+	if (firstRevertIdx == 0) {
+		// This trinomial tree does not have reverting property:
+		_backTraverseNormalBarrier(lastIdx, lattice, std::forward<Generator>(generator), deltaTime, barrierType, barrier, rebate);
+	}
+	else {
+		// This trinomial tree does have reverting property:
+		_backTraverseRevertingBarrier(firstRevertIdx - 1, lattice, std::forward<Generator>(generator), deltaTime, barrierType, barrier, rebate);
+		_backTraverseNormalBarrier(firstRevertIdx - 1, lattice, std::forward<Generator>(generator), deltaTime, barrierType, barrier, rebate);
+
+	}
+}
 
 
 template<typename TimeAxis,
@@ -467,6 +740,149 @@ _backTraverse(LatticeObject &lattice, Generator &&generator, DeltaTime const &de
 	}
 }
 
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator, typename PayoffAdjuster>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
+_backTraverseNormalBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,
+	PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier, 
+	typename LatticeObject::Node_type const &rebate) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	auto cmp = BC::comparer(barrierType);
+	std::size_t const revertBranchesSize = timeIdx;
+	
+	Node dt{};
+	Node value{};
+	std::size_t nodesSize{ 0 };
+	for (auto n = timeIdx - 1; n > 0; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = lattice.nodesAtIdx(n).size();
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(lattice(n, i),barrier)) {
+				value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt,
+					revertBranchesSize, nodesSize, i);
+				payoffAdjuster(value, lattice(n, i));
+				lattice(n, i) = value;
+			}
+			else {
+				lattice(n, i) = rebate;
+			}
+		}
+	}
+	dt = DT::deltaTime(0, deltaTime);
+	if (cmp(lattice(0, 0),barrier)) {
+		value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), dt,
+			revertBranchesSize, 1, 0);
+		payoffAdjuster(value, lattice(0, 0));
+		lattice(0, 0) = value;
+	}
+	else {
+		lattice(0, 0) = rebate;
+	}
+
+}
+
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator, typename PayoffAdjuster>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
+_backTraverseRevertingBarrier(std::size_t timeIdx, LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime,
+	PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+	auto cmp = BC::comparer(barrierType);
+	const std::size_t lastIdx = lattice.timeDimension() - 1;
+	std::size_t const revertBranchesSize = timeIdx;
+
+	Node dt{};
+	Node value{};
+	std::size_t nodesSize{ 0 };
+	for (auto n = lastIdx - 1; n >= timeIdx; --n) {
+		dt = DT::deltaTime(n, deltaTime);
+		nodesSize = lattice.nodesAtIdx(n).size();
+
+		if (cmp(lattice(n, 0),barrier)) {
+			value = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1), lattice(n + 1, 2), dt,
+				revertBranchesSize, nodesSize, 0);
+			payoffAdjuster(value, lattice(n, 0));
+			lattice(n, 0) = value;
+		}
+		else {
+			lattice(n, 0) = rebate;
+		}
+
+		for (auto i = 1; i < nodesSize - 1; ++i) {
+			if (cmp(lattice(n, i),barrier)) {
+				value = generator(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i), lattice(n + 1, i + 1), dt,
+					revertBranchesSize, nodesSize, i);
+				payoffAdjuster(value, lattice(n, i));
+				lattice(n, i) = value;
+			}
+			else {
+				lattice(n, i) = rebate;
+			}
+		}
+		if (cmp(lattice(n, nodesSize - 1),barrier)) {
+			value = generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3), lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt,
+				revertBranchesSize, nodesSize, nodesSize - 1);
+			payoffAdjuster(value, lattice(n, nodesSize - 1));
+			lattice(n, nodesSize - 1) = value;
+		}
+		else {
+			lattice(n, nodesSize - 1) = rebate;
+		}
+	}
+
+}
+
+
+template<typename TimeAxis,
+	typename DeltaTime>
+	template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+void lattice_backward_traversals::BackwardTraversal<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
+_backTraverseBarrier(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+	PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate) {
+
+	typedef typename LatticeObject::Node_type Node;
+	typedef BarrierComparer<Node> BC;
+
+	auto cmp = BC::comparer(barrierType);
+	const std::size_t firstRevertIdx = lattice.firstRevertingIdx();
+	const std::size_t treeSize = lattice.timeDimension();
+
+	const std::size_t lastIdx = treeSize - 1;
+	const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+
+	for (auto i = 0; i < lastNodesSize; ++i) {
+		if (cmp(lattice(lastIdx, i),barrier)) {
+			lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+		}
+		else {
+			lattice(lastIdx, i) = Node{};
+		}
+	}
+
+	if (firstRevertIdx == 0) {
+		// This trinomial tree does not have reverting property:
+		_backTraverseNormalBarrier(lastIdx, lattice, std::forward<Generator>(generator), deltaTime,
+			std::forward<PayoffAdjuster>(payoffAdjuster),barrierType,barrier,rebate);
+	}
+	else {
+		// This trinomial tree does have reverting property:
+		_backTraverseRevertingBarrier(firstRevertIdx - 1, lattice, std::forward<Generator>(generator), deltaTime, 
+			std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrier, rebate);
+		_backTraverseNormalBarrier(firstRevertIdx - 1, lattice, std::forward<Generator>(generator), deltaTime,
+			std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrier, rebate);
+
+	}
+}
 
 
 #endif ///_LATTICE_BACKWARD_TRAVERSALS

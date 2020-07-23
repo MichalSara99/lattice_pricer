@@ -146,5 +146,8 @@
     <ClInclude Include="lattice_disable_warnings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lattice_barrier_option_t.h">
+      <Filter>Header Files\unit_tests</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

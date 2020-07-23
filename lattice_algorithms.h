@@ -19,6 +19,7 @@ namespace lattice_algorithms {
 	using lattice_types::LatticeType;
 	using lattice_types::LatticeClass;
 	using lattice_types::LaunchPolicy;
+	using lattice_types::BarrierType;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
 	using lattice_structure::GeneralLattice;
@@ -140,6 +141,28 @@ namespace lattice_algorithms {
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster));
 			}
 
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+						BarrierType barrierType,typename LatticeObject::Node_type const &barrierValue,
+						typename LatticeObject::Node_type const &rebateValue) {
+				LASSERT(lattice.type() == generator.latticeType(), "Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
+				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
+					traverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),
+						barrierType, barrierValue, rebateValue);
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff, 
+				PayoffAdjuster &&payoffAdjuster,BarrierType barrierType, typename LatticeObject::Node_type const &barrierValue,
+				typename LatticeObject::Node_type const &rebateValue) {
+				LASSERT(lattice.type() == generator.latticeType(), "Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
+				BackwardTraversal<LatticeType::Binomial, TimeAxis, DeltaTime>::
+					traverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),
+						std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrierValue, rebateValue);
+			}
+
 	};
 
 	template<typename TimeAxis,
@@ -186,6 +209,28 @@ namespace lattice_algorithms {
 				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
 				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
 					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster));
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				BarrierType barrierType, typename LatticeObject::Node_type const &barrierValue,
+				typename LatticeObject::Node_type const &rebateValue) {
+				LASSERT(lattice.type() == generator.latticeType(), "Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
+				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
+					traverseBarrier(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),
+						barrierType, barrierValue, rebateValue);
+			}
+
+			template<typename LatticeObject, typename Generator, typename Payoff, typename PayoffAdjuster>
+			void operator()(LatticeObject &lattice, Generator &&generator, DeltaTime const &deltaTime, Payoff &&payoff,
+				PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrierValue,
+				typename LatticeObject::Node_type const &rebateValue) {
+				LASSERT(lattice.type() == generator.latticeType(), "Mismatch between lattice types");
+				LASSERT(lattice.factors() == 1, "For one-dimensional lattice only");
+				BackwardTraversal<LatticeType::Trinomial, TimeAxis, DeltaTime>::
+					traverse(lattice, std::forward<Generator>(generator), deltaTime, std::forward<Payoff>(payoff),
+						std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrierValue, rebateValue);
 			}
 	};
 

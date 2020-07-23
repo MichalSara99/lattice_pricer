@@ -165,6 +165,7 @@
     <ClInclude Include="lattice_algorithms.h" />
     <ClInclude Include="lattice_algorithms_t.h" />
     <ClInclude Include="lattice_backward_traversals.h" />
+    <ClInclude Include="lattice_barrier_option_t.h" />
     <ClInclude Include="lattice_bond_builders.h" />
     <ClInclude Include="lattice_builder.h" />
     <ClInclude Include="lattice_builder_t.h" />

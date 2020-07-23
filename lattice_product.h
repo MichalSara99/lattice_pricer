@@ -14,6 +14,7 @@ namespace lattice_product {
 
 	using lattice_model_params::ModelParams;
 	using lattice_types::AssetClass;
+	using lattice_types::BarrierType;
 
 	template<typename T>
 	class Product {
@@ -143,6 +144,8 @@ namespace lattice_product {
 	class BarrierOption :public Option<T> {
 	protected:
 		T barrier_;
+		T rebate_;
+		BarrierType type_;
 
 	public:
 		explicit BarrierOption() {}
@@ -155,6 +158,12 @@ namespace lattice_product {
 
 		inline void setBarrier(T barrier) { barrier_ = barrier; }
 		inline T barrier()const { return barrier_; }
+
+		inline void setRebate(T rebate) { rebate_ = rebate; }
+		inline T rebate()const { return rebate_; }
+
+		inline void setBarrierType(BarrierType barrierType) { type_ = barrierType; }
+		inline BarrierType barrierType()const { return type_; }
 
 	};
 

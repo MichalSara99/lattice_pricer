@@ -16,6 +16,7 @@
 #include"lattice_utility_t.h"
 #include"lattice_calibrator_ir_t.h"
 #include"lattice_examples_calibrate_price_ir.h"
+#include"lattice_barrier_option_t.h"
 
 #include"lattice_calibrator_equity_t.h"
 #include"lattice_multidimensional_t.h"
@@ -89,6 +90,16 @@ int main(int argc, char const *argv[]) {
     // testIndexedTrinomialEuropeanOptionOnCouponBondLattice();
 	// testTrinomialEuropeanOptionOnCouponBondLattice();
 	// testTrinomialAmericanOptionOnCouponBondLattice();
+
+	// ===============================================
+
+
+
+	// ===============================================
+	// =========== lattice_barrier_option_t.h ========
+	// ===============================================
+	testIndexedEuropeanBarrierLattices();
+
 
 	// ===============================================
 

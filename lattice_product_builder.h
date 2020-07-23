@@ -3,6 +3,7 @@
 #define _LATTICE_PRODUCT_BUILDER
 
 #include"lattice_product.h"
+#include"lattice_types.h"
 
 namespace lattice_product_builder {
 
@@ -13,7 +14,7 @@ namespace lattice_product_builder {
 	using lattice_product::CouponBond;
 	using lattice_product::OptionOnPureDiscountBond;
 	using lattice_product::OptionOnCouponBond;
-
+	using lattice_types::BarrierType;
 
 	// ===========================================================================
 	// =========================== OptionBuilder =================================
@@ -94,7 +95,8 @@ namespace lattice_product_builder {
 		self withDividend(T value) { option_.setDividend(value); return *this;}
 		self withPeriods(std::size_t periods) { option_.setPeriods(periods); return *this;}
 		self withVolatility(T value) { option_.setVolatility(value); return *this;}
-
+		self withRebate(T value) { option_.setRebate(value); return *this; }
+		self withBarrierType(BarrierType barrier) { option_.setBarrierType(barrier); return *this; }
 	};
 
 	// ===========================================================================
