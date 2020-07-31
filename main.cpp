@@ -51,7 +51,7 @@ int main(int argc, char const *argv[]) {
 	// ===============================================
 
 	// testIndexedImpliedStatePriceLattice();
-	// testImpliedStatePriceLattice();
+	 testImpliedStatePriceLattice();
 
 	// testIndexedImpliedProbabilities();
 
@@ -98,7 +98,7 @@ int main(int argc, char const *argv[]) {
 	// ===============================================
 	// =========== lattice_barrier_option_t.h ========
 	// ===============================================
-	testIndexedEuropeanBarrierLattices();
+	// testIndexedEuropeanBarrierLattices();
 
 
 	// ===============================================

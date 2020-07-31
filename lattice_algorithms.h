@@ -25,6 +25,7 @@ namespace lattice_algorithms {
 	using lattice_structure::GeneralLattice;
 	using lattice_forward_traversals::ForwardTraversal;
 	using lattice_backward_traversals::BackwardTraversal;
+	using lattice_backward_traversals::ImpliedBackwardTraversal;
 	using lattice_traits::MergeTraits;
 	using lattice_merge::MergePolicy;
 	
@@ -234,6 +235,26 @@ namespace lattice_algorithms {
 			}
 	};
 
+
+	// ======================================================================================
+	// ==================== Implied Backward Induction Algorithms ===========================
+	// ======================================================================================
+
+
+
+	template<LatticeType Type,
+		typename DeltaTime,
+		typename RiskFreeRate>
+	class ImpliedBackwardInduction {};
+
+
+	template<typename DeltaTime,
+			typename RiskFreeRate>
+	class ImpliedBackwardInduction<LatticeType::Trinomial, DeltaTime, RiskFreeRate> {
+
+
+
+	};
 
 
 
