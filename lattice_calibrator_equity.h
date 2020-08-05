@@ -16,7 +16,11 @@ namespace lattice_calibrator_equity {
 	using lattice_utility::RiskFreeRateHolder;
 	using lattice_utility::LinearInterpolator;
 	using lattice_utility::probFloorCapper;
-	using lattice_calibrator_results::CalibratorResults;
+	using lattice_calibrator_results::CalibratorBinomialEquityResultsPtr;
+	using lattice_calibrator_results::CalibratorBinomialEquityResultsT;
+	using lattice_calibrator_results::CalibratorTrinomialEquityResultsPtr;
+	using lattice_calibrator_results::CalibratorTrinomialEquityResultsT;
+
 
 	// ==============================================================================
 	// ====================== OptionPriceLocator ====================================
@@ -142,17 +146,21 @@ namespace lattice_calibrator_equity {
 	struct CalibratorEquity<LatticeType::Binomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData> {
 	private:
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			_implyTree_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-				typename LatticeObject::Node_type const &apexPrice, OptionData const &optionData);
+		static CalibratorBinomialEquityResultsPtr<LatticeObject> const
+			_implyTree_impl(LatticeObject &stockPriceLattice,
+				DeltaTime const &deltaTime, 
+				RiskFreeRate const &riskFreeRate,
+				typename LatticeObject::Node_type const &apexPrice, 
+				OptionData const &optionData);
 
 	public:
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			implyTree(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-				typename LatticeObject::Node_type const &apexPrice, OptionData const &optionData) {
+		static CalibratorBinomialEquityResultsPtr<LatticeObject> const
+			implyTree(LatticeObject &stockPriceLattice, 
+				DeltaTime const &deltaTime, 
+				RiskFreeRate const &riskFreeRate,
+				typename LatticeObject::Node_type const &apexPrice, 
+				OptionData const &optionData) {
 			return _implyTree_impl(stockPriceLattice, deltaTime, riskFreeRate, apexPrice, optionData);
 		}
 
@@ -169,41 +177,44 @@ namespace lattice_calibrator_equity {
 		// ============= state price algos ===============
 		// for liquid call option prices
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type,typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			_statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
+		static CalibratorTrinomialEquityResultsPtr<LatticeObject> const
+			_statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, 
+				DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,
 				OptionData const &optionData);
 		// for liquid put option prices
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			_statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
+		static CalibratorTrinomialEquityResultsPtr<LatticeObject> const
+			_statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice,
+				DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,
 				OptionData const &optionData);
 
 		// ============= implied probabilities algos ===============
 
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			_impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
-				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate);
+		static CalibratorTrinomialEquityResultsPtr<LatticeObject> const
+			_impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, 
+				LatticeObject const &stockPriceLattice,
+				DeltaTime const &deltaTime, 
+				RiskFreeRate const &riskFreeRate);
 
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			_impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
-				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate);
+		static CalibratorTrinomialEquityResultsPtr<LatticeObject> const
+			_impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, 
+				LatticeObject const &stockPriceLattice,
+				DeltaTime const &deltaTime, 
+				RiskFreeRate const &riskFreeRate);
 
 	
 	public:
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			statePriceLattice(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
+		static CalibratorTrinomialEquityResultsPtr<LatticeObject> const
+			statePriceLattice(LatticeObject &stockPriceLattice,
+				DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,
-				OptionData const &optionData,bool areCallPricesLiquid = true) {
+				OptionData const &optionData,
+				bool areCallPricesLiquid = true) {
 			if(areCallPricesLiquid)
 				return _statePriceLatticeCallKernel_impl(stockPriceLattice, deltaTime, apexPrice, optionData);
 			else
@@ -211,10 +222,12 @@ namespace lattice_calibrator_equity {
 		}
 
 		template<typename LatticeObject>
-		static std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
-			impliedProbability(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
-				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate, bool areCallPricesLiquid = true) {
+		static CalibratorTrinomialEquityResultsPtr<LatticeObject> const
+			impliedProbability(LatticeObject const &statePriceLattice,
+				LatticeObject const &stockPriceLattice,
+				DeltaTime const &deltaTime,
+				RiskFreeRate const &riskFreeRate,
+				bool areCallPricesLiquid = true) {
 			LASSERT(statePriceLattice.timeDimension() == stockPriceLattice.timeDimension(),
 				"statePriceLattice must be of the same time dimension as stockPriceLattice");
 			if(areCallPricesLiquid)
@@ -236,8 +249,7 @@ template<typename TimeAxis,
 		typename RiskFreeRate,
 		typename OptionData>
 template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity,LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial,TimeAxis,DeltaTime,RiskFreeRate, OptionData>::
 _statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, typename LatticeObject::Node_type const &apexPrice,
 	OptionData const &optionData) {
@@ -347,11 +359,8 @@ _statePriceLatticeCallKernel_impl(LatticeObject &stockPriceLattice, DeltaTime co
 		}
 	}
 
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>(statePriceLattice)};
+	return lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject>{new lattice_calibrator_equity::
+		CalibratorTrinomialEquityResultsT<LatticeObject>(statePriceLattice)};
 }
 
 
@@ -360,8 +369,7 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 	template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
 _statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, typename LatticeObject::Node_type const &apexPrice,
 	OptionData const &optionData) {
@@ -471,11 +479,8 @@ _statePriceLatticePutKernel_impl(LatticeObject &stockPriceLattice, DeltaTime con
 		}
 	}
 
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>(statePriceLattice)};
+	return lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject>{new lattice_calibrator_equity::
+		CalibratorTrinomialEquityResultsT<LatticeObject>(statePriceLattice)};
 }
 
 
@@ -486,8 +491,7 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
 _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
@@ -574,11 +578,8 @@ _impliedProbabilityCallKernel_impl(LatticeObject const &statePriceLattice, Latti
 	}
 
 
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>(statePriceLattice,impliedProbs)};
+	return lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject>{new lattice_calibrator_equity::
+		CalibratorTrinomialEquityResultsT<LatticeObject>(statePriceLattice,impliedProbs)};
 
 }
 
@@ -588,8 +589,7 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 	template<typename LatticeObject>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, RiskFreeRate, OptionData>::
 _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate) {
@@ -676,11 +676,8 @@ _impliedProbabilityPutKernel_impl(LatticeObject const &statePriceLattice, Lattic
 	}
 
 
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Triplet>(statePriceLattice, impliedProbs)};
+	return lattice_calibrator_equity::CalibratorTrinomialEquityResultsPtr<LatticeObject>{new lattice_calibrator_equity::
+		CalibratorTrinomialEquityResultsT<LatticeObject>(statePriceLattice, impliedProbs)};
 
 }
 
@@ -690,8 +687,7 @@ template<typename TimeAxis,
 	typename RiskFreeRate,
 	typename OptionData>
 template<typename LatticeObject>
-static std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::Equity, LatticeObject,
-	std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+static lattice_calibrator_equity::CalibratorBinomialEquityResultsPtr<LatticeObject> const
 lattice_calibrator_equity::CalibratorEquity<lattice_types::LatticeType::Binomial,TimeAxis,DeltaTime, RiskFreeRate,OptionData>::
 _implyTree_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 	typename LatticeObject::Node_type const &apexPrice, OptionData const &optionData) {
@@ -849,11 +845,8 @@ _implyTree_impl(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime, Ri
 		}
 	}
 
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Pair>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::Equity,
-		LatticeObject, Pair>(statePriceLattice, impliedProbs)};
+	return lattice_calibrator_equity::CalibratorBinomialEquityResultsPtr<LatticeObject>{new lattice_calibrator_equity::
+		CalibratorBinomialEquityResultsT<LatticeObject>(statePriceLattice, impliedProbs)};
 
 }
 

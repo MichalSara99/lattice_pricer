@@ -17,6 +17,7 @@
 #include"lattice_calibrator_ir_t.h"
 #include"lattice_examples_calibrate_price_ir.h"
 #include"lattice_barrier_option_t.h"
+#include"lattice_equity_implied_pricing_t.h"
 
 #include"lattice_calibrator_equity_t.h"
 #include"lattice_multidimensional_t.h"
@@ -46,19 +47,27 @@ int main(int argc, char const *argv[]) {
 	// testOptionBuilder();
 	// testBarrierOptionBuilder();
 	// testPureDiscountBondBuilder();
+
 	// ===============================================
 	// ======== lattice_calibrator_equity_t.h ========
 	// ===============================================
 
 	// testIndexedImpliedStatePriceLattice();
-	 testImpliedStatePriceLattice();
+	// testImpliedStatePriceLattice();
 
 	// testIndexedImpliedProbabilities();
 
 	// testIndexedSPLImpliedBinomial();
 
 	// ===============================================
+	// ===============================================
+	// === lattice_equity_implied_pricing.h =====
+	// ===============================================
 
+	testIndexedReplicateEuropeanOptionPrice();
+
+
+	// ===============================================
 	// ===============================================
 	// === lattice_examples_calibrate_price_ir.h =====
 	// ===============================================

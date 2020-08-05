@@ -66,6 +66,36 @@ namespace lattice_calibrator_results {
 
 	};
 
+	// ==============================================================================
+	// ============================== Templated typedefs ============================
+	// ==============================================================================
+	
+	template<typename LatticeObject>
+	using ProbabilityPairT = std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>;
+
+	template<typename LatticeObject>
+	using ProbabilityTripletT = std::tuple<typename LatticeObject::Node_type,
+									typename LatticeObject::Node_type,typename LatticeObject::Node_type>;
+
+
+	template<typename LatticeObject>
+	using CalibratorIRResultsT = CalibratorResults<AssetClass::InterestRate, LatticeObject>;
+
+	template<typename LatticeObject>
+	using CalibratorIRResultsPtr = std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>>;
+
+	template<typename LatticeObject>
+	using CalibratorTrinomialEquityResultsT = CalibratorResults<AssetClass::Equity, LatticeObject, ProbabilityTripletT<LatticeObject>>;
+
+	template<typename LatticeObject>
+	using CalibratorBinomialEquityResultsT = CalibratorResults<AssetClass::Equity, LatticeObject, ProbabilityPairT<LatticeObject>>;
+
+	template<typename LatticeObject>
+	using CalibratorTrinomialEquityResultsPtr = std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject, ProbabilityTripletT<LatticeObject>>>;
+
+	template<typename LatticeObject>
+	using CalibratorBinomialEquityResultsPtr = std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject, ProbabilityPairT<LatticeObject>>>;
+
 }
 
 

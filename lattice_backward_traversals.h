@@ -18,7 +18,7 @@ namespace lattice_backward_traversals {
 	using lattice_utility::BarrierComparer;
 	using lattice_utility::DiscountingStyle;
 	using lattice_utility::DiscountingFactor;
-	using lattice_calibrator_results::CalibratorResults;
+	using lattice_calibrator_results::CalibratorTrinomialEquityResultsPtr;
 
 
 
@@ -202,34 +202,26 @@ namespace lattice_backward_traversals {
 	private:
 		template<typename LatticeObject, typename Payoff>
 		static void _backTraverse(LatticeObject &optionLattice,LatticeObject const &spotLattice,
-			std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-			typename LatticeObject::Node_type>>> const& calibrationResults,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, DiscountingStyle style);
 
 		template<typename LatticeObject, typename Payoff,typename PayoffAdjuster>
 		static void _backTraverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-			std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-			typename LatticeObject::Node_type>>> const& calibrationResults,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, DiscountingStyle style);
 
 		template<typename LatticeObject, typename Payoff>
 		static void _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-			std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-			typename LatticeObject::Node_type>>> const& calibrationResults,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, BarrierType barrierType,typename LatticeObject::Node_type const &barrier,
 			typename LatticeObject::Node_type const &rebate, DiscountingStyle style);
 
 		template<typename LatticeObject, typename Payoff, typename PayoffAdjuster>
 		static void _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-			std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-			typename LatticeObject::Node_type>>> const& calibrationResults,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
 			typename LatticeObject::Node_type const &rebate, DiscountingStyle style);
@@ -237,13 +229,11 @@ namespace lattice_backward_traversals {
 	public:
 		template<typename LatticeObject, typename Payoff>
 		static void traverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-			std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-			typename LatticeObject::Node_type>>> const& calibrationResults,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, DiscountingStyle style) {
 			_backTraverse(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
-				payoff, style);
+				std::forward<Payoff>(payoff), style);
 		}
 
 	};
@@ -963,9 +953,7 @@ template<typename DeltaTime,
 template<typename LatticeObject, typename Payoff>
 void lattice_backward_traversals::ImpliedBackwardTraversal<lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
 _backTraverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-	std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-	typename LatticeObject::Node_type>>> const& calibrationResults,
+	CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 	Payoff &&payoff, DiscountingStyle style) {
 
@@ -984,7 +972,7 @@ _backTraverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
 	// get the size of optionLattice object:
 	std::size_t const treeSize = optionLattice.timeDimension();
 	std::size_t const lastIdx = treeSize - 1;
-	std::size_t const lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+	std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
 
 	// unpack the impled probabilities from calibrationResults:
 	auto impliedProbs = calibrationResults->impliedProbabilities;
@@ -1024,9 +1012,7 @@ template<typename DeltaTime,
 template<typename LatticeObject, typename Payoff, typename PayoffAdjuster>
 void lattice_backward_traversals::ImpliedBackwardTraversal<lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
 _backTraverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-	std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-	typename LatticeObject::Node_type>>> const& calibrationResults,
+	CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 	Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, DiscountingStyle style) {
 
@@ -1039,9 +1025,7 @@ template<typename DeltaTime,
 template<typename LatticeObject, typename Payoff>
 void lattice_backward_traversals::ImpliedBackwardTraversal<lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
 _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-	std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-	typename LatticeObject::Node_type>>> const& calibrationResults,
+	CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 	Payoff &&payoff, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
 	typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
@@ -1056,9 +1040,7 @@ template<typename DeltaTime,
 template<typename LatticeObject, typename Payoff, typename PayoffAdjuster>
 void lattice_backward_traversals::ImpliedBackwardTraversal<lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
 _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLattice,
-	std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-	std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type,
-	typename LatticeObject::Node_type>>> const& calibrationResults,
+	CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 	Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
 	typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {

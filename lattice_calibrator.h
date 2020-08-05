@@ -13,7 +13,9 @@ namespace lattice_calibrator {
 
 	using lattice_types::AssetClass;
 	using lattice_types::LatticeType;
-	using lattice_calibrator_results::CalibratorResults;
+	using lattice_calibrator_results::CalibratorIRResultsPtr;
+	using lattice_calibrator_results::CalibratorBinomialEquityResultsPtr;
+	using lattice_calibrator_results::CalibratorTrinomialEquityResultsPtr;
 	using lattice_calibrator_ir::CalibratorIR;
 	using lattice_calibrator_equity::CalibratorEquity;
 
@@ -47,9 +49,10 @@ namespace lattice_calibrator {
 
 
 		template<typename LatticeObject,typename Generator>
-		std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			operator()(LatticeObject &rateLattice, Generator &&generator,
-						DeltaTime const &deltaTime) const {
+		CalibratorIRResultsPtr<LatticeObject> const
+			operator()(LatticeObject &rateLattice, 
+				Generator &&generator,
+				DeltaTime const &deltaTime) const {
 			LASSERT(rateLattice.type() == generator.latticeType(), "Mismatch between lattice types");
 			LASSERT(generator.assetClass() == AssetClass::InterestRate, "Mismatch between asset classes");
 			return CalibratorIR<LatticeType::Binomial, TimeAxis, DeltaTime, DiscountCurve>::
@@ -75,8 +78,9 @@ namespace lattice_calibrator {
 
 
 		template<typename LatticeObject, typename Generator>
-		std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			operator()(LatticeObject &rateLattice, Generator &&generator,
+		CalibratorIRResultsPtr<LatticeObject> const
+			operator()(LatticeObject &rateLattice, 
+				Generator &&generator,
 				DeltaTime const &deltaTime) const {
 			LASSERT(rateLattice.type() == generator.latticeType(), "Mismatch between lattice types");
 			LASSERT(generator.assetClass() == AssetClass::InterestRate, "Mismatch between asset classes");
@@ -107,8 +111,7 @@ namespace lattice_calibrator {
 			:rate_{rate},optionData_{optionData}{}
 
 		template<typename LatticeObject>
-		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject,
-			std::pair<typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+		CalibratorBinomialEquityResultsPtr<LatticeObject> const
 			operator()(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
 				RiskFreeRate const &riskFreeRate, typename LatticeObject::Node_type const &apexPrice) {
 
@@ -136,8 +139,7 @@ namespace lattice_calibrator {
 			:rate_{ rate }, optionData_{ optionData } {}
 
 		template<typename LatticeObject>
-		std::shared_ptr<CalibratorResults<AssetClass::Equity,LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+		CalibratorTrinomialEquityResultsPtr<LatticeObject> const
 			operator()(LatticeObject &stockPriceLattice, DeltaTime const &deltaTime,
 				typename LatticeObject::Node_type const &apexPrice,bool areCallPricesLiquid = true)const {
 			
@@ -148,8 +150,7 @@ namespace lattice_calibrator {
 		}
 
 		template<typename LatticeObject>
-		std::shared_ptr<CalibratorResults<AssetClass::Equity, LatticeObject,
-			std::tuple<typename LatticeObject::Node_type, typename LatticeObject::Node_type, typename LatticeObject::Node_type>>> const
+		CalibratorTrinomialEquityResultsPtr<LatticeObject> const
 			operator()(LatticeObject const &statePriceLattice, LatticeObject const &stockPriceLattice,
 				DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate, bool areCallPricesLiquid = true) {
 			return lattice_calibrator::CalibratorEquity<LatticeType::Trinomial, TimeAxis,

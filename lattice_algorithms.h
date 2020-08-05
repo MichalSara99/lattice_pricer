@@ -9,6 +9,7 @@
 #include"lattice_multidimensional.h"
 #include"lattice_forward_traversals.h"
 #include"lattice_backward_traversals.h"
+#include"lattice_calibrator_results.h"
 #include"lattice_types.h"
 #include"lattice_macros.h"
 #include"lattice_traits.h"
@@ -18,11 +19,14 @@ namespace lattice_algorithms {
 
 	using lattice_types::LatticeType;
 	using lattice_types::LatticeClass;
+	using lattice_types::AssetClass;
 	using lattice_types::LaunchPolicy;
 	using lattice_types::BarrierType;
+	using lattice_types::DiscountingStyle;
 	using lattice_structure::IndexedLattice;
 	using lattice_structure::Lattice;
 	using lattice_structure::GeneralLattice;
+	using lattice_calibrator_results::CalibratorTrinomialEquityResultsPtr;
 	using lattice_forward_traversals::ForwardTraversal;
 	using lattice_backward_traversals::BackwardTraversal;
 	using lattice_backward_traversals::ImpliedBackwardTraversal;
@@ -240,8 +244,6 @@ namespace lattice_algorithms {
 	// ==================== Implied Backward Induction Algorithms ===========================
 	// ======================================================================================
 
-
-
 	template<LatticeType Type,
 		typename DeltaTime,
 		typename RiskFreeRate>
@@ -251,7 +253,23 @@ namespace lattice_algorithms {
 	template<typename DeltaTime,
 			typename RiskFreeRate>
 	class ImpliedBackwardInduction<LatticeType::Trinomial, DeltaTime, RiskFreeRate> {
+	private:
+		RiskFreeRate rate_;
 
+	public:
+		ImpliedBackwardInduction() = delete;
+		explicit ImpliedBackwardInduction(RiskFreeRate rate)
+			:rate_{rate}{}
+
+		template<typename LatticeObject,typename Payoff>
+		void operator()(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, Payoff &&payoff, DiscountingStyle style = DiscountingStyle::Discrete) {
+
+			ImpliedBackwardTraversal<LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
+				traverse(optionLattice, spotLattice, calibrationResults, deltaTime,
+					rate_, std::forward<Payoff>(payoff), style);
+		}
 
 
 	};

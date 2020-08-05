@@ -15,7 +15,8 @@
 namespace lattice_calibrator_ir {
 
 	using lattice_types::LatticeType;
-	using lattice_calibrator_results::CalibratorResults;
+	using lattice_calibrator_results::CalibratorIRResultsT;
+	using lattice_calibrator_results::CalibratorIRResultsPtr;
 	using lattice_types::AssetClass;
 	using lattice_types::DiscountingStyle;
 	using lattice_types::MinimizerMethod;
@@ -72,15 +73,19 @@ namespace lattice_calibrator_ir {
 	struct CalibratorIR<LatticeType::Binomial, TimeAxis, DeltaTime, DiscountCurve> {
 	private:
 		template<typename LatticeObject, typename Generator>
-		static std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			_calibrate_impl(LatticeObject &rateLattice, Generator &&generator,
-				DeltaTime const &deltaTime, DiscountCurve const &discountCurve);
+		static CalibratorIRResultsPtr<LatticeObject> const
+			_calibrate_impl(LatticeObject &rateLattice, 
+				Generator &&generator,
+				DeltaTime const &deltaTime, 
+				DiscountCurve const &discountCurve);
 
 	public:
 		template<typename LatticeObject, typename Generator>
-		static std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			calibrate(LatticeObject &rateLattice, Generator &&generator,
-						DeltaTime const &deltaTime, DiscountCurve const &discountCurve) {
+		static CalibratorIRResultsPtr<LatticeObject> const
+			calibrate(LatticeObject &rateLattice, 
+				Generator &&generator,
+				DeltaTime const &deltaTime, 
+				DiscountCurve const &discountCurve) {
 			return _calibrate_impl(rateLattice, std::forward<Generator>(generator),
 				deltaTime, discountCurve);
 		}
@@ -93,26 +98,37 @@ namespace lattice_calibrator_ir {
 	struct CalibratorIR<LatticeType::Trinomial, TimeAxis, DeltaTime, DiscountCurve> {
 	private:
 		template<typename LatticeObject, typename Generator>
-		static std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			_calibrate_normal_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generator &&generator,
-				DeltaTime const &deltaTime, DiscountCurve const &discountCurve);
+		static CalibratorIRResultsPtr<LatticeObject> const
+			_calibrate_normal_impl(std::size_t timeIdx,
+				LatticeObject &rateLattice, 
+				Generator &&generator,
+				DeltaTime const &deltaTime, 
+				DiscountCurve const &discountCurve);
 
 		template<typename LatticeObject, typename Generator>
-		static std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			_calibrate_reverting_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generator &&generator,
-				DeltaTime const &deltaTime, DiscountCurve const &discountCurve, LatticeObject &arrowDebreuLattice);
+		static CalibratorIRResultsPtr<LatticeObject> const
+			_calibrate_reverting_impl(std::size_t timeIdx, 
+				LatticeObject &rateLattice, 
+				Generator &&generator,
+				DeltaTime const &deltaTime, 
+				DiscountCurve const &discountCurve, 
+				LatticeObject &arrowDebreuLattice);
 
 		template<typename LatticeObject, typename Generator>
-		static std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			_calibrate_impl(LatticeObject &rateLattice, Generator &&generator,
-				DeltaTime const &deltaTime, DiscountCurve const &discountCurve);
+		static CalibratorIRResultsPtr<LatticeObject> const
+			_calibrate_impl(LatticeObject &rateLattice,
+				Generator &&generator,
+				DeltaTime const &deltaTime,
+				DiscountCurve const &discountCurve);
 
 
 	public:
 		template<typename LatticeObject, typename Generator>
-		static std::shared_ptr<CalibratorResults<AssetClass::InterestRate, LatticeObject>> const
-			calibrate(LatticeObject &rateLattice, Generator &&generator,
-				DeltaTime const &deltaTime, DiscountCurve const &discountCurve) {
+		static CalibratorIRResultsPtr<LatticeObject> const
+			calibrate(LatticeObject &rateLattice, 
+				Generator &&generator,
+				DeltaTime const &deltaTime,
+				DiscountCurve const &discountCurve) {
 			return _calibrate_impl(rateLattice, std::forward<Generator>(generator),
 				deltaTime, discountCurve);
 		}
@@ -131,9 +147,11 @@ template<typename TimeAxis,
 	typename DeltaTime,
 	typename DiscountCurve>
 template<typename LatticeObject, typename Generator>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::InterestRate, LatticeObject>> const
+lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject> const
 lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Binomial,TimeAxis, DeltaTime, DiscountCurve>::
-	_calibrate_impl(LatticeObject &rateLattice, Generator &&generator,DeltaTime const &deltaTime,
+	_calibrate_impl(LatticeObject &rateLattice, 
+		Generator &&generator,
+		DeltaTime const &deltaTime,
 		DiscountCurve const &discountCurve) {
 
 	// typedef node type:
@@ -205,11 +223,8 @@ lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Binomial,TimeAxi
 
 		optimizers.emplace_back(optimizer);
 	}
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::InterestRate,
-		LatticeObject>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::InterestRate,
-		LatticeObject>(arrowDebreuLattice, optimizers) };
+	return lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject>{new lattice_calibrator_ir::
+		CalibratorIRResultsT<LatticeObject>(arrowDebreuLattice, optimizers) };
 }
 
 
@@ -217,9 +232,12 @@ template<typename TimeAxis,
 	typename DeltaTime,
 	typename DiscountCurve>
 	template<typename LatticeObject, typename Generator>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::InterestRate, LatticeObject>> const
+lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject> const
 lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, DiscountCurve>::
-_calibrate_normal_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generator &&generator, DeltaTime const &deltaTime,
+_calibrate_normal_impl(std::size_t timeIdx, 
+	LatticeObject &rateLattice, 
+	Generator &&generator, 
+	DeltaTime const &deltaTime,
 	DiscountCurve const &discountCurve) {
 	// typedef node type:
 	typedef typename LatticeObject::Node_type Node;
@@ -289,11 +307,8 @@ _calibrate_normal_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generato
 
 		optimizers.emplace_back(optimizer);
 	}
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::InterestRate,
-		LatticeObject>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::InterestRate,
-		LatticeObject>(arrowDebreuLattice, optimizers) };
+	return lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject>{new lattice_calibrator_ir::
+		CalibratorIRResultsT<LatticeObject>(arrowDebreuLattice, optimizers) };
 
 }
 
@@ -301,10 +316,14 @@ template<typename TimeAxis,
 	typename DeltaTime,
 	typename DiscountCurve>
 	template<typename LatticeObject, typename Generator>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::InterestRate, LatticeObject>> const
+lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject> const
 lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, DiscountCurve>::
-_calibrate_reverting_impl(std::size_t timeIdx, LatticeObject &rateLattice, Generator &&generator, DeltaTime const &deltaTime,
-	DiscountCurve const &discountCurve, LatticeObject &arrowDebreuLattice) {
+_calibrate_reverting_impl(std::size_t timeIdx, 
+	LatticeObject &rateLattice, 
+	Generator &&generator, 
+	DeltaTime const &deltaTime,
+	DiscountCurve const &discountCurve, 
+	LatticeObject &arrowDebreuLattice) {
 
 	// typedef node type:
 	typedef typename LatticeObject::Node_type Node;
@@ -391,11 +410,8 @@ _calibrate_reverting_impl(std::size_t timeIdx, LatticeObject &rateLattice, Gener
 
 		optimizers.emplace_back(optimizer);
 	}
-	return std::shared_ptr<lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::InterestRate,
-		LatticeObject>>{new lattice_calibrator_results::
-		CalibratorResults<lattice_types::AssetClass::InterestRate,
-		LatticeObject>(arrowDebreuLattice, optimizers) };
+	return lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject>{new lattice_calibrator_ir::
+		CalibratorIRResultsT<LatticeObject>(arrowDebreuLattice, optimizers) };
 
 }
 
@@ -405,9 +421,11 @@ template<typename TimeAxis,
 	typename DeltaTime,
 	typename DiscountCurve>
 	template<typename LatticeObject, typename Generator>
-std::shared_ptr<lattice_calibrator_results::CalibratorResults<lattice_types::AssetClass::InterestRate, LatticeObject>> const
+lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject> const
 lattice_calibrator_ir::CalibratorIR<lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime, DiscountCurve>::
-_calibrate_impl(LatticeObject &rateLattice, Generator &&generator, DeltaTime const &deltaTime,
+_calibrate_impl(LatticeObject &rateLattice,
+	Generator &&generator,
+	DeltaTime const &deltaTime,
 	DiscountCurve const &discountCurve) {
 
 	// typedef node type:
@@ -436,11 +454,8 @@ _calibrate_impl(LatticeObject &rateLattice, Generator &&generator, DeltaTime con
 			optimizers.emplace_back(optimizers_part2[t]);
 		}
 
-		return std::shared_ptr<lattice_calibrator_results::
-			CalibratorResults<lattice_types::AssetClass::InterestRate,
-			LatticeObject>>{new lattice_calibrator_results::
-			CalibratorResults<lattice_types::AssetClass::InterestRate,
-			LatticeObject>(arrowDebreuLattice, optimizers) };
+		return lattice_calibrator_ir::CalibratorIRResultsPtr<LatticeObject>{new lattice_calibrator_ir::
+			CalibratorIRResultsT<LatticeObject>(arrowDebreuLattice, optimizers) };
 	}
 }
 
