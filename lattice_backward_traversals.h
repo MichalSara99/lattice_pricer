@@ -236,6 +236,36 @@ namespace lattice_backward_traversals {
 				std::forward<Payoff>(payoff), style);
 		}
 
+		template<typename LatticeObject, typename Payoff,typename PayoffAdjuster>
+		static void traverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, DiscountingStyle style) {
+			_backTraverse(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+				std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster), style);
+		}
+
+		template<typename LatticeObject,typename Payoff>
+		static void traverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+			Payoff &&payoff, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
+			typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
+			_backTraverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+				std::forward<Payoff>(payoff), barrierType, barrier, rebate, style);
+		}
+
+		template<typename LatticeObject,typename Payoff,typename PayoffAdjuster>
+		static void traverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
+			typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
+			_backTraverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+				std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrier, rebate, style);
+		}
+
+
 	};
 
 
@@ -1016,7 +1046,59 @@ _backTraverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
 	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 	Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, DiscountingStyle style) {
 
-	throw std::exception("Not yet implemented.");
+	// typedefs:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef RiskFreeRateHolder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef DeltaTimeHolder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef discounting factor:
+	typedef DiscountingFactor<Node> DCF;
+
+	// get correct discounting factor style:
+	auto dcf = DCF::function(style);
+
+	// get the size of optionLattice object:
+	std::size_t const treeSize = optionLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	// unpack the impled probabilities from calibrationResults:
+	auto impliedProbs = calibrationResults->impliedProbabilities;
+	LASSERT(impliedProbs.size() >= (treeSize - 1), "Must have enough implied volatilities for pricing.");
+
+	// last payoff first:
+	for (std::size_t i = 0; i < lastNodesSize; ++i) {
+		optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+	}
+
+	std::size_t nodesSize{ 0 };
+	Node df{};
+	Node value{};
+	std::vector<std::tuple<Node, Node, Node>> probs;
+	std::tuple<Node, Node, Node> tpl;
+	for (auto t = lastIdx - 1; t > 0; --t) {
+		df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
+		nodesSize = optionLattice.nodesAtIdx(t).size();
+		probs = impliedProbs.at(t);
+		for (auto i = 0; i < nodesSize; ++i) {
+			tpl = probs.at(i);
+			value = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
+				std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
+				std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+			payoffAdjuster(value, spotLattice(t, i));
+			optionLattice(t, i) = value;
+		}
+
+	}
+	df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
+	probs = impliedProbs.at(0);
+	tpl = probs.at(0);
+	value = df * (std::get<0>(tpl) * optionLattice(1, 0) +
+		std::get<1>(tpl) * optionLattice(1, 1) +
+		std::get<2>(tpl) *optionLattice(1, 2));
+	payoffAdjuster(value, spotLattice(0, 0));
+	optionLattice(0, 0) = value;
 
 }
 
@@ -1030,8 +1112,74 @@ _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLatt
 	Payoff &&payoff, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
 	typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
 
-	throw std::exception("Not yet implemented.");
+	// typedefs:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef RiskFreeRateHolder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef DeltaTimeHolder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef discounting factor:
+	typedef DiscountingFactor<Node> DCF;
+	// typedef BarrierComparer:
+	typedef BarrierComparer<Node> BC;
 
+	// get correct comparer function:
+	auto cmp = BC::comparer(barrierType);
+	// get correct discounting factor style:
+	auto dcf = DCF::function(style);
+
+	// get the size of optionLattice object:
+	std::size_t const treeSize = optionLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	// unpack the impled probabilities from calibrationResults:
+	auto impliedProbs = calibrationResults->impliedProbabilities;
+	LASSERT(impliedProbs.size() >= (treeSize - 1), "Must have enough implied volatilities for pricing.");
+
+	// last payoff first:
+	for (std::size_t i = 0; i < lastNodesSize; ++i) {
+		if (cmp(spotLattice(lastIdx, i), barrier)) {
+			optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+		}
+		else {
+			optionLattice(lastIdx, i) = 0.0;
+		}
+	}
+
+	std::size_t nodesSize{ 0 };
+	Node df{};
+	std::vector<std::tuple<Node, Node, Node>> probs;
+	std::tuple<Node, Node, Node> tpl;
+	for (auto t = lastIdx - 1; t > 0; --t) {
+		df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
+		nodesSize = optionLattice.nodesAtIdx(t).size();
+		probs = impliedProbs.at(t);
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(spotLattice(t, i), barrier)) {
+				tpl = probs.at(i);
+				optionLattice(t, i) = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
+					std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
+					std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+			}
+			else {
+				optionLattice(t, i) = rebate;
+			}
+		}
+
+	}
+
+	df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
+	probs = impliedProbs.at(0);
+	if (cmp(spotLattice(0, 0), barrier)) {
+		tpl = probs.at(0);
+		optionLattice(0, 0) = df * (std::get<0>(tpl) * optionLattice(1, 0) +
+			std::get<1>(tpl) * optionLattice(1, 1) +
+			std::get<2>(tpl) *optionLattice(1, 2));
+	}
+	else {
+		optionLattice(0, 0) = rebate;
+	}
 }
 
 
@@ -1045,7 +1193,80 @@ _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLatt
 	Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
 	typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
 
-	throw std::exception("Not yet implemented");
+	// typedefs:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef RiskFreeRateHolder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef DeltaTimeHolder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef discounting factor:
+	typedef DiscountingFactor<Node> DCF;
+	// typedef BarrierComparer:
+	typedef BarrierComparer<Node> BC;
+
+	// get correct comparer function:
+	auto cmp = BC::comparer(barrierType);
+	// get correct discounting factor style:
+	auto dcf = DCF::function(style);
+
+	// get the size of optionLattice object:
+	std::size_t const treeSize = optionLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	// unpack the impled probabilities from calibrationResults:
+	auto impliedProbs = calibrationResults->impliedProbabilities;
+	LASSERT(impliedProbs.size() >= (treeSize - 1), "Must have enough implied volatilities for pricing.");
+
+	// last payoff first:
+	for (std::size_t i = 0; i < lastNodesSize; ++i) {
+		if (cmp(spotLattice(lastIdx, i), barrier)) {
+			optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+		}
+		else {
+			optionLattice(lastIdx, i) = 0.0;
+		}
+	}
+
+	std::size_t nodesSize{ 0 };
+	Node df{};
+	Node value{};
+	std::vector<std::tuple<Node, Node, Node>> probs;
+	std::tuple<Node, Node, Node> tpl;
+	for (auto t = lastIdx - 1; t > 0; --t) {
+		df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
+		nodesSize = optionLattice.nodesAtIdx(t).size();
+		probs = impliedProbs.at(t);
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(spotLattice(t, i), barrier)) {
+				tpl = probs.at(i);
+				value = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
+					std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
+					std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+				payoffAdjuster(value,spotLattice(t, i));
+				optionLattice(t, i) = value;
+
+			}
+			else {
+				optionLattice(t, i) = rebate;
+			}
+		}
+
+	}
+
+	df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
+	probs = impliedProbs.at(0);
+	if (cmp(spotLattice(0, 0), barrier)) {
+		tpl = probs.at(0);
+		value = df * (std::get<0>(tpl) * optionLattice(1, 0) +
+			std::get<1>(tpl) * optionLattice(1, 1) +
+			std::get<2>(tpl) *optionLattice(1, 2));
+		payoffAdjuster(value, spotLattice(0, 0));
+		optionLattice(0, 0) = value;
+	}
+	else {
+		optionLattice(0, 0) = rebate;
+	}
 }
 
 #endif ///_LATTICE_BACKWARD_TRAVERSALS

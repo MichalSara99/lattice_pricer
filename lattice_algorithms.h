@@ -271,6 +271,37 @@ namespace lattice_algorithms {
 					rate_, std::forward<Payoff>(payoff), style);
 		}
 
+		template<typename LatticeObject, typename Payoff,typename PayoffAdjuster>
+		void operator()(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, DiscountingStyle style = DiscountingStyle::Discrete) {
+			ImpliedBackwardTraversal<LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
+				traverse(optionLattice, spotLattice, calibrationResults, deltaTime,
+					rate_, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster), style);
+		}
+
+		template<typename LatticeObject,typename Payoff>
+		void operator()(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, Payoff &&payoff, BarrierType barrierType, 
+			typename LatticeObject::Node_type const &barrier,typename LatticeObject::Node_type const &rebate,
+			DiscountingStyle style = DiscountingStyle::Discrete) {
+			ImpliedBackwardTraversal<LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
+				traverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime,
+					rate_, std::forward<Payoff>(payoff),barrierType, barrier, rebate, style);
+		}
+
+		template<typename LatticeObject, typename Payoff,typename PayoffAdjuster>
+		void operator()(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,BarrierType barrierType,
+			typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate,
+			DiscountingStyle style = DiscountingStyle::Discrete) {
+			ImpliedBackwardTraversal<LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
+				traverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime,
+					rate_, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster),
+					barrierType, barrier, rebate, style);
+		}
 
 	};
 

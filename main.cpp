@@ -65,7 +65,9 @@ int main(int argc, char const *argv[]) {
 	// ===============================================
 
 	testIndexedReplicateEuropeanOptionPrice();
-
+	// testIndexedReplicateAmericanOptionPrice();
+	testIndexedEuropeanBarrierOptionPrice();
+	testIndexedAmericanBarrierOptionPrice();
 
 	// ===============================================
 	// ===============================================
