@@ -64,10 +64,10 @@ int main(int argc, char const *argv[]) {
 	// === lattice_equity_implied_pricing.h =====
 	// ===============================================
 
-	testIndexedReplicateEuropeanOptionPrice();
+	// testIndexedReplicateEuropeanOptionPrice();
 	// testIndexedReplicateAmericanOptionPrice();
 	testIndexedEuropeanBarrierOptionPrice();
-	testIndexedAmericanBarrierOptionPrice();
+	// testIndexedAmericanBarrierOptionPrice();
 
 	// ===============================================
 	// ===============================================

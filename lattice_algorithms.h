@@ -285,10 +285,11 @@ namespace lattice_algorithms {
 			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, Payoff &&payoff, BarrierType barrierType, 
 			typename LatticeObject::Node_type const &barrier,typename LatticeObject::Node_type const &rebate,
-			DiscountingStyle style = DiscountingStyle::Discrete) {
+			bool dermanKaniErgenerAdujstment = false,DiscountingStyle style = DiscountingStyle::Discrete) {
 			ImpliedBackwardTraversal<LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
 				traverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime,
-					rate_, std::forward<Payoff>(payoff),barrierType, barrier, rebate, style);
+					rate_, std::forward<Payoff>(payoff), barrierType, barrier, rebate,
+					dermanKaniErgenerAdujstment, style);
 		}
 
 		template<typename LatticeObject, typename Payoff,typename PayoffAdjuster>
@@ -296,11 +297,11 @@ namespace lattice_algorithms {
 			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,BarrierType barrierType,
 			typename LatticeObject::Node_type const &barrier, typename LatticeObject::Node_type const &rebate,
-			DiscountingStyle style = DiscountingStyle::Discrete) {
+			bool dermanKaniErgenerAdujstment = false,DiscountingStyle style = DiscountingStyle::Discrete) {
 			ImpliedBackwardTraversal<LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
 				traverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime,
-					rate_, std::forward<Payoff>(payoff),std::forward<PayoffAdjuster>(payoffAdjuster),
-					barrierType, barrier, rebate, style);
+					rate_, std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster),
+					barrierType, barrier, rebate, dermanKaniErgenerAdujstment, style);
 		}
 
 	};

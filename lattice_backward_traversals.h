@@ -16,6 +16,7 @@ namespace lattice_backward_traversals {
 	using lattice_utility::DeltaTimeHolder;
 	using lattice_utility::RiskFreeRateHolder;
 	using lattice_utility::BarrierComparer;
+	using lattice_utility::DermanKaniErgenerAdjuster;
 	using lattice_utility::DiscountingStyle;
 	using lattice_utility::DiscountingFactor;
 	using lattice_calibrator_results::CalibratorTrinomialEquityResultsPtr;
@@ -226,6 +227,21 @@ namespace lattice_backward_traversals {
 			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
 			typename LatticeObject::Node_type const &rebate, DiscountingStyle style);
 
+		template<typename LatticeObject,typename Payoff>
+		static void _backTraverseBarrierDKEAdjustment(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+			Payoff &&payoff, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
+			typename LatticeObject::Node_type const &rebate, DiscountingStyle style);
+
+		template<typename LatticeObject, typename Payoff,typename PayoffAdjuster>
+		static void _backTraverseBarrierDKEAdjustment(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
+			typename LatticeObject::Node_type const &rebate, DiscountingStyle style);
+
+
 	public:
 		template<typename LatticeObject, typename Payoff>
 		static void traverse(LatticeObject &optionLattice, LatticeObject const &spotLattice,
@@ -250,9 +266,14 @@ namespace lattice_backward_traversals {
 			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
-			typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
-			_backTraverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
-				std::forward<Payoff>(payoff), barrierType, barrier, rebate, style);
+			typename LatticeObject::Node_type const &rebate,
+			bool dermanKaniErgenerAdujstment,DiscountingStyle style) {
+			if(dermanKaniErgenerAdujstment)
+				_backTraverseBarrierDKEAdjustment(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+					std::forward<Payoff>(payoff), barrierType, barrier, rebate, style);
+			else
+				_backTraverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+					std::forward<Payoff>(payoff), barrierType, barrier, rebate, style);
 		}
 
 		template<typename LatticeObject,typename Payoff,typename PayoffAdjuster>
@@ -260,9 +281,13 @@ namespace lattice_backward_traversals {
 			CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
 			DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
 			Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
-			typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
-			_backTraverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+			typename LatticeObject::Node_type const &rebate, bool dermanKaniErgenerAdujstment, DiscountingStyle style) {
+			if(dermanKaniErgenerAdujstment)
+				_backTraverseBarrierDKEAdjustment(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
 				std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrier, rebate, style);
+			else
+				_backTraverseBarrier(optionLattice, spotLattice, calibrationResults, deltaTime, riskFreeRate,
+					std::forward<Payoff>(payoff), std::forward<PayoffAdjuster>(payoffAdjuster), barrierType, barrier, rebate, style);
 		}
 
 
@@ -1267,6 +1292,202 @@ _backTraverseBarrier(LatticeObject &optionLattice, LatticeObject const &spotLatt
 	else {
 		optionLattice(0, 0) = rebate;
 	}
+}
+
+template<typename DeltaTime,
+	typename RiskFreeRate>
+template<typename LatticeObject, typename Payoff>
+void lattice_backward_traversals::ImpliedBackwardTraversal<lattice_types::LatticeType::Trinomial,DeltaTime,RiskFreeRate>::
+_backTraverseBarrierDKEAdjustment(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+	CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+	Payoff &&payoff, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
+	typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
+
+
+	// typedefs:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef RiskFreeRateHolder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef DeltaTimeHolder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef discounting factor:
+	typedef DiscountingFactor<Node> DCF;
+	// typedef BarrierComparer:
+	typedef BarrierComparer<Node> BC;
+	// typedef DermanKaniErgenerAdjuster:
+	typedef DermanKaniErgenerAdjuster<Node> DKEA;
+
+	// get correct comparer function:
+	auto cmp = BC::comparer(barrierType);
+	// get correct adjuster:
+	auto adjustPair = DKEA::adjuster(barrierType);
+	// unpack checker and adjuster:
+	auto dkeChecker = adjustPair.first;
+	auto dkeAdjuster = adjustPair.second;
+	// get correct discounting factor style:
+	auto dcf = DCF::function(style);
+
+	// get the size of optionLattice object:
+	std::size_t const treeSize = optionLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	// unpack the impled probabilities from calibrationResults:
+	auto impliedProbs = calibrationResults->impliedProbabilities;
+	LASSERT(impliedProbs.size() >= (treeSize - 1), "Must have enough implied volatilities for pricing.");
+
+	// last payoff first:
+	for (std::size_t i = 0; i < lastNodesSize; ++i) {
+		if (cmp(spotLattice(lastIdx, i), barrier)) {
+			optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+		}
+		else {
+			optionLattice(lastIdx, i) = 0.0;
+		}
+	}
+
+	std::size_t nodesSize{ 0 };
+	Node df{};
+	std::vector<std::tuple<Node, Node, Node>> probs;
+	std::tuple<Node, Node, Node> tpl;
+	for (auto t = lastIdx - 1; t > 0; --t) {
+		df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
+		nodesSize = optionLattice.nodesAtIdx(t).size();
+		probs = impliedProbs.at(t);
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(spotLattice(t, i), barrier)) {
+				tpl = probs.at(i);
+				optionLattice(t, i) = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
+					std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
+					std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+			}
+			else {
+				optionLattice(t, i) = rebate;
+			}
+			// Derman-Kani-Ergener adjustment:
+			if (((i > 0) && (i < nodesSize - 1)) &&
+				dkeChecker(spotLattice(t, i), spotLattice(t, i - 1), spotLattice(t, i + 1), barrier)) {
+				optionLattice(t, i) = dkeAdjuster(spotLattice(t, i), spotLattice(t, i - 1),
+					spotLattice(t, i + 1), barrier,rebate, optionLattice(t, i));
+			}
+		}
+
+	}
+
+	df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
+	probs = impliedProbs.at(0);
+	if (cmp(spotLattice(0, 0), barrier)) {
+		tpl = probs.at(0);
+		optionLattice(0, 0) = df * (std::get<0>(tpl) * optionLattice(1, 0) +
+			std::get<1>(tpl) * optionLattice(1, 1) +
+			std::get<2>(tpl) *optionLattice(1, 2));
+	}
+	else {
+		optionLattice(0, 0) = rebate;
+	}
+
+}
+
+
+template<typename DeltaTime,
+	typename RiskFreeRate>
+	template<typename LatticeObject, typename Payoff, typename PayoffAdjuster>
+void lattice_backward_traversals::ImpliedBackwardTraversal<lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
+_backTraverseBarrierDKEAdjustment(LatticeObject &optionLattice, LatticeObject const &spotLattice,
+	CalibratorTrinomialEquityResultsPtr<LatticeObject> const& calibrationResults,
+	DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
+	Payoff &&payoff, PayoffAdjuster &&payoffAdjuster, BarrierType barrierType, typename LatticeObject::Node_type const &barrier,
+	typename LatticeObject::Node_type const &rebate, DiscountingStyle style) {
+
+	// typedefs:
+	typedef typename LatticeObject::Node_type Node;
+	// typedef RiskFreeRateHolder:
+	typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+	// typedef DeltaTimeHolder:
+	typedef DeltaTimeHolder<DeltaTime> DT;
+	// typedef discounting factor:
+	typedef DiscountingFactor<Node> DCF;
+	// typedef BarrierComparer:
+	typedef BarrierComparer<Node> BC;
+	// typedef DermanKaniErgenerAdjuster:
+	typedef DermanKaniErgenerAdjuster<Node> DKEA;
+
+	// get correct comparer function:
+	auto cmp = BC::comparer(barrierType);
+	// get correct adjuster:
+	auto adjustPair = DKEA::adjuster(barrierType);
+	// unpack checker and adjuster:
+	auto dkeChecker = adjustPair.first;
+	auto dkeAdjuster = adjustPair.second;
+	// get correct discounting factor style:
+	auto dcf = DCF::function(style);
+
+	// get the size of optionLattice object:
+	std::size_t const treeSize = optionLattice.timeDimension();
+	std::size_t const lastIdx = treeSize - 1;
+	std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+
+	// unpack the impled probabilities from calibrationResults:
+	auto impliedProbs = calibrationResults->impliedProbabilities;
+	LASSERT(impliedProbs.size() >= (treeSize - 1), "Must have enough implied volatilities for pricing.");
+
+	// last payoff first:
+	for (std::size_t i = 0; i < lastNodesSize; ++i) {
+		if (cmp(spotLattice(lastIdx, i), barrier)) {
+			optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+		}
+		else {
+			optionLattice(lastIdx, i) = 0.0;
+		}
+	}
+
+	std::size_t nodesSize{ 0 };
+	Node df{};
+	Node value{};
+	std::vector<std::tuple<Node, Node, Node>> probs;
+	std::tuple<Node, Node, Node> tpl;
+	for (auto t = lastIdx - 1; t > 0; --t) {
+		df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
+		nodesSize = optionLattice.nodesAtIdx(t).size();
+		probs = impliedProbs.at(t);
+		for (auto i = 0; i < nodesSize; ++i) {
+			if (cmp(spotLattice(t, i), barrier)) {
+				tpl = probs.at(i);
+				value = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
+					std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
+					std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+				payoffAdjuster(value, spotLattice(t, i));
+				optionLattice(t, i) = value;
+
+			}
+			else {
+				optionLattice(t, i) = rebate;
+			}
+			// Derman-Kani-Ergener adjustment:
+			if (((i > 0) && (i < nodesSize - 1)) &&
+				dkeChecker(spotLattice(t, i), spotLattice(t, i - 1), spotLattice(t, i + 1), barrier)) {
+				optionLattice(t, i) = dkeAdjuster(spotLattice(t, i), spotLattice(t, i - 1),
+					spotLattice(t, i + 1), barrier, rebate, optionLattice(t, i));
+			}
+		}
+
+	}
+
+	df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
+	probs = impliedProbs.at(0);
+	if (cmp(spotLattice(0, 0), barrier)) {
+		tpl = probs.at(0);
+		value = df * (std::get<0>(tpl) * optionLattice(1, 0) +
+			std::get<1>(tpl) * optionLattice(1, 1) +
+			std::get<2>(tpl) *optionLattice(1, 2));
+		payoffAdjuster(value, spotLattice(0, 0));
+		optionLattice(0, 0) = value;
+	}
+	else {
+		optionLattice(0, 0) = rebate;
+	}
+
 }
 
 #endif ///_LATTICE_BACKWARD_TRAVERSALS

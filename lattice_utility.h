@@ -64,9 +64,14 @@ namespace lattice_utility {
 					return (stock > barrier);
 				};
 				break;
+			case lattice_types::BarrierType::UpAndIn:
+				return [](T stock, T barrier)->bool {
+					return (stock >= barrier);
+				};
+				break;
 			case lattice_types::BarrierType::DownAndIn:
-				return [](T stock, T barrier) ->bool{
-					return (stock < barrier);
+				return [](T stock, T barrier)->bool {
+					return (stock <= barrier);
 				};
 				break;
 			case lattice_types::BarrierType::UpAndOut:
@@ -74,15 +79,52 @@ namespace lattice_utility {
 					return (stock < barrier);
 				};
 				break;
-			case lattice_types::BarrierType::UpAndIn:
-				return [](T stock, T barrier)->bool {
-					return (stock > barrier);
-				};
-				break;
 			}
 		}
 	};
 
+	// ==============================================================================
+	// ================================ DermanKaniErgenerAdjuster ===================
+	// ==============================================================================
+
+	template<typename T>
+	using CheckAdjusterPair = std::pair<std::function<bool(T, T, T, T)>, std::function<T(T, T, T, T, T, T)>>;
+
+	template<typename T>
+	struct DermanKaniErgenerAdjuster {
+		static CheckAdjusterPair<T> const adjuster(lattice_types::BarrierType BType) {
+			auto cmp = BarrierComparer<T>::comparer(BType);
+			switch (BType)
+			{
+				case lattice_types::BarrierType::DownAndOut:
+				case lattice_types::BarrierType::UpAndIn:
+					{
+						auto checker =  [=](T stock, T stockDown,T stockUp, T barrier)->bool {
+							return (cmp(stock,barrier) && (stockDown <= barrier));
+						};
+
+						auto adjuster = [](T stock,T stockDown,T stockUp,T barrier,T rebate,T optionPrice)->T {
+							return (std::max(rebate - optionPrice, optionPrice - rebate) / (stockDown - stock))*(barrier - stock);
+						};
+						return std::make_pair(checker, adjuster);
+					}
+					break;
+				case lattice_types::BarrierType::DownAndIn:
+				case lattice_types::BarrierType::UpAndOut:
+					{
+						auto checker = [=](T stock, T stockDown, T stockUp, T barrier)->bool {
+							return (cmp(stock, barrier) && (stockUp >= barrier));
+						};
+
+						auto adjuster = [](T stock, T stockDown, T stockUp, T barrier, T rebate, T optionPrice)->T {
+							return (std::max(rebate - optionPrice, optionPrice - rebate) / (stockUp - stock))*(barrier - stock);
+						};
+						return std::make_pair(checker, adjuster);
+					}
+					break;
+			}
+		}
+	};
 
 	// ==============================================================================
 	// ================================== print =====================================
