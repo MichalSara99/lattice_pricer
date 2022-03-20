@@ -51,7 +51,7 @@ public:
       std::vector<T> const &theta,
       discounting_style style = discounting_style::Continuous)
       : params_{params}, theta_{theta}, prob_{T{0.5}}, ds_{style},
-        dfc_{DCF::function(style)} {}
+        dcf_{DCF::function(style)} {}
 
   discounting_style style_of_discounting() const { return ds_; }
 
@@ -69,7 +69,7 @@ public:
   }
 
   // Backward generator
-  T operator()(T curr_value, T down_value, T up_value, T dt) override {
+  T operator()(T curr_value, T down_value, T up_value, T dt) const override {
     T const disc = dcf_(curr_value, dt);
     return (disc *
             (prob_ * up_value + (static_cast<T>(1.0) - prob_) * down_value));

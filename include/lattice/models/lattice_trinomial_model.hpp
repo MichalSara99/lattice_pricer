@@ -28,7 +28,7 @@ public:
   // Backward generator:
   virtual T operator()(T curr_value, T up_value, T mid_value, T down_value,
                        T dt, std::size_t revert_branches_size,
-                       std::size_t nodes_size, std::size_t leaf_idx) = 0;
+                       std::size_t nodes_size, std::size_t leaf_idx) const = 0;
 
   // Factor count:
   enum { factor_count = 1 };

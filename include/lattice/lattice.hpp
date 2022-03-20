@@ -37,7 +37,7 @@ template <lattice_type type, typename node, typename time_axis,
           typename node_container_t>
 class general_lattice {
 private:
-  std::size_t first_revert_idx_;
+  std::size_t first_revert_idx_{0};
 
   template <typename arg>
   void build_tree_impl(arg const &argument, std::true_type);

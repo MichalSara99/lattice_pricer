@@ -49,7 +49,7 @@ private:
     T const half = static_cast<T>(0.5);
     std::size_t const decrement{(nodes_size - 1) / 2};
     long const i = (leaf_idx - decrement);
-    T const eps = sign(i) * std::floor(std::abs<T>(i) / revert_branches_size);
+    T const eps = sign(i) * std::floor(std::abs(i) / revert_branches_size);
     T const nu = (-one * a * dt * i + eps) * dr;
     T const numer = (nu * nu + sig * sig * dt);
     return std::make_tuple(half * ((numer / denom) - (nu / dr)),
