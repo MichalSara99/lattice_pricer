@@ -1,8 +1,8 @@
 #define BOOST_TEST_MODULE
 
 #include "lattice/lattice.hpp"
-#include "utilities/lattice_enums.hpp"
-#include "utilities/lattice_printing.hpp"
+#include "lattice/utilities/lattice_enums.hpp"
+#include "lattice/utilities/lattice_printing.hpp"
 #include <fstream>
 #include <iostream>
 

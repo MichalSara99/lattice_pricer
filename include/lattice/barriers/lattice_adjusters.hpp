@@ -1,12 +1,20 @@
+/**
+ * @file lattice_adjusters.hpp
+ * @author Michal Sara (michal.sara99@gmail.com)
+ * @brief Adjusters for the lattice
+ * @version 0.1
+ * @date 2022-03-20
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
 #if !defined(_LATTICE_ADJUSTERS_HPP_)
 #define _LATTICE_ADJUSTERS_HPP_
 
-#include "utilities/lattice_enums.hpp"
+#include "../utilities/lattice_enums.hpp"
 #include <functional>
 
-namespace lattice_adjusters {
-
-using lattice_types::barrier_type;
+namespace lattice {
 
 template <typename T>
 using check_adjuster_pair_t = std::pair<std::function<bool(T, T, T, T)>,
@@ -78,6 +86,6 @@ template <typename T> struct derman_kani_ergener_adjuster {
   }
 };
 
-} // namespace lattice_adjusters
+} // namespace lattice
 
 #endif ///_LATTICE_ADJUSTERS_HPP_

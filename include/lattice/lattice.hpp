@@ -11,9 +11,9 @@
 #if !defined(_LATTICE_HPP_)
 #define _LATTICE_HPP_
 
-#include "../utilities/lattice_enums.hpp"
-#include "../utilities/lattice_macros.hpp"
-#include "../utilities/lattice_miscellaneous.hpp"
+#include "utilities/lattice_enums.hpp"
+#include "utilities/lattice_macros.hpp"
+#include "utilities/lattice_miscellaneous.hpp"
 #include <algorithm>
 #include <initializer_list>
 #include <map>
