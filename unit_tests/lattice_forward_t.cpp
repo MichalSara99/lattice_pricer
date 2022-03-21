@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE
+#define BOOST_TEST_MODULEgit checkout - b
 
 #include "lattice/lattice.hpp"
 #include "lattice/models/lattice_black_derman_toy.hpp"
