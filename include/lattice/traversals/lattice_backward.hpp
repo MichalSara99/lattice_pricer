@@ -1,6 +1,7 @@
 #if !defined(_LATTICE_BACKWARD_HPP_)
 #define _LATTICE_BACKWARD_HPP_
 
+#include "../barriers/lattice_adjusters.hpp"
 #include "../calibration/lattice_calibrator_results.hpp"
 #include "../utilities/lattice_component_holders.hpp"
 #include "../utilities/lattice_enums.hpp"
@@ -401,1268 +402,1247 @@ public:
 
 /// =============== IMPLEMENTATION =================
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Binomial, TimeAxis,
-    DeltaTime>::_backTraverse(LatticeObject &lattice, Generator &&generator,
-                              DeltaTime const &deltaTime, Payoff &&payoff) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff>
+void traverse_backward<lattice_type::Binomial, time_axis,
+                       delta_time>::_back_traverse(lattice_object &lattice,
+                                                   generator &&gen,
+                                                   delta_time const &dt,
+                                                   payoff &&pay) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
-  typename LatticeObject::Node_type dt{};
+  typedef delta_time_holder<delta_time> DT;
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
+  typename lattice_object::node_t delta{};
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    lattice(last_idx, i) = pay(lattice(last_idx, i));
   }
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n > 0; --n) {
-    nodesSize = lattice.nodesAtIdx(n).size();
-    dt = DT::deltaTime(n, deltaTime);
-    for (auto i = 0; i < nodesSize; ++i) {
-      lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i),
-                                lattice(n + 1, i + 1), dt);
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n > 0; --n) {
+    nodes_size = lattice.nodes_at_idx(n).size();
+    delta = DT::delta_time(n, dt);
+    for (auto i = 0; i < nodes_size; ++i) {
+      lattice(n, i) =
+          gen(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), delta);
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
+  delta = DT::delta_time(0, dt);
+  lattice(0, 0) = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Binomial, TimeAxis, DeltaTime>::
-    _backTraverseBarrier(LatticeObject &lattice, Generator &&generator,
-                         DeltaTime const &deltaTime, Payoff &&payoff,
-                         BarrierType barrierType,
-                         typename LatticeObject::Node_type const &barrier,
-                         typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff>
+void traverse_backward<lattice_type::Binomial, time_axis, delta_time>::
+    _back_traverse_barrier(lattice_object &lattice, generator &&gen,
+                           delta_time const &dt, payoff &&pay,
+                           barrier_type barrier,
+                           typename lattice_object::node_t const &barrier_val,
+                           typename lattice_object::node_t const &rebate_val) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  auto cmp = BC::comparer(barrierType);
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
-  Node dt{};
+  typedef delta_time_holder<delta_time> DT;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  auto cmp = BC::comparer(barrier);
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
+  node delta{};
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    if (cmp(lattice(lastIdx, i), barrier)) {
-      lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    if (cmp(lattice(last_idx, i), barrier_val)) {
+      lattice(last_idx, i) = pay(lattice(last_idx, i));
     } else {
-      lattice(lastIdx, i) = Node{};
+      lattice(last_idx, i) = node{};
     }
   }
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n > 0; --n) {
-    nodesSize = lattice.nodesAtIdx(n).size();
-    dt = DT::deltaTime(n, deltaTime);
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(lattice(n, i), barrier)) {
-        lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i),
-                                  lattice(n + 1, i + 1), dt);
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n > 0; --n) {
+    nodes_size = lattice.nodes_at_idx(n).size();
+    delta = DT::delta_time(n, dt);
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(lattice(n, i), barrier_val)) {
+        lattice(n, i) =
+            gen(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), delta);
       } else {
         lattice(n, i) = rebate;
       }
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  if (cmp(lattice(0, 0), barrier)) {
-    lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
+  delta = DT::delta_time(0, dt);
+  if (cmp(lattice(0, 0), barrier_val)) {
+    lattice(0, 0) = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1), delta);
   } else {
-    lattice(0, 0) = rebate;
+    lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff,
-          typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Binomial, TimeAxis,
-    DeltaTime>::_backTraverse(LatticeObject &lattice, Generator &&generator,
-                              DeltaTime const &deltaTime, Payoff &&payoff,
-                              PayoffAdjuster &&payoffAdjuster) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff,
+          typename payoff_adjuster>
+void traverse_backward<lattice_type::Binomial, time_axis, delta_time>::
+    _back_traverse(lattice_object &lattice, generator &&gen,
+                   delta_time const &dt, payoff &&pay,
+                   payoff_adjuster &&payoff_adj) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
-  typename LatticeObject::Node_type dt{};
-  typename LatticeObject::Node_type value{};
+  typedef delta_time_holder<delta_time> DT;
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
+  typename lattice_object::node_t delta{};
+  typename lattice_object::node_t value{};
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    lattice(last_idx, i) = pay(lattice(last_idx, i));
   }
 
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n > 0; --n) {
-    nodesSize = lattice.nodesAtIdx(n).size();
-    dt = DT::deltaTime(n, deltaTime);
-    for (auto i = 0; i < nodesSize; ++i) {
-      value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1),
-                        dt);
-      payoffAdjuster(value, lattice(n, i));
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n > 0; --n) {
+    nodes_size = lattice.nodes_at_idx(n).size();
+    delta = DT::delta_time(n, dt);
+    for (auto i = 0; i < nodes_size; ++i) {
+      value =
+          gen(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), delta);
+      payoff_adj(value, lattice(n, i));
       lattice(n, i) = value;
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
-  payoffAdjuster(value, lattice(0, 0));
+  delta = DT::delta_time(0, dt);
+  value = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1), delta);
+  payoff_adj(value, lattice(0, 0));
   lattice(0, 0) = value;
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff,
-          typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Binomial, TimeAxis, DeltaTime>::
-    _backTraverseBarrier(LatticeObject &lattice, Generator &&generator,
-                         DeltaTime const &deltaTime, Payoff &&payoff,
-                         PayoffAdjuster &&payoffAdjuster,
-                         BarrierType barrierType,
-                         typename LatticeObject::Node_type const &barrier,
-                         typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff,
+          typename payoff_adjuster>
+void traverse_backward<lattice_type::Binomial, time_axis, delta_time>::
+    _back_traverse_barrier(lattice_object &lattice, generator &&gen,
+                           delta_time const &dt, payoff &&pay,
+                           payoff_adjuster &&payoff_adj, barrier_type barrier,
+                           typename lattice_object::node_t const &barrier_val,
+                           typename lattice_object::node_t const &rebate_val) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
-  Node dt{};
-  Node value{};
+  typedef delta_time_holder<delta_time> DT;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  auto cmp = BC::comparer(barrier);
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
+  node delta{};
+  node value{};
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    if (cmp(lattice(lastIdx, i), barrier)) {
-      lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    if (cmp(lattice(last_idx, i), barrier_val)) {
+      lattice(last_idx, i) = pay(lattice(last_idx, i));
     } else {
-      lattice(lastIdx, i) = Node{};
+      lattice(last_idx, i) = node{};
     }
   }
 
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n > 0; --n) {
-    nodesSize = lattice.nodesAtIdx(n).size();
-    dt = DT::deltaTime(n, deltaTime);
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(lattice(n, i), barrier)) {
-        value = generator(lattice(n, i), lattice(n + 1, i),
-                          lattice(n + 1, i + 1), dt);
-        payoffAdjuster(value, lattice(n, i));
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n > 0; --n) {
+    nodes_size = lattice.nodesAtIdx(n).size();
+    delta = DT::delta_time(n, dt);
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(lattice(n, i), barrier_val)) {
+        value =
+            gen(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1), delta);
+        payoff_adj(value, lattice(n, i));
         lattice(n, i) = value;
       } else {
-        lattice(n, i) = rebate;
+        lattice(n, i) = rebate_val;
       }
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  if (cmp(lattice(0, 0), barrier)) {
-    value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), dt);
-    payoffAdjuster(value, lattice(0, 0));
+  delta = DT::delta_time(0, dt);
+  if (cmp(lattice(0, 0), barrier_val)) {
+    value = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1), delta);
+    payoff_adj(value, lattice(0, 0));
     lattice(0, 0) = value;
   } else {
-    lattice(0, 0) = rebate;
+    lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename MultidimLatticeObject,
-          typename Generator, typename Payoff>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::TwoVariableBinomial, TimeAxis,
-    DeltaTime>::_backTraverse(LatticeObject &priceLattice,
-                              MultidimLatticeObject const &lattice,
-                              Generator &&generator, DeltaTime const &deltaTime,
-                              Payoff &&payoff) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename multidim_lattice_object,
+          typename generator, typename payoff>
+void traverse_backward<
+    lattice_type::TwoVariableBinomial, time_axis,
+    delta_time>::_back_traverse(lattice_object &price_lattice,
+                                multidim_lattice_object const &lattice,
+                                generator &&gen, delta_time const &dt,
+                                payoff &&pay) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typename LatticeObject::Node_type dt{};
+  typedef delta_time_holder<delta_time> DT;
+  typename lattice_object::node_t delta{};
 
-  auto tree1 = lattice.getFactor(0);
-  auto tree2 = lattice.getFactor(1);
+  auto tree1 = lattice.get_factor(0);
+  auto tree2 = lattice.get_factor(1);
 
-  std::size_t const treeSize = priceLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = priceLattice.nodesAtIdx(lastIdx).size();
-  std::size_t factorLastNodesSize = tree1.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = price_lattice.time_dimension();
+  std::size_t const last_idx = tree_size - 1;
+  std::size_t const last_nodes_size =
+      price_lattice.nodes_at_idx(last_idx).size();
+  std::size_t factor_last_nodes_size = tree1.nodes_at_idx(last_idx).size();
   std::size_t col{0}, row{0};
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    col = i % factorLastNodesSize;
-    if ((i > 0) && ((i % factorLastNodesSize) == 0))
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    col = i % factor_last_nodes_size;
+    if ((i > 0) && ((i % factor_last_nodes_size) == 0))
       row++;
-    priceLattice(lastIdx, i) = payoff(tree1(lastIdx, row), tree2(lastIdx, col));
+    price_lattice(last_idx, i) =
+        pay(tree1(last_idx, row), tree2(last_idx, col));
   }
 
-  std::size_t nodesSize{0};
-  std::size_t factorNodesSize{0};
-  for (auto n = lastIdx - 1; n > 0; --n) {
-    nodesSize = priceLattice.nodesAtIdx(n).size();
-    factorNodesSize = tree1.nodesAtIdx(n).size();
-    dt = DT::deltaTime(n, deltaTime);
+  std::size_t nodes_size{0};
+  std::size_t factor_nodes_size{0};
+  for (auto n = last_idx - 1; n > 0; --n) {
+    nodes_size = price_lattice.nodes_at_idx(n).size();
+    factor_nodes_size = tree1.nodes_at_idx(n).size();
+    delta = DT::delta_time(n, dt);
     row = 0;
-    for (auto i = 0; i < nodesSize; ++i) {
-      if ((i > 0) && ((i % factorNodesSize) == 0))
+    for (auto i = 0; i < nodes_size; ++i) {
+      if ((i > 0) && ((i % factor_nodes_size) == 0))
         row++;
-      priceLattice(n, i) = generator(
-          priceLattice(n, i), /*down-down*/ priceLattice(n + 1, i + row),
-          /*down-up*/ priceLattice(n + 1, i + row + 1),
-          /*up-down*/ priceLattice(n + 1, i + row + factorLastNodesSize),
-          /*up-up*/ priceLattice(n + 1, i + row + factorLastNodesSize + 1), dt);
+      price_lattice(n, i) = gen(
+          price_lattice(n, i), /*down-down*/ price_lattice(n + 1, i + row),
+          /*down-up*/ price_lattice(n + 1, i + row + 1),
+          /*up-down*/ price_lattice(n + 1, i + row + factor_last_nodes_size),
+          /*up-up*/ price_lattice(n + 1, i + row + factor_last_nodes_size + 1),
+          delta);
     }
-    factorLastNodesSize = factorNodesSize;
+    factor_last_nodes_size = factor_nodes_size;
   }
-  dt = DT::deltaTime(0, deltaTime);
-  priceLattice(0, 0) =
-      generator(priceLattice(0, 0), priceLattice(1, 0), priceLattice(1, 1),
-                priceLattice(1, 2), priceLattice(1, 3), dt);
+  delta = DT::delta_time(0, dt);
+  price_lattice(0, 0) =
+      gen(price_lattice(0, 0), price_lattice(1, 0), price_lattice(1, 1),
+          price_lattice(1, 2), price_lattice(1, 3), delta);
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename MultidimLatticeObject,
-          typename Generator, typename Payoff, typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::TwoVariableBinomial, TimeAxis,
-    DeltaTime>::_backTraverse(LatticeObject &priceLattice,
-                              MultidimLatticeObject const &lattice,
-                              Generator &&generator, DeltaTime const &deltaTime,
-                              Payoff &&payoff,
-                              PayoffAdjuster &&payoffAdjuster) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename multidim_lattice_object,
+          typename generator, typename payoff, typename payoff_adjuster>
+void traverse_backward<
+    lattice_type::TwoVariableBinomial, time_axis,
+    delta_time>::_back_traverse(lattice_object &price_lattice,
+                                multidim_lattice_object const &lattice,
+                                generator &&gen, delta_time const &dt,
+                                payoff &&pay, payoff_adjuster &&payoff_adj) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typename LatticeObject::Node_type dt{};
-  typename LatticeObject::Node_type value{};
+  typedef delta_time_holder<delta_time> DT;
+  typename lattice_object::node_t delta{};
+  typename lattice_object::node_t value{};
 
-  auto tree1 = lattice.getFactor(0);
-  auto tree2 = lattice.getFactor(1);
+  auto tree1 = lattice.get_factor(0);
+  auto tree2 = lattice.get_factor(1);
 
-  std::size_t const treeSize = priceLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = priceLattice.nodesAtIdx(lastIdx).size();
-  std::size_t factorLastNodesSize = tree1.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = price_lattice.time_dimension();
+  std::size_t const last_idx = tree_size - 1;
+  std::size_t const last_nodes_size =
+      price_lattice.nodes_at_idx(last_idx).size();
+  std::size_t factor_last_nodes_size = tree1.nodes_at_idx(last_idx).size();
   std::size_t col{0}, row{0};
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    col = i % factorLastNodesSize;
-    if ((i > 0) && ((i % factorLastNodesSize) == 0))
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    col = i % factor_last_nodes_size;
+    if ((i > 0) && ((i % factor_last_nodes_size) == 0))
       row++;
-    priceLattice(lastIdx, i) = payoff(tree1(lastIdx, row), tree2(lastIdx, col));
+    price_lattice(last_idx, i) =
+        pay(tree1(last_idx, row), tree2(last_idx, col));
   }
 
-  std::size_t nodesSize{0};
-  std::size_t factorNodesSize{0};
-  for (auto n = lastIdx - 1; n > 0; --n) {
-    nodesSize = priceLattice.nodesAtIdx(n).size();
-    factorNodesSize = tree1.nodesAtIdx(n).size();
-    dt = DT::deltaTime(n, deltaTime);
+  std::size_t nodes_size{0};
+  std::size_t factor_nodes_size{0};
+  for (auto n = last_idx - 1; n > 0; --n) {
+    nodes_size = price_lattice.nodesAtIdx(n).size();
+    factor_nodes_size = tree1.nodesAtIdx(n).size();
+    delta = DT::delta_time(n, dt);
     col = 0;
     row = 0;
-    for (auto i = 0; i < nodesSize; ++i) {
-      col = i % factorNodesSize;
-      if ((i > 0) && ((i % factorNodesSize) == 0))
+    for (auto i = 0; i < nodes_size; ++i) {
+      col = i % factor_nodes_size;
+      if ((i > 0) && ((i % factor_nodes_size) == 0))
         row++;
-      value = generator(
-          priceLattice(n, i), /*down-down*/ priceLattice(n + 1, i + row),
-          /*down-up*/ priceLattice(n + 1, i + row + 1),
-          /*up-down*/ priceLattice(n + 1, i + row + factorLastNodesSize),
-          /*up-up*/ priceLattice(n + 1, i + row + factorLastNodesSize + 1), dt);
+      value = gen(
+          price_lattice(n, i), /*down-down*/ price_lattice(n + 1, i + row),
+          /*down-up*/ price_lattice(n + 1, i + row + 1),
+          /*up-down*/ price_lattice(n + 1, i + row + factor_last_nodes_size),
+          /*up-up*/ price_lattice(n + 1, i + row + factor_last_nodes_size + 1),
+          delta);
       payoffAdjuster(value, tree1(n, row), tree2(n, col));
-      priceLattice(n, i) = value;
+      price_lattice(n, i) = value;
     }
-    factorLastNodesSize = factorNodesSize;
+    factor_last_nodes_size = factor_nodes_size;
   }
-  dt = DT::deltaTime(0, deltaTime);
-  value = generator(priceLattice(0, 0), priceLattice(1, 0), priceLattice(1, 1),
-                    priceLattice(1, 2), priceLattice(1, 3), dt);
-  payoffAdjuster(value, tree1(0, 0), tree2(0, 0));
-  priceLattice(0, 0) = value;
+  delta = DT::delta_time(0, dt);
+  value = gen(price_lattice(0, 0), price_lattice(1, 0), price_lattice(1, 1),
+              price_lattice(1, 2), price_lattice(1, 3), delta);
+  payoff_adj(value, tree1(0, 0), tree2(0, 0));
+  price_lattice(0, 0) = value;
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis,
-    DeltaTime>::_backTraverseNormal(std::size_t timeIdx, LatticeObject &lattice,
-                                    Generator &&generator,
-                                    DeltaTime const &deltaTime) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_normal(std::size_t time_idx, lattice_object &lattice,
+                          generator &&gen, delta_time const &dt) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typename LatticeObject::Node_type dt{};
+  typedef delta_time_holder<delta_time> DT;
+  typename lattice_object::node_t delta{};
 
-  std::size_t const revertBranchesSize = timeIdx;
+  std::size_t const revert_branches_size = time_idx;
 
-  std::size_t nodesSize{0};
-  for (auto n = timeIdx - 1; n > 0; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
-    for (auto i = 0; i < nodesSize; ++i) {
-      lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i),
-                                lattice(n + 1, i + 1), lattice(n + 1, i + 2),
-                                dt, revertBranchesSize, nodesSize, i);
+  std::size_t nodes_size{0};
+  for (auto n = time_idx - 1; n > 0; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
+    for (auto i = 0; i < nodes_size; ++i) {
+      lattice(n, i) = gen(lattice(n, i), lattice(n + 1, i),
+                          lattice(n + 1, i + 1), lattice(n + 1, i + 2), delta,
+                          revert_branches_size, nodes_size, i);
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1),
-                            lattice(1, 2), dt, revertBranchesSize, 1, 0);
+  delta = DT::delta_time(0, dt);
+  lattice(0, 0) = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1),
+                      lattice(1, 2), delta, revert_branches_size, 1, 0);
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis,
-    DeltaTime>::_backTraverseReverting(std::size_t timeIdx,
-                                       LatticeObject &lattice,
-                                       Generator &&generator,
-                                       DeltaTime const &deltaTime) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_reverting(std::size_t time_idx, lattice_object &lattice,
+                             generator &&gen, delta_time const &dt) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typename LatticeObject::Node_type dt{};
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
+  typedef delta_time_holder<delta_time> DT;
+  typename lattice_object::node_t delta{};
+  const std::size_t last_idx = lattice.time_dimension() - 1;
 
-  std::size_t const revertBranchesSize = timeIdx;
+  std::size_t const revert_branches_size = time_idx;
 
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n >= timeIdx; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n >= time_idx; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
     lattice(n, 0) =
-        generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
-                  lattice(n + 1, 2), dt, revertBranchesSize, nodesSize, 0);
-    for (auto i = 1; i < nodesSize - 1; ++i) {
-      lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i - 1),
-                                lattice(n + 1, i), lattice(n + 1, i + 1), dt,
-                                revertBranchesSize, nodesSize, i);
+        gen(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
+            lattice(n + 1, 2), delta, revert_branches_size, nodes_size, 0);
+    for (auto i = 1; i < nodes_size - 1; ++i) {
+      lattice(n, i) = gen(lattice(n, i), lattice(n + 1, i - 1),
+                          lattice(n + 1, i), lattice(n + 1, i + 1), delta,
+                          revert_branches_size, nodes_size, i);
     }
-    lattice(n, nodesSize - 1) =
-        generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3),
-                  lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1),
-                  dt, revertBranchesSize, nodesSize, nodesSize - 1);
+    lattice(n, nodes_size - 1) =
+        gen(lattice(n, nodes_size - 1), lattice(n + 1, nodes_size - 3),
+            lattice(n + 1, nodes_size - 2), lattice(n + 1, nodes_size - 1),
+            delta, revert_branches_size, nodes_size, nodes_size - 1);
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis,
-    DeltaTime>::_backTraverse(LatticeObject &lattice, Generator &&generator,
-                              DeltaTime const &deltaTime, Payoff &&payoff) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff>
+void traverse_backward<lattice_type::Trinomial, time_axis,
+                       delta_time>::_back_traverse(lattice_object &lattice,
+                                                   generator &&gen,
+                                                   delta_time const &dt,
+                                                   payoff &&pay) {
 
-  const std::size_t firstRevertIdx = lattice.firstRevertingIdx();
-  const std::size_t treeSize = lattice.timeDimension();
+  const std::size_t first_revert_idx = lattice.first_reverting_idx();
+  const std::size_t tree_size = lattice.time_dimension();
 
-  const std::size_t lastIdx = treeSize - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+  const std::size_t last_idx = tree_size - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    lattice(last_idx, i) = pay(lattice(last_idx, i));
   }
 
-  if (firstRevertIdx == 0) {
+  if (first_revert_idx == 0) {
     // This trinomial tree does not have reverting property:
-    _backTraverseNormal(lastIdx, lattice, std::forward<Generator>(generator),
-                        deltaTime);
+    _back_traverse_normal(last_idx, lattice, std::forward<generator>(gen), dt);
   } else {
     // This trinomial tree does have reverting property:
-    _backTraverseReverting(firstRevertIdx - 1, lattice,
-                           std::forward<Generator>(generator), deltaTime);
-    _backTraverseNormal(firstRevertIdx - 1, lattice,
-                        std::forward<Generator>(generator), deltaTime);
+    _back_traverse_reverting(first_revert_idx - 1, lattice,
+                             std::forward<generator>(gen), dt);
+    _back_traverse_normal(first_revert_idx - 1, lattice,
+                          std::forward<generator>(gen), dt);
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
-    _backTraverseNormalBarrier(
-        std::size_t timeIdx, LatticeObject &lattice, Generator &&generator,
-        DeltaTime const &deltaTime, BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_normal_barrier(
+        std::size_t time_idx, lattice_object &lattice, generator &&gen,
+        delta_time const &dt, barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  std::size_t const revertBranchesSize = timeIdx;
-  auto cmp = BC::comparer(barrierType);
+  typedef delta_time_holder<delta_time> DT;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  std::size_t const revert_branches_size = time_idx;
+  auto cmp = BC::comparer(barrier);
 
-  Node dt{};
-  std::size_t nodesSize{0};
-  for (auto n = timeIdx - 1; n > 0; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(lattice(n, i), barrier)) {
-        lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i),
-                                  lattice(n + 1, i + 1), lattice(n + 1, i + 2),
-                                  dt, revertBranchesSize, nodesSize, i);
+  node delta{};
+  std::size_t nodes_size{0};
+  for (auto n = time_idx - 1; n > 0; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(lattice(n, i), barrier_val)) {
+        lattice(n, i) = gen(lattice(n, i), lattice(n + 1, i),
+                            lattice(n + 1, i + 1), lattice(n + 1, i + 2), delta,
+                            revert_branches_size, nodes_size, i);
       } else {
-        lattice(n, i) = rebate;
+        lattice(n, i) = rebate_val;
       }
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  if (cmp(lattice(0, 0), barrier)) {
-    lattice(0, 0) = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1),
-                              lattice(1, 2), dt, revertBranchesSize, 1, 0);
+  delta = DT::delta_time(0, dt);
+  if (cmp(lattice(0, 0), barrier_val)) {
+    lattice(0, 0) = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1),
+                        lattice(1, 2), delta, revert_branches_size, 1, 0);
   } else {
-    lattice(0, 0) = rebate;
+    lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
-    _backTraverseRevertingBarrier(
-        std::size_t timeIdx, LatticeObject &lattice, Generator &&generator,
-        DeltaTime const &deltaTime, BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_reverting_barrier(
+        std::size_t time_idx, lattice_object &lattice, generator &&gen,
+        delta_time const &dt, barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  auto cmp = BC::comparer(barrierType);
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  std::size_t const revertBranchesSize = timeIdx;
+  typedef delta_time_holder<delta_time> DT;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  auto cmp = BC::comparer(barrier);
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  std::size_t const revert_branches_size = time_idx;
 
-  Node dt{};
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n >= timeIdx; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
-    if (cmp(lattice(n, 0), barrier)) {
+  node delta{};
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n >= time_idx; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
+    if (cmp(lattice(n, 0), barrier_val)) {
       lattice(n, 0) =
-          generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
-                    lattice(n + 1, 2), dt, revertBranchesSize, nodesSize, 0);
+          gen(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
+              lattice(n + 1, 2), delta, revert_branches_size, nodes_size, 0);
     } else {
-      lattice(n, 0) = rebate;
+      lattice(n, 0) = rebate_val;
     }
-    for (auto i = 1; i < nodesSize - 1; ++i) {
-      if (cmp(lattice(n, i), barrier)) {
-        lattice(n, i) = generator(lattice(n, i), lattice(n + 1, i - 1),
-                                  lattice(n + 1, i), lattice(n + 1, i + 1), dt,
-                                  revertBranchesSize, nodesSize, i);
+    for (auto i = 1; i < nodes_size - 1; ++i) {
+      if (cmp(lattice(n, i), barrier_val)) {
+        lattice(n, i) = gen(lattice(n, i), lattice(n + 1, i - 1),
+                            lattice(n + 1, i), lattice(n + 1, i + 1), delta,
+                            revert_branches_size, nodes_size, i);
       } else {
-        lattice(n, i) = rebate;
+        lattice(n, i) = rebate_val;
       }
     }
-    if (cmp(lattice(n, nodesSize - 1), barrier)) {
-      lattice(n, nodesSize - 1) = generator(
-          lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3),
-          lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt,
-          revertBranchesSize, nodesSize, nodesSize - 1);
+    if (cmp(lattice(n, nodes_size - 1), barrier_val)) {
+      lattice(n, nodes_size - 1) =
+          gen(lattice(n, nodes_size - 1), lattice(n + 1, nodes_size - 3),
+              lattice(n + 1, nodes_size - 2), lattice(n + 1, nodes_size - 1),
+              delta, revert_branches_size, nodes_size, nodes_size - 1);
     } else {
-      lattice(n, nodesSize - 1) = rebate;
+      lattice(n, nodes_size - 1) = rebate_val;
     }
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
-    _backTraverseBarrier(LatticeObject &lattice, Generator &&generator,
-                         DeltaTime const &deltaTime, Payoff &&payoff,
-                         BarrierType barrierType,
-                         typename LatticeObject::Node_type const &barrier,
-                         typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_barrier(lattice_object &lattice, generator &&gen,
+                           delta_time const &dt, payoff &&pay,
+                           barrier_type barrier,
+                           typename lattice_object::node_t const &barrier_val,
+                           typename lattice_object::node_t const &rebate_val) {
 
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  auto cmp = BC::comparer(barrierType);
-  const std::size_t firstRevertIdx = lattice.firstRevertingIdx();
-  const std::size_t treeSize = lattice.timeDimension();
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  auto cmp = BC::comparer(barrier);
+  const std::size_t first_revert_idx = lattice.first_reverting_idx();
+  const std::size_t tree_size = lattice.time_dimension();
 
-  const std::size_t lastIdx = treeSize - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+  const std::size_t last_idx = tree_size - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    if (cmp(lattice(lastIdx, i), barrier)) {
-      lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    if (cmp(lattice(last_idx, i), barrier_val)) {
+      lattice(last_idx, i) = pay(lattice(last_idx, i));
     } else {
-      lattice(lastIdx, i) = Node{};
+      lattice(last_idx, i) = node{};
     }
   }
 
-  if (firstRevertIdx == 0) {
+  if (first_revert_idx == 0) {
     // This trinomial tree does not have reverting property:
-    _backTraverseNormalBarrier(lastIdx, lattice,
-                               std::forward<Generator>(generator), deltaTime,
-                               barrierType, barrier, rebate);
+    _back_traverse_normal_barrier(last_idx, lattice,
+                                  std::forward<generator>(gen), dt, barrier,
+                                  barrier_val, rebate_val);
   } else {
     // This trinomial tree does have reverting property:
-    _backTraverseRevertingBarrier(firstRevertIdx - 1, lattice,
-                                  std::forward<Generator>(generator), deltaTime,
-                                  barrierType, barrier, rebate);
-    _backTraverseNormalBarrier(firstRevertIdx - 1, lattice,
-                               std::forward<Generator>(generator), deltaTime,
-                               barrierType, barrier, rebate);
+    _back_traverse_reverting_barrier(first_revert_idx - 1, lattice,
+                                     std::forward<generator>(gen), dt, barrier,
+                                     barrier_val, rebate_val);
+    _back_traverse_normal_barrier(first_revert_idx - 1, lattice,
+                                  std::forward<generator>(gen), dt, barrier,
+                                  barrier_val, rebate_val);
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis,
-    DeltaTime>::_backTraverseNormal(std::size_t timeIdx, LatticeObject &lattice,
-                                    Generator &&generator,
-                                    DeltaTime const &deltaTime,
-                                    PayoffAdjuster &&payoffAdjuster) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff_adjuster>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_normal(std::size_t time_idx, lattice_object &lattice,
+                          generator &&gen, delta_time const &dt,
+                          payoff_adjuster &&payoff_adj) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  std::size_t const revertBranchesSize = timeIdx;
-  typename LatticeObject::Node_type dt{};
-  typename LatticeObject::Node_type value{};
+  typedef delta_time_holder<delta_time> DT;
+  std::size_t const revert_branches_size = time_idx;
+  typename lattice_object::node_t delta{};
+  typename lattice_object::node_t value{};
 
-  std::size_t nodesSize{0};
-  for (auto n = timeIdx - 1; n > 0; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
-    for (auto i = 0; i < nodesSize; ++i) {
-      value = generator(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1),
-                        lattice(n + 1, i + 2), dt, revertBranchesSize,
-                        nodesSize, i);
-      payoffAdjuster(value, lattice(n, i));
+  std::size_t nodes_size{0};
+  for (auto n = time_idx - 1; n > 0; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
+    for (auto i = 0; i < nodes_size; ++i) {
+      value = gen(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1),
+                  lattice(n + 1, i + 2), delta, revert_branches_size,
+                  nodes_size, i);
+      payoff_adj(value, lattice(n, i));
       lattice(n, i) = value;
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2),
-                    dt, revertBranchesSize, 1, 0);
-  payoffAdjuster(value, lattice(0, 0));
+  delta = DT::delta_time(0, dt);
+  value = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2), delta,
+              revert_branches_size, 1, 0);
+  payoff_adj(value, lattice(0, 0));
   lattice(0, 0) = value;
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis,
-    DeltaTime>::_backTraverseReverting(std::size_t timeIdx,
-                                       LatticeObject &lattice,
-                                       Generator &&generator,
-                                       DeltaTime const &deltaTime,
-                                       PayoffAdjuster &&payoffAdjuster) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff_adjuster>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_reverting(std::size_t time_idx, lattice_object &lattice,
+                             generator &&gen, delta_time const &dt,
+                             payoff_adjuster &&payoff_adj) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typename LatticeObject::Node_type dt{};
-  typename LatticeObject::Node_type value{};
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  std::size_t const revertBranchesSize = timeIdx;
+  typedef delta_time_holder<delta_time> DT;
+  typename lattice_object::node_t delta{};
+  typename lattice_object::node_t value{};
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  std::size_t const revert_branches_size = time_idx;
 
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n >= timeIdx; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n >= time_idx; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
 
-    value = generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
-                      lattice(n + 1, 2), dt, revertBranchesSize, nodesSize, 0);
-    payoffAdjuster(value, lattice(n, 0));
+    value = gen(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
+                lattice(n + 1, 2), delta, revert_branches_size, nodes_size, 0);
+    payoff_adj(value, lattice(n, 0));
     lattice(n, 0) = value;
 
-    for (auto i = 1; i < nodesSize - 1; ++i) {
-      value = generator(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i),
-                        lattice(n + 1, i + 1), dt, revertBranchesSize,
-                        nodesSize, i);
-      payoffAdjuster(value, lattice(n, i));
+    for (auto i = 1; i < nodes_size - 1; ++i) {
+      value = gen(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i),
+                  lattice(n + 1, i + 1), delta, revert_branches_size,
+                  nodes_size, i);
+      payoff_adj(value, lattice(n, i));
       lattice(n, i) = value;
     }
 
-    value =
-        generator(lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3),
-                  lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1),
-                  dt, revertBranchesSize, nodesSize, nodesSize - 1);
-    payoffAdjuster(value, lattice(n, nodesSize - 1));
-    lattice(n, nodesSize - 1) = value;
+    value = gen(lattice(n, nodes_size - 1), lattice(n + 1, nodes_size - 3),
+                lattice(n + 1, nodes_size - 2), lattice(n + 1, nodes_size - 1),
+                delta, revert_branches_size, nodes_size, nodes_size - 1);
+    payoff_adj(value, lattice(n, nodes_size - 1));
+    lattice(n, nodes_size - 1) = value;
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff,
-          typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis,
-    DeltaTime>::_backTraverse(LatticeObject &lattice, Generator &&generator,
-                              DeltaTime const &deltaTime, Payoff &&payoff,
-                              PayoffAdjuster &&payoffAdjuster) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff,
+          typename payoff_adjuster>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse(lattice_object &lattice, generator &&gen,
+                   delta_time const &dt, payoff &&pay,
+                   payoff_adjuster &&payoff_adj) {
 
-  const std::size_t firstRevertIdx = lattice.firstRevertingIdx();
-  const std::size_t treeSize = lattice.timeDimension();
+  const std::size_t first_revert_idx = lattice.first_reverting_idx();
+  const std::size_t tree_size = lattice.time_dimension();
 
-  const std::size_t lastIdx = treeSize - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+  const std::size_t last_idx = tree_size - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    lattice(last_idx, i) = pay(lattice(last_idx, i));
   }
 
-  if (firstRevertIdx == 0) {
+  if (first_revert_idx == 0) {
     // This trinomial tree does not have reverting property:
-    _backTraverseNormal(lastIdx, lattice, std::forward<Generator>(generator),
-                        deltaTime,
-                        std::forward<PayoffAdjuster>(payoffAdjuster));
+    _back_traverse_normal(last_idx, lattice, std::forward<generator>(gen), dt,
+                          std::forward<payoff_adjuster>(payoff_adj));
   } else {
     // This trinomial tree does have reverting property:
-    _backTraverseReverting(firstRevertIdx - 1, lattice,
-                           std::forward<Generator>(generator), deltaTime,
-                           std::forward<PayoffAdjuster>(payoffAdjuster));
-    _backTraverseNormal(firstRevertIdx - 1, lattice,
-                        std::forward<Generator>(generator), deltaTime,
-                        std::forward<PayoffAdjuster>(payoffAdjuster));
+    _back_traverse_reverting(first_revert_idx - 1, lattice,
+                             std::forward<generator>(gen), dt,
+                             std::forward<payoff_adjuster>(payoff_adj));
+    _back_traverse_normal(first_revert_idx - 1, lattice,
+                          std::forward<generator>(gen), dt,
+                          std::forward<payoff_adjuster>(payoff_adj));
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
-    _backTraverseNormalBarrier(
-        std::size_t timeIdx, LatticeObject &lattice, Generator &&generator,
-        DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster,
-        BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff_adjuster>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_normal_barrier(
+        std::size_t time_idx, lattice_object &lattice, generator &&gen,
+        delta_time const &dt, payoff_adjuster &&payoff_adj,
+        barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  auto cmp = BC::comparer(barrierType);
-  std::size_t const revertBranchesSize = timeIdx;
+  typedef delta_time_holder<delta_time> DT;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  auto cmp = BC::comparer(barrier);
+  std::size_t const revert_branches_size = time_idx;
 
-  Node dt{};
-  Node value{};
-  std::size_t nodesSize{0};
-  for (auto n = timeIdx - 1; n > 0; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(lattice(n, i), barrier)) {
-        value = generator(lattice(n, i), lattice(n + 1, i),
-                          lattice(n + 1, i + 1), lattice(n + 1, i + 2), dt,
-                          revertBranchesSize, nodesSize, i);
-        payoffAdjuster(value, lattice(n, i));
+  node delta{};
+  node value{};
+  std::size_t nodes_size{0};
+  for (auto n = time_idx - 1; n > 0; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(lattice(n, i), barrier_val)) {
+        value = gen(lattice(n, i), lattice(n + 1, i), lattice(n + 1, i + 1),
+                    lattice(n + 1, i + 2), delta, revert_branches_size,
+                    nodes_size, i);
+        payoff_adj(value, lattice(n, i));
         lattice(n, i) = value;
       } else {
-        lattice(n, i) = rebate;
+        lattice(n, i) = rebate_val;
       }
     }
   }
-  dt = DT::deltaTime(0, deltaTime);
-  if (cmp(lattice(0, 0), barrier)) {
-    value = generator(lattice(0, 0), lattice(1, 0), lattice(1, 1),
-                      lattice(1, 2), dt, revertBranchesSize, 1, 0);
-    payoffAdjuster(value, lattice(0, 0));
+  delta = DT::delta_time(0, dt);
+  if (cmp(lattice(0, 0), barrier_val)) {
+    value = gen(lattice(0, 0), lattice(1, 0), lattice(1, 1), lattice(1, 2),
+                delta, revert_branches_size, 1, 0);
+    payoff_adj(value, lattice(0, 0));
     lattice(0, 0) = value;
   } else {
-    lattice(0, 0) = rebate;
+    lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
-    _backTraverseRevertingBarrier(
-        std::size_t timeIdx, LatticeObject &lattice, Generator &&generator,
-        DeltaTime const &deltaTime, PayoffAdjuster &&payoffAdjuster,
-        BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff_adjuster>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_reverting_barrier(
+        std::size_t time_idx, lattice_object &lattice, generator &&gen,
+        delta_time const &dt, payoff_adjuster &&payoff_adj,
+        barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val) {
 
-  typedef DeltaTimeHolder<DeltaTime> DT;
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
-  auto cmp = BC::comparer(barrierType);
-  const std::size_t lastIdx = lattice.timeDimension() - 1;
-  std::size_t const revertBranchesSize = timeIdx;
+  typedef delta_time_holder<delta_time> DT;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
+  auto cmp = BC::comparer(barrier);
+  const std::size_t last_idx = lattice.time_dimension() - 1;
+  std::size_t const revert_branches_size = time_idx;
 
-  Node dt{};
-  Node value{};
-  std::size_t nodesSize{0};
-  for (auto n = lastIdx - 1; n >= timeIdx; --n) {
-    dt = DT::deltaTime(n, deltaTime);
-    nodesSize = lattice.nodesAtIdx(n).size();
+  node delta{};
+  node value{};
+  std::size_t nodes_size{0};
+  for (auto n = last_idx - 1; n >= time_idx; --n) {
+    delta = DT::delta_time(n, dt);
+    nodes_size = lattice.nodes_at_idx(n).size();
 
-    if (cmp(lattice(n, 0), barrier)) {
+    if (cmp(lattice(n, 0), barrier_val)) {
       value =
-          generator(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
-                    lattice(n + 1, 2), dt, revertBranchesSize, nodesSize, 0);
-      payoffAdjuster(value, lattice(n, 0));
+          gen(lattice(n, 0), lattice(n + 1, 0), lattice(n + 1, 1),
+              lattice(n + 1, 2), delta, revert_branches_size, nodes_size, 0);
+      payoff_adj(value, lattice(n, 0));
       lattice(n, 0) = value;
     } else {
-      lattice(n, 0) = rebate;
+      lattice(n, 0) = rebate_val;
     }
 
-    for (auto i = 1; i < nodesSize - 1; ++i) {
-      if (cmp(lattice(n, i), barrier)) {
-        value = generator(lattice(n, i), lattice(n + 1, i - 1),
-                          lattice(n + 1, i), lattice(n + 1, i + 1), dt,
-                          revertBranchesSize, nodesSize, i);
-        payoffAdjuster(value, lattice(n, i));
+    for (auto i = 1; i < nodes_size - 1; ++i) {
+      if (cmp(lattice(n, i), barrier_val)) {
+        value = gen(lattice(n, i), lattice(n + 1, i - 1), lattice(n + 1, i),
+                    lattice(n + 1, i + 1), delta, revert_branches_size,
+                    nodes_size, i);
+        payoff_adj(value, lattice(n, i));
         lattice(n, i) = value;
       } else {
-        lattice(n, i) = rebate;
+        lattice(n, i) = rebate_val;
       }
     }
-    if (cmp(lattice(n, nodesSize - 1), barrier)) {
-      value = generator(
-          lattice(n, nodesSize - 1), lattice(n + 1, nodesSize - 3),
-          lattice(n + 1, nodesSize - 2), lattice(n + 1, nodesSize - 1), dt,
-          revertBranchesSize, nodesSize, nodesSize - 1);
-      payoffAdjuster(value, lattice(n, nodesSize - 1));
-      lattice(n, nodesSize - 1) = value;
+    if (cmp(lattice(n, nodes_size - 1), barrier_val)) {
+      value =
+          gen(lattice(n, nodes_size - 1), lattice(n + 1, nodes_size - 3),
+              lattice(n + 1, nodes_size - 2), lattice(n + 1, nodes_size - 1),
+              delta, revert_branches_size, nodes_size, nodes_size - 1);
+      payoff_adj(value, lattice(n, nodes_size - 1));
+      lattice(n, nodes_size - 1) = value;
     } else {
-      lattice(n, nodesSize - 1) = rebate;
+      lattice(n, nodes_size - 1) = rebate_val;
     }
   }
 }
 
-template <typename TimeAxis, typename DeltaTime>
-template <typename LatticeObject, typename Generator, typename Payoff,
-          typename PayoffAdjuster>
-void lattice_backward_traversals::BackwardTraversal<
-    lattice_types::LatticeType::Trinomial, TimeAxis, DeltaTime>::
-    _backTraverseBarrier(LatticeObject &lattice, Generator &&generator,
-                         DeltaTime const &deltaTime, Payoff &&payoff,
-                         PayoffAdjuster &&payoffAdjuster,
-                         BarrierType barrierType,
-                         typename LatticeObject::Node_type const &barrier,
-                         typename LatticeObject::Node_type const &rebate) {
+template <typename time_axis, typename delta_time>
+template <typename lattice_object, typename generator, typename payoff,
+          typename payoff_adjuster>
+void traverse_backward<lattice_type::Trinomial, time_axis, delta_time>::
+    _back_traverse_barrier(lattice_object &lattice, generator &&gen,
+                           delta_time const &dt, payoff &&pay,
+                           payoff_adjuster &&payoff_adj, barrier_type barrier,
+                           typename lattice_object::node_t const &barrier_val,
+                           typename lattice_object::node_t const &rebate_val) {
 
-  typedef typename LatticeObject::Node_type Node;
-  typedef BarrierComparer<Node> BC;
+  typedef typename lattice_object::node_t node;
+  typedef barrier_comparer<node> BC;
 
-  auto cmp = BC::comparer(barrierType);
-  const std::size_t firstRevertIdx = lattice.firstRevertingIdx();
-  const std::size_t treeSize = lattice.timeDimension();
+  auto cmp = BC::comparer(barrier);
+  const std::size_t first_revert_idx = lattice.first_reverting_idx();
+  const std::size_t tree_size = lattice.time_dimension();
 
-  const std::size_t lastIdx = treeSize - 1;
-  const std::size_t lastNodesSize = lattice.nodesAtIdx(lastIdx).size();
+  const std::size_t last_idx = tree_size - 1;
+  const std::size_t last_nodes_size = lattice.nodes_at_idx(last_idx).size();
 
-  for (auto i = 0; i < lastNodesSize; ++i) {
-    if (cmp(lattice(lastIdx, i), barrier)) {
-      lattice(lastIdx, i) = payoff(lattice(lastIdx, i));
+  for (auto i = 0; i < last_nodes_size; ++i) {
+    if (cmp(lattice(last_idx, i), barrier_val)) {
+      lattice(last_idx, i) = pay(lattice(last_idx, i));
     } else {
-      lattice(lastIdx, i) = Node{};
+      lattice(last_idx, i) = node{};
     }
   }
 
-  if (firstRevertIdx == 0) {
+  if (first_revert_idx == 0) {
     // This trinomial tree does not have reverting property:
-    _backTraverseNormalBarrier(lastIdx, lattice,
-                               std::forward<Generator>(generator), deltaTime,
-                               std::forward<PayoffAdjuster>(payoffAdjuster),
-                               barrierType, barrier, rebate);
+    _back_traverse_normal_barrier(last_idx, lattice,
+                                  std::forward<generator>(gen), dt,
+                                  std::forward<payoff_adjuster>(payoff_adj),
+                                  barrier, barrier_val, rebate_val);
   } else {
     // This trinomial tree does have reverting property:
-    _backTraverseRevertingBarrier(firstRevertIdx - 1, lattice,
-                                  std::forward<Generator>(generator), deltaTime,
-                                  std::forward<PayoffAdjuster>(payoffAdjuster),
-                                  barrierType, barrier, rebate);
-    _backTraverseNormalBarrier(firstRevertIdx - 1, lattice,
-                               std::forward<Generator>(generator), deltaTime,
-                               std::forward<PayoffAdjuster>(payoffAdjuster),
-                               barrierType, barrier, rebate);
+    _back_traverse_reverting_barrier(first_revert_idx - 1, lattice,
+                                     std::forward<generator>(gen), dt,
+                                     std::forward<payoff_adjuster>(payoff_adj),
+                                     barrier, barrier_val, rebate_val);
+    _back_traverse_normal_barrier(first_revert_idx - 1, lattice,
+                                  std::forward<generator>(gen), dt,
+                                  std::forward<payoff_adjuster>(payoff_adj),
+                                  barrier, barrier_val, rebate_val);
   }
 }
 
-template <typename DeltaTime, typename RiskFreeRate>
-template <typename LatticeObject, typename Payoff>
-void lattice_backward_traversals::ImpliedBackwardTraversal<
-    lattice_types::LatticeType::Trinomial, DeltaTime,
-    RiskFreeRate>::_backTraverse(LatticeObject &optionLattice,
-                                 LatticeObject const &spotLattice,
-                                 CalibratorTrinomialEquityResultsPtr<
-                                     LatticeObject> const &calibrationResults,
-                                 DeltaTime const &deltaTime,
-                                 RiskFreeRate const &riskFreeRate,
-                                 Payoff &&payoff, DiscountingStyle style) {
+template <typename delta_time, typename risk_free_rate>
+template <typename lattice_object, typename payoff>
+void traverse_implied_backward<lattice_type::Trinomial, delta_time,
+                               risk_free_rate>::
+    _back_traverse(
+        lattice_object &option_lattice, lattice_object const &spot_lattice,
+        calibrator_trinomial_equity_results_ptr<lattice_object> const &results,
+        delta_time const &dt, risk_free_rate const &rfr, payoff &&pay,
+        discounting_style style) {
 
   // typedefs:
-  typedef typename LatticeObject::Node_type Node;
+  typedef typename lattice_object::node_t node;
   // typedef RiskFreeRateHolder:
-  typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+  typedef risk_free_rate_holder<risk_free_rate> RFR;
   // typedef DeltaTimeHolder:
-  typedef DeltaTimeHolder<DeltaTime> DT;
+  typedef delta_time_holder<delta_time> DT;
   // typedef discounting factor:
-  typedef DiscountingFactor<Node> DCF;
+  typedef discounting_factor<node> DCF;
 
   // get correct discounting factor style:
   auto dcf = DCF::function(style);
 
   // get the size of optionLattice object:
-  std::size_t const treeSize = optionLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = option_lattice.time_dimension();
+  std::size_t const last_idx = tree_size - 1;
+  std::size_t const last_nodes_size =
+      option_lattice.nodes_at_idx(last_idx).size();
 
   // unpack the impled probabilities from calibrationResults:
-  auto impliedProbs = calibrationResults->impliedProbabilities;
-  LASSERT(impliedProbs.size() >= (treeSize - 1),
+  auto implied_probs = results->implied_probabilities;
+  LASSERT(implied_probs.size() >= (tree_size - 1),
           "Must have enough implied volatilities for pricing.");
 
   // last payoff first:
-  for (std::size_t i = 0; i < lastNodesSize; ++i) {
-    optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+  for (std::size_t i = 0; i < last_nodes_size; ++i) {
+    option_lattice(last_idx, i) = pay(spot_lattice(last_idx, i));
   }
 
-  std::size_t nodesSize{0};
-  Node df{};
-  std::vector<std::tuple<Node, Node, Node>> probs;
-  std::tuple<Node, Node, Node> tpl;
-  for (auto t = lastIdx - 1; t > 0; --t) {
-    df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
-    nodesSize = optionLattice.nodesAtIdx(t).size();
-    probs = impliedProbs.at(t);
-    for (auto i = 0; i < nodesSize; ++i) {
+  std::size_t nodes_size{0};
+  node df{};
+  std::vector<std::tuple<node, node, node>> probs;
+  std::tuple<node, node, node> tpl;
+  for (auto t = last_idx - 1; t > 0; --t) {
+    df = dcf(RFR::rate(t, rfr), DT::delta_time(t, dt));
+    nodes_size = option_lattice.nodes_at_idx(t).size();
+    probs = implied_probs.at(t);
+    for (auto i = 0; i < nodes_size; ++i) {
       tpl = probs.at(i);
-      optionLattice(t, i) =
-          df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
-                std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
-                std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+      option_lattice(t, i) =
+          df * (std::get<0>(tpl) * option_lattice(t + 1, i) +
+                std::get<1>(tpl) * option_lattice(t + 1, i + 1) +
+                std::get<2>(tpl) * option_lattice(t + 1, i + 2));
     }
   }
-  df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
-  probs = impliedProbs.at(0);
+  df = dcf(RFR::rate(0, rfr), DT::delta_time(0, dt));
+  probs = implied_probs.at(0);
   tpl = probs.at(0);
-  optionLattice(0, 0) = df * (std::get<0>(tpl) * optionLattice(1, 0) +
-                              std::get<1>(tpl) * optionLattice(1, 1) +
-                              std::get<2>(tpl) * optionLattice(1, 2));
+  option_lattice(0, 0) = df * (std::get<0>(tpl) * option_lattice(1, 0) +
+                               std::get<1>(tpl) * option_lattice(1, 1) +
+                               std::get<2>(tpl) * option_lattice(1, 2));
 }
 
-template <typename DeltaTime, typename RiskFreeRate>
-template <typename LatticeObject, typename Payoff, typename PayoffAdjuster>
-void lattice_backward_traversals::ImpliedBackwardTraversal<
-    lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
-    _backTraverse(LatticeObject &optionLattice,
-                  LatticeObject const &spotLattice,
-                  CalibratorTrinomialEquityResultsPtr<LatticeObject> const
-                      &calibrationResults,
-                  DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-                  Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,
-                  DiscountingStyle style) {
+template <typename delta_time, typename risk_free_rate>
+template <typename lattice_object, typename payoff, typename payoff_adjuster>
+void traverse_implied_backward<lattice_type::Trinomial, delta_time,
+                               risk_free_rate>::
+    _back_traverse(
+        lattice_object &option_lattice, lattice_object const &spot_lattice,
+        calibrator_trinomial_equity_results_ptr<lattice_object> const &results,
+        delta_time const &dt, risk_free_rate const &rfr, payoff &&pay,
+        payoff_adjuster &&payoff_adj, discounting_style style) {
 
   // typedefs:
-  typedef typename LatticeObject::Node_type Node;
+  typedef typename lattice_object::node_t node;
   // typedef RiskFreeRateHolder:
-  typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+  typedef risk_free_rate_holder<risk_free_rate> RFR;
   // typedef DeltaTimeHolder:
-  typedef DeltaTimeHolder<DeltaTime> DT;
+  typedef delta_time_holder<delta_time> DT;
   // typedef discounting factor:
-  typedef DiscountingFactor<Node> DCF;
+  typedef discounting_factor<node> DCF;
 
   // get correct discounting factor style:
   auto dcf = DCF::function(style);
 
   // get the size of optionLattice object:
-  std::size_t const treeSize = optionLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = option_lattice.time_dimension();
+  std::size_t const last_idx = treeSize - 1;
+  std::size_t const last_nodes_size =
+      option_lattice.nodes_at_idx(last_idx).size();
 
   // unpack the impled probabilities from calibrationResults:
-  auto impliedProbs = calibrationResults->impliedProbabilities;
-  LASSERT(impliedProbs.size() >= (treeSize - 1),
+  auto implied_probs = results->implied_probabilities;
+  LASSERT(implied_probs.size() >= (tree_size - 1),
           "Must have enough implied volatilities for pricing.");
 
   // last payoff first:
-  for (std::size_t i = 0; i < lastNodesSize; ++i) {
-    optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+  for (std::size_t i = 0; i < last_nodes_size; ++i) {
+    option_lattice(last_idx, i) = pay(spot_lattice(last_idx, i));
   }
 
-  std::size_t nodesSize{0};
-  Node df{};
-  Node value{};
-  std::vector<std::tuple<Node, Node, Node>> probs;
-  std::tuple<Node, Node, Node> tpl;
-  for (auto t = lastIdx - 1; t > 0; --t) {
-    df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
-    nodesSize = optionLattice.nodesAtIdx(t).size();
-    probs = impliedProbs.at(t);
-    for (auto i = 0; i < nodesSize; ++i) {
+  std::size_t nodes_size{0};
+  node df{};
+  node value{};
+  std::vector<std::tuple<node, node, node>> probs;
+  std::tuple<node, node, node> tpl;
+  for (auto t = last_idx - 1; t > 0; --t) {
+    df = dcf(RFR::rate(t, rfr), DT::delta_time(t, dt));
+    nodes_size = option_lattice.nodes_at_idx(t).size();
+    probs = implied_probs.at(t);
+    for (auto i = 0; i < nodes_size; ++i) {
       tpl = probs.at(i);
-      value = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
-                    std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
-                    std::get<2>(tpl) * optionLattice(t + 1, i + 2));
-      payoffAdjuster(value, spotLattice(t, i));
-      optionLattice(t, i) = value;
+      value = df * (std::get<0>(tpl) * option_lattice(t + 1, i) +
+                    std::get<1>(tpl) * option_lattice(t + 1, i + 1) +
+                    std::get<2>(tpl) * option_lattice(t + 1, i + 2));
+      payoff_adj(value, spot_lattice(t, i));
+      option_lattice(t, i) = value;
     }
   }
-  df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
-  probs = impliedProbs.at(0);
+  df = dcf(RFR::rate(0, rfr), DT::delta_time(0, dt));
+  probs = implied_probs.at(0);
   tpl = probs.at(0);
-  value = df * (std::get<0>(tpl) * optionLattice(1, 0) +
-                std::get<1>(tpl) * optionLattice(1, 1) +
-                std::get<2>(tpl) * optionLattice(1, 2));
-  payoffAdjuster(value, spotLattice(0, 0));
-  optionLattice(0, 0) = value;
+  value = df * (std::get<0>(tpl) * option_lattice(1, 0) +
+                std::get<1>(tpl) * option_lattice(1, 1) +
+                std::get<2>(tpl) * option_lattice(1, 2));
+  payoff_adj(value, spot_lattice(0, 0));
+  option_lattice(0, 0) = value;
 }
 
-template <typename DeltaTime, typename RiskFreeRate>
-template <typename LatticeObject, typename Payoff>
-void lattice_backward_traversals::ImpliedBackwardTraversal<
-    lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
-    _backTraverseBarrier(
-        LatticeObject &optionLattice, LatticeObject const &spotLattice,
-        CalibratorTrinomialEquityResultsPtr<LatticeObject> const
-            &calibrationResults,
-        DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-        Payoff &&payoff, BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate,
-        DiscountingStyle style) {
+template <typename delta_time, typename risk_free_rate>
+template <typename lattice_object, typename payoff>
+void traverse_implied_backward<lattice_type::Trinomial, delta_time,
+                               risk_free_rate>::
+    _back_traverse_barrier(
+        lattice_object &option_lattice, lattice_object const &spot_lattice,
+        calibrator_trinomial_equity_results_ptr<lattice_object> const &results,
+        delta_time const &dt, risk_free_rate const &rfr, payoff &&pay,
+        barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val,
+        discounting_style style) {
 
   // typedefs:
-  typedef typename LatticeObject::Node_type Node;
+  typedef typename lattice_object::node_t node;
   // typedef RiskFreeRateHolder:
-  typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+  typedef risk_free_rate_holder<risk_free_rate> RFR;
   // typedef DeltaTimeHolder:
-  typedef DeltaTimeHolder<DeltaTime> DT;
+  typedef delta_time_holder<delta_time> DT;
   // typedef discounting factor:
-  typedef DiscountingFactor<Node> DCF;
+  typedef discounting_factor<node> DCF;
   // typedef BarrierComparer:
-  typedef BarrierComparer<Node> BC;
+  typedef barrier_comparer<node> BC;
 
   // get correct comparer function:
-  auto cmp = BC::comparer(barrierType);
+  auto cmp = BC::comparer(barrier);
   // get correct discounting factor style:
   auto dcf = DCF::function(style);
 
   // get the size of optionLattice object:
-  std::size_t const treeSize = optionLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = option_lattice.time_dimension();
+  std::size_t const last_idx = treeSize - 1;
+  std::size_t const last_nodes_size =
+      option_lattice.nodes_at_idx(last_idx).size();
 
   // unpack the impled probabilities from calibrationResults:
-  auto impliedProbs = calibrationResults->impliedProbabilities;
-  LASSERT(impliedProbs.size() >= (treeSize - 1),
+  auto implied_probs = results->implied_probabilities;
+  LASSERT(implied_probs.size() >= (tree_size - 1),
           "Must have enough implied volatilities for pricing.");
 
   // last payoff first:
-  for (std::size_t i = 0; i < lastNodesSize; ++i) {
-    if (cmp(spotLattice(lastIdx, i), barrier)) {
-      optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+  for (std::size_t i = 0; i < last_nodes_size; ++i) {
+    if (cmp(spot_lattice(last_idx, i), barrier_val)) {
+      option_lattice(last_idx, i) = payoff(spot_lattice(last_idx, i));
     } else {
-      optionLattice(lastIdx, i) = 0.0;
+      option_lattice(last_idx, i) = 0.0;
     }
   }
 
-  std::size_t nodesSize{0};
-  Node df{};
-  std::vector<std::tuple<Node, Node, Node>> probs;
-  std::tuple<Node, Node, Node> tpl;
-  for (auto t = lastIdx - 1; t > 0; --t) {
-    df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
-    nodesSize = optionLattice.nodesAtIdx(t).size();
-    probs = impliedProbs.at(t);
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(spotLattice(t, i), barrier)) {
+  std::size_t nodes_size{0};
+  node df{};
+  std::vector<std::tuple<node, node, node>> probs;
+  std::tuple<node, node, node> tpl;
+  for (auto t = last_idx - 1; t > 0; --t) {
+    df = dcf(RFR::rate(t, rfr), DT::delta_time(t, dt));
+    nodes_size = option_lattice.nodes_at_idx(t).size();
+    probs = implied_probs.at(t);
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(spot_lattice(t, i), barrier_val)) {
         tpl = probs.at(i);
-        optionLattice(t, i) =
-            df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
-                  std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
-                  std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+        option_lattice(t, i) =
+            df * (std::get<0>(tpl) * option_lattice(t + 1, i) +
+                  std::get<1>(tpl) * option_lattice(t + 1, i + 1) +
+                  std::get<2>(tpl) * option_lattice(t + 1, i + 2));
       } else {
-        optionLattice(t, i) = rebate;
+        option_lattice(t, i) = rebate_val;
       }
     }
   }
 
-  df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
-  probs = impliedProbs.at(0);
-  if (cmp(spotLattice(0, 0), barrier)) {
+  df = dcf(RFR::rate(0, rfr), DT::delta_time(0, dt));
+  probs = implied_probs.at(0);
+  if (cmp(spot_lattice(0, 0), barrier_val)) {
     tpl = probs.at(0);
-    optionLattice(0, 0) = df * (std::get<0>(tpl) * optionLattice(1, 0) +
-                                std::get<1>(tpl) * optionLattice(1, 1) +
-                                std::get<2>(tpl) * optionLattice(1, 2));
+    option_lattice(0, 0) = df * (std::get<0>(tpl) * option_lattice(1, 0) +
+                                 std::get<1>(tpl) * option_lattice(1, 1) +
+                                 std::get<2>(tpl) * option_lattice(1, 2));
   } else {
-    optionLattice(0, 0) = rebate;
+    option_lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename DeltaTime, typename RiskFreeRate>
-template <typename LatticeObject, typename Payoff, typename PayoffAdjuster>
-void lattice_backward_traversals::ImpliedBackwardTraversal<
-    lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
-    _backTraverseBarrier(
-        LatticeObject &optionLattice, LatticeObject const &spotLattice,
-        CalibratorTrinomialEquityResultsPtr<LatticeObject> const
-            &calibrationResults,
-        DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-        Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,
-        BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate,
-        DiscountingStyle style) {
+template <typename delta_time, typename risk_free_rate>
+template <typename lattice_object, typename payoff, typename payoff_adjuster>
+void traverse_implied_backward<lattice_type::Trinomial, delta_time,
+                               risk_free_rate>::
+    _back_traverse_barrier(
+        lattice_object &option_lattice, lattice_object const &spot_lattice,
+        calibrator_trinomial_equity_results_ptr<lattice_object> const &results,
+        delta_time const &dt, risk_free_rate const &rfr, payoff &&pay,
+        payoff_adjuster &&payoff_adj, barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val,
+        discounting_style style) {
 
   // typedefs:
-  typedef typename LatticeObject::Node_type Node;
+  typedef typename lattice_object::node_t node;
   // typedef RiskFreeRateHolder:
-  typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+  typedef risk_free_rate_holder<risk_free_rate> RFR;
   // typedef DeltaTimeHolder:
-  typedef DeltaTimeHolder<DeltaTime> DT;
+  typedef delta_time_holder<delta_time> DT;
   // typedef discounting factor:
-  typedef DiscountingFactor<Node> DCF;
+  typedef discounting_factor<node> DCF;
   // typedef BarrierComparer:
-  typedef BarrierComparer<Node> BC;
+  typedef barrier_comparer<node> BC;
 
   // get correct comparer function:
-  auto cmp = BC::comparer(barrierType);
+  auto cmp = BC::comparer(barrier);
   // get correct discounting factor style:
   auto dcf = DCF::function(style);
 
   // get the size of optionLattice object:
-  std::size_t const treeSize = optionLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = option_lattice.time_dimension();
+  std::size_t const last_idx = tree_size - 1;
+  std::size_t const last_nodes_size =
+      option_lattice.nodes_at_idx(last_idx).size();
 
   // unpack the impled probabilities from calibrationResults:
-  auto impliedProbs = calibrationResults->impliedProbabilities;
-  LASSERT(impliedProbs.size() >= (treeSize - 1),
+  auto implied_probs = results->implied_probabilities;
+  LASSERT(implied_probs.size() >= (treeSize - 1),
           "Must have enough implied volatilities for pricing.");
 
   // last payoff first:
-  for (std::size_t i = 0; i < lastNodesSize; ++i) {
-    if (cmp(spotLattice(lastIdx, i), barrier)) {
-      optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+  for (std::size_t i = 0; i < last_nodes_size; ++i) {
+    if (cmp(spot_lattice(last_idx, i), barrier_val)) {
+      option_lattice(last_idx, i) = pay(spot_lattice(last_idx, i));
     } else {
-      optionLattice(lastIdx, i) = 0.0;
+      option_lattice(last_idx, i) = 0.0;
     }
   }
 
-  std::size_t nodesSize{0};
-  Node df{};
-  Node value{};
-  std::vector<std::tuple<Node, Node, Node>> probs;
-  std::tuple<Node, Node, Node> tpl;
-  for (auto t = lastIdx - 1; t > 0; --t) {
-    df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
-    nodesSize = optionLattice.nodesAtIdx(t).size();
-    probs = impliedProbs.at(t);
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(spotLattice(t, i), barrier)) {
+  std::size_t nodes_size{0};
+  node df{};
+  node value{};
+  std::vector<std::tuple<node, node, node>> probs;
+  std::tuple<node, node, node> tpl;
+  for (auto t = last_idx - 1; t > 0; --t) {
+    df = dcf(RFR::rate(t, rfr), DT::delta_time(t, dt));
+    nodes_size = option_lattice.nodes_at_idx(t).size();
+    probs = implied_probs.at(t);
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(spot_lattice(t, i), barrier_val)) {
         tpl = probs.at(i);
-        value = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
-                      std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
-                      std::get<2>(tpl) * optionLattice(t + 1, i + 2));
-        payoffAdjuster(value, spotLattice(t, i));
-        optionLattice(t, i) = value;
+        value = df * (std::get<0>(tpl) * option_lattice(t + 1, i) +
+                      std::get<1>(tpl) * option_lattice(t + 1, i + 1) +
+                      std::get<2>(tpl) * option_lattice(t + 1, i + 2));
+        payoff_adj(value, spotLattice(t, i));
+        option_lattice(t, i) = value;
 
       } else {
-        optionLattice(t, i) = rebate;
+        option_lattice(t, i) = rebate_val;
       }
     }
   }
 
-  df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
-  probs = impliedProbs.at(0);
-  if (cmp(spotLattice(0, 0), barrier)) {
+  df = dcf(RFR::rate(0, rfr), DT::delta_time(0, dt));
+  probs = implied_probs.at(0);
+  if (cmp(spot_lattice(0, 0), barrier_val)) {
     tpl = probs.at(0);
-    value = df * (std::get<0>(tpl) * optionLattice(1, 0) +
-                  std::get<1>(tpl) * optionLattice(1, 1) +
-                  std::get<2>(tpl) * optionLattice(1, 2));
-    payoffAdjuster(value, spotLattice(0, 0));
-    optionLattice(0, 0) = value;
+    value = df * (std::get<0>(tpl) * option_lattice(1, 0) +
+                  std::get<1>(tpl) * option_lattice(1, 1) +
+                  std::get<2>(tpl) * option_lattice(1, 2));
+    payoff_adj(value, spot_lattice(0, 0));
+    option_lattice(0, 0) = value;
   } else {
-    optionLattice(0, 0) = rebate;
+    option_lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename DeltaTime, typename RiskFreeRate>
-template <typename LatticeObject, typename Payoff>
-void lattice_backward_traversals::ImpliedBackwardTraversal<
-    lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
-    _backTraverseBarrierDKEAdjustment(
-        LatticeObject &optionLattice, LatticeObject const &spotLattice,
-        CalibratorTrinomialEquityResultsPtr<LatticeObject> const
-            &calibrationResults,
-        DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-        Payoff &&payoff, BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate,
-        DiscountingStyle style) {
+template <typename delta_time, typename risk_free_rate>
+template <typename lattice_object, typename payoff>
+void traverse_implied_backward<lattice_type::Trinomial, delta_time,
+                               risk_free_rate>::
+    _back_traverse_barrier_dke_adjustment(
+        lattice_object &option_lattice, lattice_object const &spot_lattice,
+        calibrator_trinomial_equity_results_ptr<lattice_object> const &results,
+        delta_time const &dt, risk_free_rate const &rfr, payoff &&pay,
+        barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val,
+        discounting_style style) {
 
   // typedefs:
-  typedef typename LatticeObject::Node_type Node;
+  typedef typename lattice_object::node_t node;
   // typedef RiskFreeRateHolder:
-  typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+  typedef risk_free_rate_holder<risk_free_rate> RFR;
   // typedef DeltaTimeHolder:
-  typedef DeltaTimeHolder<DeltaTime> DT;
+  typedef delta_time_holder<delta_time> DT;
   // typedef discounting factor:
-  typedef DiscountingFactor<Node> DCF;
+  typedef discounting_factor<node> DCF;
   // typedef BarrierComparer:
-  typedef BarrierComparer<Node> BC;
+  typedef barrier_comparer<node> BC;
   // typedef DermanKaniErgenerAdjuster:
-  typedef DermanKaniErgenerAdjuster<Node> DKEA;
+  typedef derman_kani_ergener_adjuster<node> DKEA;
 
   // get correct comparer function:
-  auto cmp = BC::comparer(barrierType);
+  auto cmp = BC::comparer(barrier);
   // get correct adjuster:
-  auto adjustPair = DKEA::adjuster(barrierType);
+  auto adjust_pair = DKEA::adjuster(barrier);
   // unpack checker and adjuster:
-  auto dkeChecker = adjustPair.first;
-  auto dkeAdjuster = adjustPair.second;
+  auto dke_checker = adjust_pair.first;
+  auto dke_adjuster = adjust_pair.second;
   // get correct discounting factor style:
   auto dcf = DCF::function(style);
 
   // get the size of optionLattice object:
-  std::size_t const treeSize = optionLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = option_lattice.time_dimension();
+  std::size_t const last_idx = tree_size - 1;
+  std::size_t const last_nodes_size =
+      option_lattice.nodes_at_idx(last_idx).size();
 
   // unpack the impled probabilities from calibrationResults:
-  auto impliedProbs = calibrationResults->impliedProbabilities;
-  LASSERT(impliedProbs.size() >= (treeSize - 1),
+  auto implied_probs = results->implied_probabilities;
+  LASSERT(implied_probs.size() >= (tree_size - 1),
           "Must have enough implied volatilities for pricing.");
 
   // last payoff first:
-  for (std::size_t i = 0; i < lastNodesSize; ++i) {
-    if (cmp(spotLattice(lastIdx, i), barrier)) {
-      optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+  for (std::size_t i = 0; i < last_nodes_size; ++i) {
+    if (cmp(spot_lattice(last_idx, i), barrier_val)) {
+      option_lattice(last_idx, i) = payoff(spot_lattice(last_idx, i));
     } else {
-      optionLattice(lastIdx, i) = 0.0;
+      option_lattice(last_idx, i) = 0.0;
     }
   }
 
-  std::size_t nodesSize{0};
-  Node df{};
-  std::vector<std::tuple<Node, Node, Node>> probs;
-  std::tuple<Node, Node, Node> tpl;
-  for (auto t = lastIdx - 1; t > 0; --t) {
-    df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
-    nodesSize = optionLattice.nodesAtIdx(t).size();
-    probs = impliedProbs.at(t);
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(spotLattice(t, i), barrier)) {
+  std::size_t nodes_size{0};
+  node df{};
+  std::vector<std::tuple<node, node, node>> probs;
+  std::tuple<node, node, node> tpl;
+  for (auto t = last_idx - 1; t > 0; --t) {
+    df = dcf(RFR::rate(t, rfr), DT::delta_time(t, dt));
+    nodes_size = option_lattice.nodes_at_idx(t).size();
+    probs = implied_probs.at(t);
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(spot_lattice(t, i), barrier_val)) {
         tpl = probs.at(i);
-        optionLattice(t, i) =
-            df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
-                  std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
-                  std::get<2>(tpl) * optionLattice(t + 1, i + 2));
+        option_lattice(t, i) =
+            df * (std::get<0>(tpl) * option_lattice(t + 1, i) +
+                  std::get<1>(tpl) * option_lattice(t + 1, i + 1) +
+                  std::get<2>(tpl) * option_lattice(t + 1, i + 2));
       } else {
-        optionLattice(t, i) = rebate;
+        option_lattice(t, i) = rebate_val;
       }
       // Derman-Kani-Ergener adjustment:
-      if (((i > 0) && (i < nodesSize - 1)) &&
-          dkeChecker(spotLattice(t, i), spotLattice(t, i - 1),
-                     spotLattice(t, i + 1), barrier)) {
-        optionLattice(t, i) = dkeAdjuster(
-            spotLattice(t, i), spotLattice(t, i - 1), spotLattice(t, i + 1),
-            barrier, rebate, optionLattice(t, i));
+      if (((i > 0) && (i < nodes_size - 1)) &&
+          dke_checker(spot_lattice(t, i), spot_lattice(t, i - 1),
+                      spot_lattice(t, i + 1), barrier_val)) {
+        option_lattice(t, i) = dke_adjuster(
+            spot_lattice(t, i), spot_lattice(t, i - 1), spot_lattice(t, i + 1),
+            barrier_val, rebate_val, option_lattice(t, i));
       }
     }
   }
 
-  df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
-  probs = impliedProbs.at(0);
-  if (cmp(spotLattice(0, 0), barrier)) {
+  df = dcf(RFR::rate(0, rfr), DT::delta_time(0, dt));
+  probs = implied_probs.at(0);
+  if (cmp(spot_lattice(0, 0), barrier_val)) {
     tpl = probs.at(0);
-    optionLattice(0, 0) = df * (std::get<0>(tpl) * optionLattice(1, 0) +
-                                std::get<1>(tpl) * optionLattice(1, 1) +
-                                std::get<2>(tpl) * optionLattice(1, 2));
+    option_lattice(0, 0) = df * (std::get<0>(tpl) * option_lattice(1, 0) +
+                                 std::get<1>(tpl) * option_lattice(1, 1) +
+                                 std::get<2>(tpl) * option_lattice(1, 2));
   } else {
-    optionLattice(0, 0) = rebate;
+    option_lattice(0, 0) = rebate_val;
   }
 }
 
-template <typename DeltaTime, typename RiskFreeRate>
-template <typename LatticeObject, typename Payoff, typename PayoffAdjuster>
-void lattice_backward_traversals::ImpliedBackwardTraversal<
-    lattice_types::LatticeType::Trinomial, DeltaTime, RiskFreeRate>::
-    _backTraverseBarrierDKEAdjustment(
-        LatticeObject &optionLattice, LatticeObject const &spotLattice,
-        CalibratorTrinomialEquityResultsPtr<LatticeObject> const
-            &calibrationResults,
-        DeltaTime const &deltaTime, RiskFreeRate const &riskFreeRate,
-        Payoff &&payoff, PayoffAdjuster &&payoffAdjuster,
-        BarrierType barrierType,
-        typename LatticeObject::Node_type const &barrier,
-        typename LatticeObject::Node_type const &rebate,
-        DiscountingStyle style) {
+template <typename delta_time, typename risk_free_rate>
+template <typename lattice_object, typename payoff, typename payoff_adjuster>
+void traverse_implied_backward<lattice_type::Trinomial, delta_time,
+                               risk_free_rate>::
+    _back_traverse_barrier_dke_adjustment(
+        lattice_object &option_lattice, lattice_object const &spot_lattice,
+        calibrator_trinomial_equity_results_ptr<lattice_object> const &results,
+        delta_time const &dt, risk_free_rate const &rfr, payoff &&pay,
+        payoff_adjuster &&payoff_adj, barrier_type barrier,
+        typename lattice_object::node_t const &barrier_val,
+        typename lattice_object::node_t const &rebate_val,
+        discounting_style style) {
 
   // typedefs:
-  typedef typename LatticeObject::Node_type Node;
+  typedef typename lattice_object::node_t node;
   // typedef RiskFreeRateHolder:
-  typedef RiskFreeRateHolder<RiskFreeRate> RFR;
+  typedef risk_free_rate_holder<risk_free_rate> RFR;
   // typedef DeltaTimeHolder:
-  typedef DeltaTimeHolder<DeltaTime> DT;
+  typedef delta_time_holder<delta_time> DT;
   // typedef discounting factor:
-  typedef DiscountingFactor<Node> DCF;
+  typedef discounting_factor<node> DCF;
   // typedef BarrierComparer:
-  typedef BarrierComparer<Node> BC;
+  typedef barrier_comparer<node> BC;
   // typedef DermanKaniErgenerAdjuster:
-  typedef DermanKaniErgenerAdjuster<Node> DKEA;
+  typedef derman_kani_ergener_adjuster<node> DKEA;
 
   // get correct comparer function:
-  auto cmp = BC::comparer(barrierType);
+  auto cmp = BC::comparer(barrier);
   // get correct adjuster:
-  auto adjustPair = DKEA::adjuster(barrierType);
+  auto adjust_pair = DKEA::adjuster(barrier);
   // unpack checker and adjuster:
-  auto dkeChecker = adjustPair.first;
-  auto dkeAdjuster = adjustPair.second;
+  auto dke_checker = adjust_pair.first;
+  auto dke_adjuster = adjust_pair.second;
   // get correct discounting factor style:
   auto dcf = DCF::function(style);
 
   // get the size of optionLattice object:
-  std::size_t const treeSize = optionLattice.timeDimension();
-  std::size_t const lastIdx = treeSize - 1;
-  std::size_t const lastNodesSize = optionLattice.nodesAtIdx(lastIdx).size();
+  std::size_t const tree_size = option_lattice.time_dimension();
+  std::size_t const last_idx = tree_size - 1;
+  std::size_t const last_nodes_size =
+      option_lattice.nodes_at_idx(last_idx).size();
 
   // unpack the impled probabilities from calibrationResults:
-  auto impliedProbs = calibrationResults->impliedProbabilities;
-  LASSERT(impliedProbs.size() >= (treeSize - 1),
+  auto implied_probs = results->implied_probabilities;
+  LASSERT(implied_probs.size() >= (tree_size - 1),
           "Must have enough implied volatilities for pricing.");
 
   // last payoff first:
-  for (std::size_t i = 0; i < lastNodesSize; ++i) {
-    if (cmp(spotLattice(lastIdx, i), barrier)) {
-      optionLattice(lastIdx, i) = payoff(spotLattice(lastIdx, i));
+  for (std::size_t i = 0; i < last_nodes_size; ++i) {
+    if (cmp(spot_lattice(last_idx, i), barrier_val)) {
+      option_lattice(last_idx, i) = payoff(spot_lattice(last_idx, i));
     } else {
-      optionLattice(lastIdx, i) = 0.0;
+      option_lattice(last_idx, i) = 0.0;
     }
   }
 
-  std::size_t nodesSize{0};
-  Node df{};
-  Node value{};
-  std::vector<std::tuple<Node, Node, Node>> probs;
-  std::tuple<Node, Node, Node> tpl;
-  for (auto t = lastIdx - 1; t > 0; --t) {
-    df = dcf(RFR::rate(t, riskFreeRate), DT::deltaTime(t, deltaTime));
-    nodesSize = optionLattice.nodesAtIdx(t).size();
-    probs = impliedProbs.at(t);
-    for (auto i = 0; i < nodesSize; ++i) {
-      if (cmp(spotLattice(t, i), barrier)) {
+  std::size_t nodes_size{0};
+  node df{};
+  node value{};
+  std::vector<std::tuple<node, node, node>> probs;
+  std::tuple<node, node, node> tpl;
+  for (auto t = last_idx - 1; t > 0; --t) {
+    df = dcf(RFR::rate(t, rfr), DT::delta_time(t, dt));
+    nodes_size = option_lattice.nodes_at_idx(t).size();
+    probs = implied_probs.at(t);
+    for (auto i = 0; i < nodes_size; ++i) {
+      if (cmp(spot_lattice(t, i), barrier_val)) {
         tpl = probs.at(i);
-        value = df * (std::get<0>(tpl) * optionLattice(t + 1, i) +
-                      std::get<1>(tpl) * optionLattice(t + 1, i + 1) +
-                      std::get<2>(tpl) * optionLattice(t + 1, i + 2));
-        payoffAdjuster(value, spotLattice(t, i));
-        optionLattice(t, i) = value;
+        value = df * (std::get<0>(tpl) * option_lattice(t + 1, i) +
+                      std::get<1>(tpl) * option_lattice(t + 1, i + 1) +
+                      std::get<2>(tpl) * option_lattice(t + 1, i + 2));
+        payoff_adj(value, spot_lattice(t, i));
+        option_lattice(t, i) = value;
 
       } else {
-        optionLattice(t, i) = rebate;
+        option_lattice(t, i) = rebate_val;
       }
       // Derman-Kani-Ergener adjustment:
-      if (((i > 0) && (i < nodesSize - 1)) &&
-          dkeChecker(spotLattice(t, i), spotLattice(t, i - 1),
-                     spotLattice(t, i + 1), barrier)) {
-        optionLattice(t, i) = dkeAdjuster(
-            spotLattice(t, i), spotLattice(t, i - 1), spotLattice(t, i + 1),
-            barrier, rebate, optionLattice(t, i));
+      if (((i > 0) && (i < nodes_size - 1)) &&
+          dke_checker(spot_lattice(t, i), spot_lattice(t, i - 1),
+                      spot_lattice(t, i + 1), barrier_val)) {
+        option_lattice(t, i) = dke_adjuster(
+            spot_lattice(t, i), spot_lattice(t, i - 1), spot_lattice(t, i + 1),
+            barrier_val, rebate_val, option_lattice(t, i));
       }
     }
   }
 
-  df = dcf(RFR::rate(0, riskFreeRate), DT::deltaTime(0, deltaTime));
-  probs = impliedProbs.at(0);
-  if (cmp(spotLattice(0, 0), barrier)) {
+  df = dcf(RFR::rate(0, rfr), DT::deltaTime(0, dt));
+  probs = implied_probs.at(0);
+  if (cmp(spot_lattice(0, 0), barrier_val)) {
     tpl = probs.at(0);
-    value = df * (std::get<0>(tpl) * optionLattice(1, 0) +
-                  std::get<1>(tpl) * optionLattice(1, 1) +
-                  std::get<2>(tpl) * optionLattice(1, 2));
-    payoffAdjuster(value, spotLattice(0, 0));
-    optionLattice(0, 0) = value;
+    value = df * (std::get<0>(tpl) * option_lattice(1, 0) +
+                  std::get<1>(tpl) * option_lattice(1, 1) +
+                  std::get<2>(tpl) * option_lattice(1, 2));
+    payoff_adj(value, spot_lattice(0, 0));
+    option_lattice(0, 0) = value;
   } else {
-    optionLattice(0, 0) = rebate;
+    option_lattice(0, 0) = rebate_val;
   }
 }
 
